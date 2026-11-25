@@ -1,0 +1,17 @@
+{
+  "name": "catroan",
+  "version": "0.1.0",
+  "description": "Catroan: juego de construcción de pueblos en una isla de hexágonos, low poly 3D en el navegador",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --dev",
+    "export-glb": "python3 tools/export-glb.py",
+    "lint": "node tools/lint.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "terser": "^5.51.4"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catroan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>/*@STYLES*/</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body data-mode="board">
+<canvas id="c" tabindex="0"></canvas>
+
+<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-sound" class="panel" title="Sonido"></button></div></div>
+<div id="toasts"></div>
+<div id="announce" class="panel"></div>
+
+<div id="mk-say"></div>
+<div id="mk-ui"></div>
+<div id="offer"></div>
+
+<div id="board-ui" class="panel">
+  <div class="row">
+    <div id="dice"><span class="die">–</span><span class="die">–</span></div>
+    <div id="turn-label"></div>
+    <div id="res"></div>
+  </div>
+  <div class="row">
+    <button id="b-roll" class="primary"><span class="m3" data-k="ic:dado"></span> Tirar dados</button>
+    <button id="b-road">Camino<small><span class="m3" data-k="madera"></span><span class="m3" data-k="ladrillo"></span></small></button>
+    <button id="b-set">Pueblo<small><span class="m3" data-k="madera"></span><span class="m3" data-k="ladrillo"></span><span class="m3" data-k="lana"></span><span class="m3" data-k="trigo"></span></small></button>
+    <button id="b-city">Ciudad<small><span class="m3" data-k="trigo"></span>×2 <span class="m3" data-k="mineral"></span>×3</small></button>
+    <button id="b-trade">Comerciar<small>banco y puertos</small></button>
+    <button id="b-end">Terminar turno</button>
+  </div>
+  <div id="hint"></div>
+</div>
+<div id="log" class="panel"><h4>Bitácora</h4><div id="log-list" style="display:block;border:0;padding:0"></div></div>
+<div id="popup" class="panel"></div>
+
+<div id="village-ui">
+  <div id="v-card" class="panel"></div>
+  <button id="v-info" title="Mostrar información (I)">ℹ Info del pueblo</button>
+  <div id="v-turn"><span class="m3" data-k="ic:campana"></span> Es tu turno: vuelve al tablero para jugar</div>
+  <div id="v-help">WASD / flechas para caminar · Shift para correr · arrastra para mirar · haz clic en una persona para platicar</div>
+  <div id="v-btns"><button id="b-back" class="mapbtn" title="Volver al tablero"><canvas></canvas></button></div>
+  <div id="dpad">
+    <span></span><button data-k="w">▲</button><span></span>
+    <button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button>
+  </div>
+</div>
+
+<div id="bubble" class="panel"></div>
+<div id="modal" class="modal hidden"><div class="panel" id="modal-body"></div></div>
+<div id="vignette"></div>
+<div id="fade"></div>
+<div id="err" class="panel"></div>
+
+<script type="module">
+//@SCRIPT
+</script>
+</body>
+</html>

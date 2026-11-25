@@ -1,0 +1,1865 @@
+{
+ "color_jugador": "#151515",
+ "modelos": [
+  {
+   "archivo": "personas/campesino.glb",
+   "categoria": "personas",
+   "nombre": "campesino",
+   "tamano_m": [
+    1.049,
+    2.039,
+    1.61
+   ]
+  },
+  {
+   "archivo": "personas/leñadora.glb",
+   "categoria": "personas",
+   "nombre": "leñadora",
+   "tamano_m": [
+    0.519,
+    1.82,
+    0.862
+   ]
+  },
+  {
+   "archivo": "personas/minero.glb",
+   "categoria": "personas",
+   "nombre": "minero",
+   "tamano_m": [
+    0.618,
+    2.001,
+    0.91
+   ]
+  },
+  {
+   "archivo": "personas/pastora.glb",
+   "categoria": "personas",
+   "nombre": "pastora",
+   "tamano_m": [
+    0.715,
+    1.911,
+    0.715
+   ]
+  },
+  {
+   "archivo": "personas/ladrillera.glb",
+   "categoria": "personas",
+   "nombre": "ladrillera",
+   "tamano_m": [
+    0.721,
+    1.8,
+    1.242
+   ]
+  },
+  {
+   "archivo": "personas/pescador.glb",
+   "categoria": "personas",
+   "nombre": "pescador",
+   "tamano_m": [
+    0.62,
+    1.97,
+    2.406
+   ]
+  },
+  {
+   "archivo": "personas/herrero.glb",
+   "categoria": "personas",
+   "nombre": "herrero",
+   "tamano_m": [
+    0.639,
+    1.994,
+    0.603
+   ]
+  },
+  {
+   "archivo": "personas/panadera.glb",
+   "categoria": "personas",
+   "nombre": "panadera",
+   "tamano_m": [
+    0.539,
+    2.03,
+    0.321
+   ]
+  },
+  {
+   "archivo": "personas/guardia.glb",
+   "categoria": "personas",
+   "nombre": "guardia",
+   "tamano_m": [
+    0.595,
+    2.716,
+    0.322
+   ]
+  },
+  {
+   "archivo": "personas/comerciante.glb",
+   "categoria": "personas",
+   "nombre": "comerciante",
+   "tamano_m": [
+    0.762,
+    2.072,
+    0.621
+   ]
+  },
+  {
+   "archivo": "personas/doctora.glb",
+   "categoria": "personas",
+   "nombre": "doctora",
+   "tamano_m": [
+    0.557,
+    1.951,
+    0.382
+   ]
+  },
+  {
+   "archivo": "personas/carnicero.glb",
+   "categoria": "personas",
+   "nombre": "carnicero",
+   "tamano_m": [
+    0.63,
+    1.967,
+    0.332
+   ]
+  },
+  {
+   "archivo": "personas/carpintero.glb",
+   "categoria": "personas",
+   "nombre": "carpintero",
+   "tamano_m": [
+    0.613,
+    1.944,
+    0.623
+   ]
+  },
+  {
+   "archivo": "personas/brujo.glb",
+   "categoria": "personas",
+   "nombre": "brujo",
+   "tamano_m": [
+    0.762,
+    2.311,
+    0.641
+   ]
+  },
+  {
+   "archivo": "personas/pirata.glb",
+   "categoria": "personas",
+   "nombre": "pirata",
+   "tamano_m": [
+    0.629,
+    2.175,
+    0.505
+   ]
+  },
+  {
+   "archivo": "personas/abuelo.glb",
+   "categoria": "personas",
+   "nombre": "abuelo",
+   "tamano_m": [
+    0.579,
+    1.855,
+    0.379
+   ]
+  },
+  {
+   "archivo": "personas/abuela.glb",
+   "categoria": "personas",
+   "nombre": "abuela",
+   "tamano_m": [
+    0.72,
+    1.845,
+    0.641
+   ]
+  },
+  {
+   "archivo": "personas/niña.glb",
+   "categoria": "personas",
+   "nombre": "niña",
+   "tamano_m": [
+    0.496,
+    1.308,
+    0.405
+   ]
+  },
+  {
+   "archivo": "personas/niño.glb",
+   "categoria": "personas",
+   "nombre": "niño",
+   "tamano_m": [
+    0.422,
+    1.372,
+    0.24
+   ]
+  },
+  {
+   "archivo": "personas/vecino-2.glb",
+   "categoria": "personas",
+   "nombre": "vecino-2",
+   "tamano_m": [
+    0.606,
+    1.92,
+    0.322
+   ]
+  },
+  {
+   "archivo": "personas/comerciante-2.glb",
+   "categoria": "personas",
+   "nombre": "comerciante-2",
+   "tamano_m": [
+    0.552,
+    2.084,
+    0.484
+   ]
+  },
+  {
+   "archivo": "personas/guardia-2.glb",
+   "categoria": "personas",
+   "nombre": "guardia-2",
+   "tamano_m": [
+    0.612,
+    2.792,
+    0.331
+   ]
+  },
+  {
+   "archivo": "personas/jinete.glb",
+   "categoria": "personas",
+   "nombre": "jinete",
+   "tamano_m": [
+    1.147,
+    2.756,
+    2.924
+   ]
+  },
+  {
+   "archivo": "animales/oveja.glb",
+   "categoria": "animales",
+   "nombre": "oveja",
+   "tamano_m": [
+    1.026,
+    1.288,
+    1.7
+   ]
+  },
+  {
+   "archivo": "animales/cabra.glb",
+   "categoria": "animales",
+   "nombre": "cabra",
+   "tamano_m": [
+    0.44,
+    1.237,
+    1.251
+   ]
+  },
+  {
+   "archivo": "animales/vaca.glb",
+   "categoria": "animales",
+   "nombre": "vaca",
+   "tamano_m": [
+    1.02,
+    1.654,
+    2.727
+   ]
+  },
+  {
+   "archivo": "animales/cerdo.glb",
+   "categoria": "animales",
+   "nombre": "cerdo",
+   "tamano_m": [
+    0.72,
+    0.84,
+    1.552
+   ]
+  },
+  {
+   "archivo": "animales/gallina.glb",
+   "categoria": "animales",
+   "nombre": "gallina",
+   "tamano_m": [
+    0.453,
+    0.82,
+    0.736
+   ]
+  },
+  {
+   "archivo": "animales/caballo.glb",
+   "categoria": "animales",
+   "nombre": "caballo",
+   "tamano_m": [
+    0.72,
+    2.565,
+    3.252
+   ]
+  },
+  {
+   "archivo": "animales/perro.glb",
+   "categoria": "animales",
+   "nombre": "perro",
+   "tamano_m": [
+    0.34,
+    0.97,
+    1.309
+   ]
+  },
+  {
+   "archivo": "animales/gato.glb",
+   "categoria": "animales",
+   "nombre": "gato",
+   "tamano_m": [
+    0.22,
+    0.715,
+    0.829
+   ]
+  },
+  {
+   "archivo": "animales/ciervo.glb",
+   "categoria": "animales",
+   "nombre": "ciervo",
+   "tamano_m": [
+    0.526,
+    2.678,
+    2.034
+   ]
+  },
+  {
+   "archivo": "animales/conejo.glb",
+   "categoria": "animales",
+   "nombre": "conejo",
+   "tamano_m": [
+    0.26,
+    0.491,
+    0.473
+   ]
+  },
+  {
+   "archivo": "animales/caballo-de-montar.glb",
+   "categoria": "animales",
+   "nombre": "caballo-de-montar",
+   "tamano_m": [
+    1.147,
+    2.283,
+    2.9
+   ]
+  },
+  {
+   "archivo": "recursos/madera.glb",
+   "categoria": "recursos",
+   "nombre": "madera",
+   "tamano_m": [
+    0.753,
+    0.431,
+    0.327
+   ]
+  },
+  {
+   "archivo": "recursos/ladrillo.glb",
+   "categoria": "recursos",
+   "nombre": "ladrillo",
+   "tamano_m": [
+    0.483,
+    0.158,
+    0.231
+   ]
+  },
+  {
+   "archivo": "recursos/lana.glb",
+   "categoria": "recursos",
+   "nombre": "lana",
+   "tamano_m": [
+    0.338,
+    0.424,
+    0.56
+   ]
+  },
+  {
+   "archivo": "recursos/trigo.glb",
+   "categoria": "recursos",
+   "nombre": "trigo",
+   "tamano_m": [
+    0.401,
+    0.551,
+    0.49
+   ]
+  },
+  {
+   "archivo": "recursos/mineral.glb",
+   "categoria": "recursos",
+   "nombre": "mineral",
+   "tamano_m": [
+    0.48,
+    0.135,
+    0.2
+   ]
+  },
+  {
+   "archivo": "objetos/margarita.glb",
+   "categoria": "objetos",
+   "nombre": "margarita",
+   "tamano_m": [
+    0.291,
+    0.391,
+    0.291
+   ]
+  },
+  {
+   "archivo": "objetos/amapola.glb",
+   "categoria": "objetos",
+   "nombre": "amapola",
+   "tamano_m": [
+    0.279,
+    0.441,
+    0.294
+   ]
+  },
+  {
+   "archivo": "objetos/lirio.glb",
+   "categoria": "objetos",
+   "nombre": "lirio",
+   "tamano_m": [
+    0.223,
+    0.373,
+    0.11
+   ]
+  },
+  {
+   "archivo": "objetos/edelweiss.glb",
+   "categoria": "objetos",
+   "nombre": "edelweiss",
+   "tamano_m": [
+    0.191,
+    0.3,
+    0.26
+   ]
+  },
+  {
+   "archivo": "objetos/cactusflor.glb",
+   "categoria": "objetos",
+   "nombre": "cactusflor",
+   "tamano_m": [
+    0.277,
+    0.309,
+    0.184
+   ]
+  },
+  {
+   "archivo": "objetos/hongo.glb",
+   "categoria": "objetos",
+   "nombre": "hongo",
+   "tamano_m": [
+    0.313,
+    0.24,
+    0.236
+   ]
+  },
+  {
+   "archivo": "objetos/cristal.glb",
+   "categoria": "objetos",
+   "nombre": "cristal",
+   "tamano_m": [
+    0.308,
+    0.43,
+    0.322
+   ]
+  },
+  {
+   "archivo": "objetos/vasija.glb",
+   "categoria": "objetos",
+   "nombre": "vasija",
+   "tamano_m": [
+    0.242,
+    0.27,
+    0.24
+   ]
+  },
+  {
+   "archivo": "objetos/miel.glb",
+   "categoria": "objetos",
+   "nombre": "miel",
+   "tamano_m": [
+    0.225,
+    0.2,
+    0.22
+   ]
+  },
+  {
+   "archivo": "objetos/semillas.glb",
+   "categoria": "objetos",
+   "nombre": "semillas",
+   "tamano_m": [
+    0.24,
+    0.316,
+    0.209
+   ]
+  },
+  {
+   "archivo": "objetos/ambar.glb",
+   "categoria": "objetos",
+   "nombre": "ambar",
+   "tamano_m": [
+    0.224,
+    0.167,
+    0.179
+   ]
+  },
+  {
+   "archivo": "amuletos/ojo.glb",
+   "categoria": "amuletos",
+   "nombre": "ojo",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.17
+   ]
+  },
+  {
+   "archivo": "amuletos/plaga.glb",
+   "categoria": "amuletos",
+   "nombre": "plaga",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.14
+   ]
+  },
+  {
+   "archivo": "amuletos/incendio.glb",
+   "categoria": "amuletos",
+   "nombre": "incendio",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.15
+   ]
+  },
+  {
+   "archivo": "amuletos/derrumbe.glb",
+   "categoria": "amuletos",
+   "nombre": "derrumbe",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.151
+   ]
+  },
+  {
+   "archivo": "amuletos/inundacion.glb",
+   "categoria": "amuletos",
+   "nombre": "inundacion",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.15
+   ]
+  },
+  {
+   "archivo": "amuletos/enfermedad.glb",
+   "categoria": "amuletos",
+   "nombre": "enfermedad",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.15
+   ]
+  },
+  {
+   "archivo": "amuletos/demolicion.glb",
+   "categoria": "amuletos",
+   "nombre": "demolicion",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.135
+   ]
+  },
+  {
+   "archivo": "amuletos/escudo.glb",
+   "categoria": "amuletos",
+   "nombre": "escudo",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.15
+   ]
+  },
+  {
+   "archivo": "amuletos/trebol.glb",
+   "categoria": "amuletos",
+   "nombre": "trebol",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.13
+   ]
+  },
+  {
+   "archivo": "amuletos/pluma.glb",
+   "categoria": "amuletos",
+   "nombre": "pluma",
+   "tamano_m": [
+    0.67,
+    0.923,
+    0.125
+   ]
+  },
+  {
+   "archivo": "cartas/caballero.glb",
+   "categoria": "cartas",
+   "nombre": "caballero",
+   "tamano_m": [
+    0.823,
+    0.911,
+    0.168
+   ]
+  },
+  {
+   "archivo": "cartas/punto.glb",
+   "categoria": "cartas",
+   "nombre": "punto",
+   "tamano_m": [
+    0.69,
+    0.32,
+    0.623
+   ]
+  },
+  {
+   "archivo": "cartas/caminos.glb",
+   "categoria": "cartas",
+   "nombre": "caminos",
+   "tamano_m": [
+    0.782,
+    0.5,
+    0.686
+   ]
+  },
+  {
+   "archivo": "cartas/abundancia.glb",
+   "categoria": "cartas",
+   "nombre": "abundancia",
+   "tamano_m": [
+    0.791,
+    0.477,
+    0.585
+   ]
+  },
+  {
+   "archivo": "cartas/monopolio.glb",
+   "categoria": "cartas",
+   "nombre": "monopolio",
+   "tamano_m": [
+    0.52,
+    0.475,
+    0.545
+   ]
+  },
+  {
+   "archivo": "cartas/mercader.glb",
+   "categoria": "cartas",
+   "nombre": "mercader",
+   "tamano_m": [
+    0.84,
+    0.63,
+    0.28
+   ]
+  },
+  {
+   "archivo": "cartas/espia.glb",
+   "categoria": "cartas",
+   "nombre": "espia",
+   "tamano_m": [
+    0.62,
+    0.472,
+    0.128
+   ]
+  },
+  {
+   "archivo": "cartas/cosecha.glb",
+   "categoria": "cartas",
+   "nombre": "cosecha",
+   "tamano_m": [
+    0.64,
+    0.629,
+    0.64
+   ]
+  },
+  {
+   "archivo": "cartas/reverso.glb",
+   "categoria": "cartas",
+   "nombre": "reverso",
+   "tamano_m": [
+    0.5,
+    0.7,
+    0.04
+   ]
+  },
+  {
+   "archivo": "trofeos/ejercito.glb",
+   "categoria": "trofeos",
+   "nombre": "ejercito",
+   "tamano_m": [
+    1.104,
+    1.365,
+    0.51
+   ]
+  },
+  {
+   "archivo": "trofeos/camino-mas-largo.glb",
+   "categoria": "trofeos",
+   "nombre": "camino-mas-largo",
+   "tamano_m": [
+    0.7,
+    0.95,
+    0.613
+   ]
+  },
+  {
+   "archivo": "iconos/campana.glb",
+   "categoria": "iconos",
+   "nombre": "campana",
+   "tamano_m": [
+    0.28,
+    0.275,
+    0.28
+   ]
+  },
+  {
+   "archivo": "iconos/martillo.glb",
+   "categoria": "iconos",
+   "nombre": "martillo",
+   "tamano_m": [
+    0.5,
+    1.02,
+    0.22
+   ]
+  },
+  {
+   "archivo": "iconos/pluma.glb",
+   "categoria": "iconos",
+   "nombre": "pluma",
+   "tamano_m": [
+    0.747,
+    1.181,
+    0.08
+   ]
+  },
+  {
+   "archivo": "iconos/calavera.glb",
+   "categoria": "iconos",
+   "nombre": "calavera",
+   "tamano_m": [
+    0.68,
+    0.64,
+    0.61
+   ]
+  },
+  {
+   "archivo": "iconos/ojo.glb",
+   "categoria": "iconos",
+   "nombre": "ojo",
+   "tamano_m": [
+    0.84,
+    0.52,
+    0.45
+   ]
+  },
+  {
+   "archivo": "iconos/escudo.glb",
+   "categoria": "iconos",
+   "nombre": "escudo",
+   "tamano_m": [
+    0.8,
+    1.28,
+    0.13
+   ]
+  },
+  {
+   "archivo": "iconos/camino.glb",
+   "categoria": "iconos",
+   "nombre": "camino",
+   "tamano_m": [
+    0.98,
+    0.9,
+    0.445
+   ]
+  },
+  {
+   "archivo": "iconos/trofeo.glb",
+   "categoria": "iconos",
+   "nombre": "trofeo",
+   "tamano_m": [
+    0.7,
+    0.82,
+    0.6
+   ]
+  },
+  {
+   "archivo": "iconos/trebol.glb",
+   "categoria": "iconos",
+   "nombre": "trebol",
+   "tamano_m": [
+    0.58,
+    0.64,
+    0.12
+   ]
+  },
+  {
+   "archivo": "iconos/orbe.glb",
+   "categoria": "iconos",
+   "nombre": "orbe",
+   "tamano_m": [
+    0.68,
+    0.72,
+    0.68
+   ]
+  },
+  {
+   "archivo": "iconos/pergamino.glb",
+   "categoria": "iconos",
+   "nombre": "pergamino",
+   "tamano_m": [
+    0.87,
+    1.04,
+    0.16
+   ]
+  },
+  {
+   "archivo": "iconos/estrella.glb",
+   "categoria": "iconos",
+   "nombre": "estrella",
+   "tamano_m": [
+    0.856,
+    0.814,
+    0.12
+   ]
+  },
+  {
+   "archivo": "iconos/regalo.glb",
+   "categoria": "iconos",
+   "nombre": "regalo",
+   "tamano_m": [
+    0.8,
+    0.83,
+    0.72
+   ]
+  },
+  {
+   "archivo": "iconos/hierba.glb",
+   "categoria": "iconos",
+   "nombre": "hierba",
+   "tamano_m": [
+    0.54,
+    0.833,
+    0.08
+   ]
+  },
+  {
+   "archivo": "iconos/canasta.glb",
+   "categoria": "iconos",
+   "nombre": "canasta",
+   "tamano_m": [
+    0.8,
+    0.53,
+    0.64
+   ]
+  },
+  {
+   "archivo": "iconos/dado.glb",
+   "categoria": "iconos",
+   "nombre": "dado",
+   "tamano_m": [
+    1.051,
+    1.051,
+    1.051
+   ]
+  },
+  {
+   "archivo": "iconos/mapa.glb",
+   "categoria": "iconos",
+   "nombre": "mapa",
+   "tamano_m": [
+    0.8,
+    0.314,
+    0.541
+   ]
+  },
+  {
+   "archivo": "iconos/ancla.glb",
+   "categoria": "iconos",
+   "nombre": "ancla",
+   "tamano_m": [
+    0.7,
+    1.27,
+    0.1
+   ]
+  },
+  {
+   "archivo": "iconos/sol.glb",
+   "categoria": "iconos",
+   "nombre": "sol",
+   "tamano_m": [
+    1.16,
+    1.16,
+    0.6
+   ]
+  },
+  {
+   "archivo": "iconos/amanecer.glb",
+   "categoria": "iconos",
+   "nombre": "amanecer",
+   "tamano_m": [
+    0.9,
+    0.64,
+    0.64
+   ]
+  },
+  {
+   "archivo": "iconos/nube.glb",
+   "categoria": "iconos",
+   "nombre": "nube",
+   "tamano_m": [
+    0.8,
+    0.62,
+    0.57
+   ]
+  },
+  {
+   "archivo": "iconos/luna.glb",
+   "categoria": "iconos",
+   "nombre": "luna",
+   "tamano_m": [
+    0.924,
+    0.99,
+    0.228
+   ]
+  },
+  {
+   "archivo": "iconos/fuego.glb",
+   "categoria": "iconos",
+   "nombre": "fuego",
+   "tamano_m": [
+    0.624,
+    0.8,
+    0.608
+   ]
+  },
+  {
+   "archivo": "iconos/ola.glb",
+   "categoria": "iconos",
+   "nombre": "ola",
+   "tamano_m": [
+    0.96,
+    0.37,
+    0.4
+   ]
+  },
+  {
+   "archivo": "iconos/montana.glb",
+   "categoria": "iconos",
+   "nombre": "montana",
+   "tamano_m": [
+    1.1,
+    0.85,
+    0.9
+   ]
+  },
+  {
+   "archivo": "iconos/frasco.glb",
+   "categoria": "iconos",
+   "nombre": "frasco",
+   "tamano_m": [
+    0.6,
+    0.92,
+    0.6
+   ]
+  },
+  {
+   "archivo": "iconos/arbol.glb",
+   "categoria": "iconos",
+   "nombre": "arbol",
+   "tamano_m": [
+    0.78,
+    0.95,
+    0.76
+   ]
+  },
+  {
+   "archivo": "iconos/cactus.glb",
+   "categoria": "iconos",
+   "nombre": "cactus",
+   "tamano_m": [
+    0.6,
+    0.93,
+    0.4
+   ]
+  },
+  {
+   "archivo": "iconos/serrucho.glb",
+   "categoria": "iconos",
+   "nombre": "serrucho",
+   "tamano_m": [
+    0.9,
+    0.28,
+    0.06
+   ]
+  },
+  {
+   "archivo": "iconos/pico.glb",
+   "categoria": "iconos",
+   "nombre": "pico",
+   "tamano_m": [
+    0.704,
+    0.9,
+    0.08
+   ]
+  },
+  {
+   "archivo": "iconos/vaca.glb",
+   "categoria": "iconos",
+   "nombre": "vaca",
+   "tamano_m": [
+    1.02,
+    1.654,
+    2.727
+   ]
+  },
+  {
+   "archivo": "iconos/cana.glb",
+   "categoria": "iconos",
+   "nombre": "cana",
+   "tamano_m": [
+    0.847,
+    1.357,
+    0.1
+   ]
+  },
+  {
+   "archivo": "iconos/pez.glb",
+   "categoria": "iconos",
+   "nombre": "pez",
+   "tamano_m": [
+    1.05,
+    0.4,
+    0.21
+   ]
+  },
+  {
+   "archivo": "iconos/casa.glb",
+   "categoria": "iconos",
+   "nombre": "casa",
+   "tamano_m": [
+    1.414,
+    0.85,
+    1.414
+   ]
+  },
+  {
+   "archivo": "iconos/puerta.glb",
+   "categoria": "iconos",
+   "nombre": "puerta",
+   "tamano_m": [
+    0.45,
+    0.9,
+    0.14
+   ]
+  },
+  {
+   "archivo": "iconos/globo.glb",
+   "categoria": "iconos",
+   "nombre": "globo",
+   "tamano_m": [
+    0.9,
+    0.924,
+    0.25
+   ]
+  },
+  {
+   "archivo": "iconos/mano.glb",
+   "categoria": "iconos",
+   "nombre": "mano",
+   "tamano_m": [
+    0.234,
+    0.058,
+    0.294
+   ]
+  },
+  {
+   "archivo": "iconos/exclama.glb",
+   "categoria": "iconos",
+   "nombre": "exclama",
+   "tamano_m": [
+    0.14,
+    0.348,
+    0.1
+   ]
+  },
+  {
+   "archivo": "iconos/pregunta.glb",
+   "categoria": "iconos",
+   "nombre": "pregunta",
+   "tamano_m": [
+    0.658,
+    1.001,
+    0.14
+   ]
+  },
+  {
+   "archivo": "iconos/nota.glb",
+   "categoria": "iconos",
+   "nombre": "nota",
+   "tamano_m": [
+    0.525,
+    0.894,
+    0.2
+   ]
+  },
+  {
+   "archivo": "iconos/pan.glb",
+   "categoria": "iconos",
+   "nombre": "pan",
+   "tamano_m": [
+    1,
+    0.36,
+    0.4
+   ]
+  },
+  {
+   "archivo": "iconos/queso.glb",
+   "categoria": "iconos",
+   "nombre": "queso",
+   "tamano_m": [
+    0.8,
+    0.3,
+    0.8
+   ]
+  },
+  {
+   "archivo": "iconos/manzana.glb",
+   "categoria": "iconos",
+   "nombre": "manzana",
+   "tamano_m": [
+    0.72,
+    0.86,
+    0.72
+   ]
+  },
+  {
+   "archivo": "iconos/tarro.glb",
+   "categoria": "iconos",
+   "nombre": "tarro",
+   "tamano_m": [
+    0.76,
+    0.68,
+    0.54
+   ]
+  },
+  {
+   "archivo": "iconos/moneda.glb",
+   "categoria": "iconos",
+   "nombre": "moneda",
+   "tamano_m": [
+    0.69,
+    0.34,
+    0.64
+   ]
+  },
+  {
+   "archivo": "iconos/carne.glb",
+   "categoria": "iconos",
+   "nombre": "carne",
+   "tamano_m": [
+    0.91,
+    0.745,
+    0.48
+   ]
+  },
+  {
+   "archivo": "iconos/hilo.glb",
+   "categoria": "iconos",
+   "nombre": "hilo",
+   "tamano_m": [
+    0.64,
+    0.7,
+    0.64
+   ]
+  },
+  {
+   "archivo": "iconos/vasija.glb",
+   "categoria": "iconos",
+   "nombre": "vasija",
+   "tamano_m": [
+    0.242,
+    0.27,
+    0.24
+   ]
+  },
+  {
+   "archivo": "iconos/gota.glb",
+   "categoria": "iconos",
+   "nombre": "gota",
+   "tamano_m": [
+    0.6,
+    0.9,
+    0.6
+   ]
+  },
+  {
+   "archivo": "iconos/brote.glb",
+   "categoria": "iconos",
+   "nombre": "brote",
+   "tamano_m": [
+    0.6,
+    0.8,
+    0.6
+   ]
+  },
+  {
+   "archivo": "iconos/silla.glb",
+   "categoria": "iconos",
+   "nombre": "silla",
+   "tamano_m": [
+    0.5,
+    1.2,
+    0.5
+   ]
+  },
+  {
+   "archivo": "iconos/girasol.glb",
+   "categoria": "iconos",
+   "nombre": "girasol",
+   "tamano_m": [
+    0.64,
+    0.87,
+    0.12
+   ]
+  },
+  {
+   "archivo": "iconos/olla.glb",
+   "categoria": "iconos",
+   "nombre": "olla",
+   "tamano_m": [
+    0.8,
+    0.6,
+    0.8
+   ]
+  },
+  {
+   "archivo": "iconos/cuerno.glb",
+   "categoria": "iconos",
+   "nombre": "cuerno",
+   "tamano_m": [
+    0.8,
+    0.585,
+    0.57
+   ]
+  },
+  {
+   "archivo": "iconos/check.glb",
+   "categoria": "iconos",
+   "nombre": "check",
+   "tamano_m": [
+    0.958,
+    0.759,
+    0.1
+   ]
+  },
+  {
+   "archivo": "iconos/cruz.glb",
+   "categoria": "iconos",
+   "nombre": "cruz",
+   "tamano_m": [
+    1.07,
+    0.582,
+    0.1
+   ]
+  },
+  {
+   "archivo": "iconos/flecha.glb",
+   "categoria": "iconos",
+   "nombre": "flecha",
+   "tamano_m": [
+    1.01,
+    0.6,
+    0.24
+   ]
+  },
+  {
+   "archivo": "iconos/flechas.glb",
+   "categoria": "iconos",
+   "nombre": "flechas",
+   "tamano_m": [
+    1.1,
+    0.58,
+    0.12
+   ]
+  },
+  {
+   "archivo": "iconos/cuerno-off.glb",
+   "categoria": "iconos",
+   "nombre": "cuerno-off",
+   "tamano_m": [
+    1.144,
+    0.994,
+    0.57
+   ]
+  },
+  {
+   "archivo": "iconos/bomba.glb",
+   "categoria": "iconos",
+   "nombre": "bomba",
+   "tamano_m": [
+    0.82,
+    1.08,
+    0.8
+   ]
+  },
+  {
+   "archivo": "iconos/cuchillo.glb",
+   "categoria": "iconos",
+   "nombre": "cuchillo",
+   "tamano_m": [
+    0.26,
+    1.14,
+    0.07
+   ]
+  },
+  {
+   "archivo": "iconos/cara-sonrisa.glb",
+   "categoria": "iconos",
+   "nombre": "cara-sonrisa",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-serio.glb",
+   "categoria": "iconos",
+   "nombre": "cara-serio",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-risa.glb",
+   "categoria": "iconos",
+   "nombre": "cara-risa",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-cansado.glb",
+   "categoria": "iconos",
+   "nombre": "cara-cansado",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-duda.glb",
+   "categoria": "iconos",
+   "nombre": "cara-duda",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-triste.glb",
+   "categoria": "iconos",
+   "nombre": "cara-triste",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-sorpresa.glb",
+   "categoria": "iconos",
+   "nombre": "cara-sorpresa",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-guino.glb",
+   "categoria": "iconos",
+   "nombre": "cara-guino",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "iconos/cara-enojo.glb",
+   "categoria": "iconos",
+   "nombre": "cara-enojo",
+   "tamano_m": [
+    0.673,
+    0.773,
+    0.682
+   ]
+  },
+  {
+   "archivo": "tablero/pueblo.glb",
+   "categoria": "tablero",
+   "nombre": "pueblo",
+   "tamano_m": [
+    0.624,
+    0.484,
+    0.564
+   ]
+  },
+  {
+   "archivo": "tablero/ciudad.glb",
+   "categoria": "tablero",
+   "nombre": "ciudad",
+   "tamano_m": [
+    0.935,
+    0.656,
+    0.963
+   ]
+  },
+  {
+   "archivo": "tablero/camino.glb",
+   "categoria": "tablero",
+   "nombre": "camino",
+   "tamano_m": [
+    0.603,
+    0.058,
+    0.153
+   ]
+  },
+  {
+   "archivo": "tablero/ladron.glb",
+   "categoria": "tablero",
+   "nombre": "ladron",
+   "tamano_m": [
+    0.16,
+    0.375,
+    0.16
+   ]
+  },
+  {
+   "archivo": "tablero/dado.glb",
+   "categoria": "tablero",
+   "nombre": "dado",
+   "tamano_m": [
+    1.051,
+    1.051,
+    1.051
+   ]
+  },
+  {
+   "archivo": "edificios/casa.glb",
+   "categoria": "edificios",
+   "nombre": "casa",
+   "tamano_m": [
+    4.359,
+    5.93,
+    4.88
+   ]
+  },
+  {
+   "archivo": "edificios/cabana.glb",
+   "categoria": "edificios",
+   "nombre": "cabana",
+   "tamano_m": [
+    4.258,
+    4.924,
+    4.58
+   ]
+  },
+  {
+   "archivo": "edificios/casa-alta.glb",
+   "categoria": "edificios",
+   "nombre": "casa-alta",
+   "tamano_m": [
+    4.96,
+    8.25,
+    5.435
+   ]
+  },
+  {
+   "archivo": "edificios/casa-piedra.glb",
+   "categoria": "edificios",
+   "nombre": "casa-piedra",
+   "tamano_m": [
+    4.857,
+    6.554,
+    6.086
+   ]
+  },
+  {
+   "archivo": "edificios/torre.glb",
+   "categoria": "edificios",
+   "nombre": "torre",
+   "tamano_m": [
+    3.959,
+    10.41,
+    4.28
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-abarrotes.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-abarrotes",
+   "tamano_m": [
+    0.3,
+    0.275,
+    0.245
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-doctor.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-doctor",
+   "tamano_m": [
+    0.3,
+    0.34,
+    0.05
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-cuartel.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-cuartel",
+   "tamano_m": [
+    0.36,
+    0.36,
+    0.04
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-carniceria.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-carniceria",
+   "tamano_m": [
+    0.26,
+    0.4,
+    0.22
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-telas.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-telas",
+   "tamano_m": [
+    0.3,
+    0.26,
+    0.1
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-alfareria.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-alfareria",
+   "tamano_m": [
+    0.121,
+    0.135,
+    0.12
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-carpinteria.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-carpinteria",
+   "tamano_m": [
+    0.349,
+    0.194,
+    0.147
+   ]
+  },
+  {
+   "archivo": "edificios/letrero-mariscos.glb",
+   "categoria": "edificios",
+   "nombre": "letrero-mariscos",
+   "tamano_m": [
+    0.44,
+    0.23,
+    0.1
+   ]
+  },
+  {
+   "archivo": "edificios/molino.glb",
+   "categoria": "edificios",
+   "nombre": "molino",
+   "tamano_m": [
+    12,
+    13,
+    3.64
+   ]
+  },
+  {
+   "archivo": "edificios/horno-ladrillos.glb",
+   "categoria": "edificios",
+   "nombre": "horno-ladrillos",
+   "tamano_m": [
+    3,
+    5.712,
+    3.07
+   ]
+  },
+  {
+   "archivo": "edificios/cartel-misiones.glb",
+   "categoria": "edificios",
+   "nombre": "cartel-misiones",
+   "tamano_m": [
+    2.009,
+    2.35,
+    0.52
+   ]
+  },
+  {
+   "archivo": "naturaleza/pino.glb",
+   "categoria": "naturaleza",
+   "nombre": "pino",
+   "tamano_m": [
+    3.47,
+    5.181,
+    3.345
+   ]
+  },
+  {
+   "archivo": "naturaleza/arbol-hojas.glb",
+   "categoria": "naturaleza",
+   "nombre": "arbol-hojas",
+   "tamano_m": [
+    3.362,
+    4.21,
+    3.157
+   ]
+  },
+  {
+   "archivo": "naturaleza/arbusto.glb",
+   "categoria": "naturaleza",
+   "nombre": "arbusto",
+   "tamano_m": [
+    2.547,
+    1.209,
+    2.451
+   ]
+  },
+  {
+   "archivo": "naturaleza/roca.glb",
+   "categoria": "naturaleza",
+   "nombre": "roca",
+   "tamano_m": [
+    2.092,
+    1.38,
+    2.273
+   ]
+  },
+  {
+   "archivo": "naturaleza/cactus.glb",
+   "categoria": "naturaleza",
+   "nombre": "cactus",
+   "tamano_m": [
+    1,
+    2.72,
+    0.6
+   ]
+  },
+  {
+   "archivo": "naturaleza/pajar.glb",
+   "categoria": "naturaleza",
+   "nombre": "pajar",
+   "tamano_m": [
+    2.047,
+    2,
+    2.05
+   ]
+  },
+  {
+   "archivo": "objetos-escena/barril.glb",
+   "categoria": "objetos-escena",
+   "nombre": "barril",
+   "tamano_m": [
+    0.84,
+    0.95,
+    0.84
+   ]
+  },
+  {
+   "archivo": "objetos-escena/banca.glb",
+   "categoria": "objetos-escena",
+   "nombre": "banca",
+   "tamano_m": [
+    1.8,
+    1.05,
+    0.51
+   ]
+  },
+  {
+   "archivo": "objetos-escena/farol.glb",
+   "categoria": "objetos-escena",
+   "nombre": "farol",
+   "tamano_m": [
+    0.6,
+    3.08,
+    0.6
+   ]
+  },
+  {
+   "archivo": "objetos-escena/carreta.glb",
+   "categoria": "objetos-escena",
+   "nombre": "carreta",
+   "tamano_m": [
+    1.88,
+    1.399,
+    3.9
+   ]
+  },
+  {
+   "archivo": "objetos-escena/lena.glb",
+   "categoria": "objetos-escena",
+   "nombre": "lena",
+   "tamano_m": [
+    1.6,
+    1.24,
+    1.34
+   ]
+  },
+  {
+   "archivo": "objetos-escena/bandera.glb",
+   "categoria": "objetos-escena",
+   "nombre": "bandera",
+   "tamano_m": [
+    2.08,
+    3,
+    0.16
+   ]
+  },
+  {
+   "archivo": "objetos-escena/ladrillos.glb",
+   "categoria": "objetos-escena",
+   "nombre": "ladrillos",
+   "tamano_m": [
+    3.208,
+    1.5,
+    0.665
+   ]
+  },
+  {
+   "archivo": "objetos-escena/caja-recursos.glb",
+   "categoria": "objetos-escena",
+   "nombre": "caja-recursos",
+   "tamano_m": [
+    1.16,
+    0.887,
+    0.96
+   ]
+  },
+  {
+   "archivo": "objetos-escena/caja-amuletos.glb",
+   "categoria": "objetos-escena",
+   "nombre": "caja-amuletos",
+   "tamano_m": [
+    1.15,
+    0.544,
+    0.823
+   ]
+  },
+  {
+   "archivo": "objetos-escena/sello.glb",
+   "categoria": "objetos-escena",
+   "nombre": "sello",
+   "tamano_m": [
+    0.105,
+    0.154,
+    0.074
+   ]
+  },
+  {
+   "archivo": "objetos-escena/tintero-sello.glb",
+   "categoria": "objetos-escena",
+   "nombre": "tintero-sello",
+   "tamano_m": [
+    0.12,
+    0.018,
+    0.12
+   ]
+  },
+  {
+   "archivo": "objetos-escena/campana.glb",
+   "categoria": "objetos-escena",
+   "nombre": "campana",
+   "tamano_m": [
+    0.28,
+    0.275,
+    0.28
+   ]
+  },
+  {
+   "archivo": "objetos-escena/costal.glb",
+   "categoria": "objetos-escena",
+   "nombre": "costal",
+   "tamano_m": [
+    0.591,
+    0.55,
+    0.582
+   ]
+  },
+  {
+   "archivo": "objetos-escena/pluma.glb",
+   "categoria": "objetos-escena",
+   "nombre": "pluma",
+   "tamano_m": [
+    0.262,
+    1.49,
+    0.08
+   ]
+  },
+  {
+   "archivo": "objetos-escena/sello-cera.glb",
+   "categoria": "objetos-escena",
+   "nombre": "sello-cera",
+   "tamano_m": [
+    2.093,
+    2.274,
+    0.624
+   ]
+  },
+  {
+   "archivo": "objetos-escena/barco.glb",
+   "categoria": "objetos-escena",
+   "nombre": "barco",
+   "tamano_m": [
+    2.712,
+    6.621,
+    8.822
+   ]
+  },
+  {
+   "archivo": "objetos-escena/letrero-madera.glb",
+   "categoria": "objetos-escena",
+   "nombre": "letrero-madera",
+   "tamano_m": [
+    1.617,
+    1,
+    0.099
+   ]
+  },
+  {
+   "archivo": "objetos-escena/mano.glb",
+   "categoria": "objetos-escena",
+   "nombre": "mano",
+   "tamano_m": [
+    0.234,
+    0.058,
+    0.294
+   ]
+  }
+ ]
+}
