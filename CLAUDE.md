@@ -18,10 +18,12 @@ Catroan es un juego tipo Catan en 3D low poly para navegador, hecho con three.js
 
 ```
 npm install
-npm run build      # dist/catroan.html (minificado, se publica) + dist/catroan.dev.html (legible)
+npm run build      # dist/catroan.html (minificado, se publica) + dist/catroan.dev.html (legible) + dist/desktop/ (Electron)
 npm run dev        # solo la versión legible
 npm run lint       # revisión estática del juego ya unido: nombres inexistentes = error
 npm run export-glb # exporta todos los modelos a assets/models (Python + Playwright)
+npm start          # el juego en Electron
+npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver electron/README.md)
 ```
 
 - **Los archivos de `src/` no son módulos.** `build.mjs` los une en el orden de `src/manifest.json` dentro de un solo
@@ -33,14 +35,15 @@ npm run export-glb # exporta todos los modelos a assets/models (Python + Playwri
   cada clic en el tablero sin mostrar nada en pantalla. Las advertencias de variables sin usar son inofensivas.
 - **Cuidado con comentarios `//` dentro de líneas largas:** todo lo que va después del `//` deja de ejecutarse. Ya
   pasó una vez y se perdió una asignación.
-- **Pruebas en el navegador:** con Playwright y Chromium. Abre `dist/catroan.dev.html` (three.js viene de un CDN).
+- **Pruebas en el navegador:** con Playwright y Chromium (en esta máquina: `~/.cache/catroan_venv/bin/python`). Abre `dist/catroan.dev.html` (three.js viene de un CDN).
   - Para llegar a funciones internas, inyecta código justo antes del último `</script>`; queda dentro del mismo
     ámbito. Ejemplo: `window.__dbg = { G: () => G, rollDice, endTurn };`.
   - Ayudas de prueba: `window.__autoSetup = true` (tú también colocas pueblos en automático) y
     `window.__slowAct = n` (multiplica cuánto duran los avisos de acción).
   - Toda prueba debe terminar con **0 errores de página**.
-  - El multijugador se prueba con dos pestañas del mismo navegador: fuera de claude.ai se usa una sala local por
-    `BroadcastChannel`.
+  - El multijugador se prueba con dos pestañas del mismo navegador: con `window.__tabRooms = true` se usa una sala
+    local por `BroadcastChannel`; sin eso, se usa la sala en línea real (PeerJS, necesita internet). La red local se
+    prueba con dos ventanas de Electron (`--user-data-dir` distinto y `--remote-debugging-port` para Playwright).
 - Al editar con scripts, reemplaza texto exacto. Nunca cortes funciones buscando "la siguiente función": así se
   borraron 1200 líneas una vez.
 
@@ -158,22 +161,13 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
 
 Antes de cada uno, comparte tus dudas con Fernando.
 
-1. **Versión de escritorio con Electron** (`electron/`).
-   - La ventana carga el juego construido.
-   - Copia three.js (r160) y la fuente Pixelify Sans dentro del proyecto para que funcione sin internet; hoy vienen
-     de un CDN y de Google Fonts.
-   - Se generan dos .exe para Windows: instalador (`nsis`) y portátil (`portable`). Opcional: AppImage para Linux.
-   - Fernando trabaja en **Linux (CachyOS)**. Para generar el .exe de Windows desde Linux, electron-builder necesita
-     **Wine** (`sudo pacman -S wine`) o la imagen de Docker `electronuserland/builder:wine`.
-   - El .exe no va firmado: Windows mostrará el aviso de SmartScreen ("Más información → Ejecutar de todas formas").
-     Explícaselo a Fernando.
-2. **Multijugador en el .exe.** El sistema de salas de claude.ai no existe fuera del artifact.
-   - Haz que `netBase()` (en `net.js`) devuelva un transporte con la **misma interfaz** que `localRoomBase`:
-     `join`, `emit`, `on`, `presence`, `peers`, `onPeers`, `connected`, `onConnection`, `leave`.
-   - El anfitrión levanta un servidor WebSocket en el proceso principal de Electron. La clave de la sala sale de su
-     IP local y puerto, codificada con el alfabeto `KEY_ABC`; fue la idea original de Fernando.
-   - `net-game.js` (la partida) no debería cambiar. Por defecto funciona en red local; para jugar por internet
-     pregunta a Fernando.
+1. ~~**Versión de escritorio con Electron**~~ **hecho.** `electron/main.js` carga `dist/desktop/` (three.js r160 y
+   Pixelify Sans locales) por `app://`. Salidas: instalador `nsis`, portátil y AppImage. Los .exe se generan con
+   Docker (`electronuserland/builder:wine`) porque el Wine local se cuelga. Detalles en `electron/README.md`.
+2. ~~**Multijugador en el .exe**~~ **hecho** (`net/net-hub.js`, `electron/lan.js`; ver `net/README.md`). En el .exe,
+   la carta de "Nueva partida" tiene el interruptor **Red: Local / En línea**. Local = WebSocket con la IP privada en
+   la clave (sin internet). En línea = WebRTC con PeerJS (también en el navegador fuera de claude.ai).
+   `net-game.js` no cambió.
 3. **Azar con semilla.**
    - Cambia `Math.random` por un generador con semilla (por ejemplo `mulberry32`, que ya existe) en todo lo que
      afecta la partida: tablero, bolsa de dados, mazo, bots, hallazgos, misiones.

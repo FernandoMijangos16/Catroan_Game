@@ -75,6 +75,7 @@
  "core/modes.js",
  "ui/simple-trade.js",
  "net/net.js",
+ "net/net-hub.js",
  "net/net-game.js",
  "ui/menu-title.js",
  "ui/menu.js",

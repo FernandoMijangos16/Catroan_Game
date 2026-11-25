@@ -6,12 +6,65 @@
     "build": "node build.mjs",
     "dev": "node build.mjs --dev",
     "export-glb": "python3 tools/export-glb.py",
-    "lint": "node tools/lint.mjs"
+    "lint": "node tools/lint.mjs",
+    "start": "node build.mjs && electron .",
+    "dist:win": "bash electron/build-win.sh",
+    "dist:linux": "node build.mjs && electron-builder --linux AppImage",
+    "dist": "bash electron/build-win.sh && electron-builder --linux AppImage"
   },
   "devDependencies": {
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0",
     "esbuild": "^0.28.2",
-    "terser": "^5.51.4"
+    "peerjs": "1.5.5",
+    "terser": "^5.51.4",
+    "three": "0.160.0"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "main": "electron/main.js",
+  "author": "Fernando Mijangos",
+  "build": {
+    "appId": "mx.fernando.catroan",
+    "productName": "Catroan",
+    "directories": {
+      "output": "release",
+      "buildResources": "electron"
+    },
+    "files": [
+      "electron/*.js",
+      "electron/preload.cjs",
+      "electron/icon.png",
+      "dist/desktop/**",
+      "package.json"
+    ],
+    "win": {
+      "icon": "electron/icon.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Catroan-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Catroan-Portable-${version}.${ext}"
+    },
+    "linux": {
+      "icon": "electron/icon.png",
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game",
+      "artifactName": "Catroan-${version}.${ext}",
+      "syncDesktopName": true
+    }
+  },
+  "desktopName": "catroan.desktop",
+  "dependencies": {
+    "ws": "^8.23.0"
+  }
 }

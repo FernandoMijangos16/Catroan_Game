@@ -597,6 +597,7 @@ body.inmenu #hud-top,body.inmenu #hexbar,body.inmenu #b-endturn,body.inmenu .fwi
 #menu .mmode.sel{opacity:1}#menu .mmode.sel b{color:#ffd890}
 #menu .mmode.sel canvas{filter:drop-shadow(0 0 14px rgba(255,200,100,.55))}
 #menu .mtoggle.off b{color:#ff9a7a}
+#menu .mnamerow{align-items:flex-end}
 #menu .mcomp{display:flex;flex-direction:column;align-items:center;opacity:.6}
 #menu .mhexes{display:flex;gap:12px}
 #menu .mhx{width:74px;height:84px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(#3a342c,#1e1a16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}

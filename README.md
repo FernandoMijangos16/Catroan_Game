@@ -21,7 +21,8 @@ src/
   audio/      sonidos sintetizados
   main/       bucle principal y arranque
   net/        multijugador: salas por clave, chat (T) y la partida en línea (net-game.js)
-electron/     (pendiente) versión de escritorio .exe
+electron/     versión de escritorio (Electron): ventana, ícono y build de los .exe
+assets/fonts/   Pixelify Sans (OFL) para la versión sin internet
 assets/models/  todos los modelos exportados a .glb, como si fueran del jugador negro (#151515)
 tools/export-glb.py  vuelve a exportar los modelos
 dist/         resultado del build
@@ -39,7 +40,12 @@ npm run build        # dist/catroan.html (minificado y ofuscado) + dist/catroan.
 npm run dev          # solo la versión legible
 npm run lint         # revisión estática del juego unido (nombres inexistentes = error)
 npm run export-glb   # exporta todos los modelos a assets/models (necesita Python + Playwright)
+npm start            # abre el juego en Electron
+npm run dist:linux   # AppImage para Linux
+npm run dist:win     # instalador y portátil para Windows (con Docker)
 ```
+
+- `dist/desktop/`: copia para Electron, con three.js y la fuente locales (funciona sin internet).
 
 - `dist/catroan.html`: lo que se publica. Código minificado, nombres internos renombrados
   (ofuscación ligera), sin comentarios ni mensajes de consola.

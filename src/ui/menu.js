@@ -37,7 +37,7 @@ function openMainMenu(){
         <div class="mrow"><button data-go="back">◀ Volver</button><button class="primary" data-go="start">Comenzar ▶</button></div></div>
       <div class="mview" data-v="mp"><h2>Multijugador</h2><div class="mbig"><button class="primary" data-go="create">Crear partida</button><button data-go="join">Unirse con clave</button></div><p class="mnote"></p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="create"><h2>Nueva partida</h2><div class="mcardwrap"><canvas class="mcard"></canvas></div>
-        <label class="mfield">Nombre de la partida<input class="mname" maxlength="24"></label>
+        <div class="mrow mnamerow"><label class="mfield">Nombre de la partida<input class="mname" maxlength="24"></label>${window.catroanDesk ? '<button class="mtoggle mnet"></button>' : ''}</div>
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
@@ -64,7 +64,7 @@ function menuGo(v){
   if (v === 'main') buildMenuTitle();
   if (v === 'play'){ buildModeHexes(); el.querySelector('.mnp').style.display = MENU.online ? '' : 'none'; updNp(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
   if (v === 'mp') el.querySelector('[data-v=mp] .mnote').textContent = '';
-  if (v === 'create'){ if (!MENU.key) MENU.key = newKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
+  if (v === 'create'){ updNetToggle(); if (!MENU.key) MENU.key = menuNewKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
   if (v === 'join') setTimeout(() => el.querySelector('.mkey').focus(), 50);
 }
 const myName = () => { try { return localStorage.getItem('hexterra-name') || 'Alcalde'; } catch { return 'Alcalde'; } };
@@ -111,7 +111,21 @@ function buildModeHexes(){
   updFpToggle();
 }
 const updNp = () => MENU.el.querySelectorAll('.mnpb').forEach(b => b.classList.toggle('on', +b.dataset.np === MENU.np));
-function updFpToggle(){ const b = MENU.el.querySelector('.mtoggle'); b.innerHTML = `${ic('ojo')} Vista en primera persona: <b>${MENU.fp ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.fp); b.title = MENU.fp ? 'Podrás recorrer tus pueblos y ver las escenas 3D (mercado, despacho, muelle…)' : 'Sin recorridos ni escenas: todo se resuelve con paneles, como el juego de mesa'; }
+function updFpToggle(){ const b = MENU.el.querySelector('.mtoggle[data-fp]'); b.innerHTML = `${ic('ojo')} Vista en primera persona: <b>${MENU.fp ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.fp); b.title = MENU.fp ? 'Podrás recorrer tus pueblos y ver las escenas 3D (mercado, despacho, muelle…)' : 'Sin recorridos ni escenas: todo se resuelve con paneles, como el juego de mesa'; }
+// ---------- desktop only: the room lives on this computer's local network (LAN key) or online (WebRTC) ----------
+function updNetToggle(){ const b = MENU.el.querySelector('.mnet'); if (!b) return; const ip = deskLanIP(); if (!ip) NET.lan = false; else if (NET.lan === undefined) NET.lan = true;
+  b.innerHTML = NET.lan ? `${ic('casa')} Red: <b>Local (misma WiFi)</b>` : `${ic('globo')} Red: <b>En línea (internet)</b>`;
+  b.title = !ip ? 'No estás conectado a una red local: la partida será en línea' : NET.lan ? 'Sin internet: los demás deben estar en tu misma red WiFi' : 'Por internet: los demás pueden estar en cualquier lugar'; }
+const menuNewKey = () => { const ip = deskLanIP(); if (NET.lan === undefined) NET.lan = !!ip; return NET.lan && ip ? lanKey(ip) : newKey(); };   // desktop starts on Local
+function netErrText(code){
+  return { port_busy: 'El puerto del juego (47213) está ocupado: ¿hay otra partida abierta en esta computadora?',
+    lan_unreachable: 'No se encontró al anfitrión en tu red. Revisen que estén en la misma WiFi.',
+    lan_only: 'Esa clave es de una partida en red local: entra desde Catroan de escritorio, en la misma WiFi.',
+    no_room: 'No hay ninguna partida abierta con esa clave.',
+    offline: 'No hay conexión a internet (o el servidor de partidas no responde).',
+    key_taken: 'Esa clave ya está en uso: vuelve y crea otra partida.',
+    no_webrtc: 'Este navegador no permite partidas en línea.' }[code] || 'No se pudo conectar (' + code + ').';
+}
 // ---------- the big card that carries the match name and its key ----------
 function matchCardCanvas(){
   const W = 180, H = 252, S = 2, cv = document.createElement('canvas'); cv.width = W*S; cv.height = H*S; const c = cv.getContext('2d'); c.scale(S, S); c.imageSmoothingEnabled = false;
@@ -159,7 +173,8 @@ async function copyKey(){
 async function menuClick(e){
   const el = MENU.el, mm = e.target.closest('.mmode');
   if (mm){ MENU.sel = mm.dataset.mode; el.querySelectorAll('.mmode').forEach(x => x.classList.toggle('sel', x === mm)); SFX.click?.(); return; }
-  if (e.target.closest('.mtoggle')){ MENU.fp = !MENU.fp; updFpToggle(); SFX.click?.(); return; }
+  if (e.target.closest('.mnet')){ if (deskLanIP()){ NET.lan = !NET.lan; MENU.key = menuNewKey(); updNetToggle(); drawMatchCards(); } SFX.click?.(); return; }
+  if (e.target.closest('.mtoggle[data-fp]')){ MENU.fp = !MENU.fp; updFpToggle(); SFX.click?.(); return; }
   const np = e.target.closest('.mnpb'); if (np){ MENU.np = +np.dataset.np; updNp(); SFX.click?.(); return; }
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
@@ -168,14 +183,14 @@ async function menuClick(e){
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
     GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp;
-    if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala (' + r.error + ').'; menuGo('mp'); return; } netHostStart(MENU.np); return; }
+    if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala: ' + netErrText(r.error); menuGo('mp'); return; } netHostStart(MENU.np); return; }
     closeMainMenu(); applyGameOpts(); newGame(); startRegistration();
   }
-  else if (go === 'create'){ MENU.key = newKey(); MENU.match = ''; el.querySelector('.mname').value = ''; menuGo('create'); }
+  else if (go === 'create'){ MENU.key = menuNewKey(); MENU.match = ''; el.querySelector('.mname').value = ''; menuGo('create'); }
   else if (go === 'dojoin'){ const k = cleanKey(el.querySelector('.mkey').value), note = el.querySelector('.jnote');
     if (k.length !== 7){ note.textContent = 'La clave tiene 6 letras o números, como K7M-2QX.'; return; }
     note.textContent = 'Buscando la sala…'; NET.me.name = myName(); const r = await netJoin(k, { name: NET.me.name });
-    if (r.error){ note.textContent = r.error === 'not_permitted' ? 'Este enlace no te deja entrar a salas: pide al anfitrión que te comparta el artifact con permiso para participar.' : 'No se pudo conectar (' + r.error + ').'; return; }
+    if (r.error){ note.textContent = r.error === 'not_permitted' ? 'Este enlace no te deja entrar a salas: pide al anfitrión que te comparta el artifact con permiso para participar.' : netErrText(r.error); return; }
     MENU.key = k; note.textContent = 'Esperando al anfitrión…';
     clearTimeout(NG.joinT); NG.joinT = setTimeout(async () => { if (NG.on) return; note.textContent = 'No hay ninguna partida abierta con esa clave (o ya no acepta jugadores).'; await netLeave(); }, 15000); }
   else if (go === 'exit') menuGo('exit');

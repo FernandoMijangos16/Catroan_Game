@@ -1,6 +1,7 @@
 // ================= MULTIPLAYER: rooms by key, players present, chat with T (the match itself: net/net-game.js) =================
 // Transport: inside claude.ai the artifact's `room` capability; anywhere else (tests, a plain browser) a
-// BroadcastChannel between tabs of the same browser. The desktop .exe will add its own (host IP) transport here.
+// room hosted by the host's own computer (net/net-hub.js: LAN in the desktop .exe, WebRTC online). Tests can ask for
+// a BroadcastChannel between tabs of the same browser with window.__tabRooms = true.
 const NET_COLORS = ['#e8c84a', '#4ab0e8', '#e86a4a', '#7ad06a', '#c87ae8', '#e8a04a', '#4ae8c8', '#f2f2e8'];
 const NET = { base: null, local: false, room: null, key: '', match: '', host: false, peers: [], unsub: [], chat: [], me: { name: '', color: NET_COLORS[Math.floor(Math.random()*NET_COLORS.length)] } };
 function localRoomBase(){
@@ -29,16 +30,16 @@ async function netBase(){
   if (NET.base) return NET.base;
   let r = null;
   try { if (window.claude && typeof window.claude.use === 'function') r = await window.claude.use('room'); } catch { r = null; }
-  NET.local = !r; NET.base = r || localRoomBase(); return NET.base;
+  NET.local = !r; NET.base = r || (window.__tabRooms ? localRoomBase() : hubBase()); return NET.base;
 }
 // keys look like K7M-2QX: no 0/O/1/I so they are easy to read aloud
 const KEY_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const newKey = () => Array.from({ length: 6 }, (_, i) => KEY_ABC[Math.floor(Math.random()*KEY_ABC.length)] + (i === 2 ? '-' : '')).join('');
+const newKey = () => onlineKey();   // random; keys with the top bit set carry a LAN address (net-hub.js: lanKey)
 const keyRoom = key => 'catroan-' + key.toLowerCase().replace(/[^a-z0-9]/g, '');
 const cleanKey = s => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6).replace(/^(.{3})(.+)$/, '$1-$2');
 async function netJoin(key, o = {}){
   await netLeave();
-  const base = await netBase(); let room;
+  const base = await netBase(); let room; NET.joinAsHost = !!o.host;
   try { room = await base.join(keyRoom(key)); } catch (e) { return { error: e && e.code || 'upstream_error' }; }
   Object.assign(NET, { room, key, host: !!o.host, match: o.match || '', peers: [] });
   NET.me.name = o.name || NET.me.name || 'Alcalde';

@@ -1,8 +1,26 @@
-# electron/ — versión de escritorio (pendiente)
+# electron/ — versión de escritorio
 
-La ventana de Electron carga el juego construido (`dist/catroan.html`) con three.js y la fuente copiados dentro del
-proyecto, para que funcione sin internet. El proceso principal levantará el servidor WebSocket del anfitrión para el
-multijugador por IP. Salidas: instalador (nsis) y portátil para Windows.
+- `main.js`: la ventana. Carga `dist/desktop/` (el build sin internet: three.js r160 y Pixelify Sans copiados) por
+  un esquema propio `app://` para que los módulos carguen y `localStorage` tenga un origen fijo. Abre maximizada,
+  sin barra de menús; **F11** cambia a pantalla completa. "Salir" del menú cierra la app (`window.close()`).
+- `icon.png`: ícono de 512 px, renderizado con los modelos del juego (hexágono de pradera, ciudad roja, árboles).
+- `lan.js` + `preload.cjs`: multijugador en red local. El anfitrión abre un servidor WebSocket (puerto 47213);
+  la página solo ve `window.catroanDesk` (enviar/recibir texto), nada más de Node.
+- `build-win.sh`: genera los .exe dentro de Docker (`electronuserland/builder:wine`), sin Wine local.
 
-Desde Linux, electron-builder necesita Wine para generar el .exe (`sudo pacman -S wine` en CachyOS / Arch) o la imagen
-de Docker `electronuserland/builder:wine`. Ver `CLAUDE.md`.
+## Comandos
+
+```
+npm start            # build + abre el juego en Electron
+npm run dist:linux   # release/Catroan-<versión>.AppImage
+npm run dist:win     # release/Catroan-Setup-<versión>.exe (instalador) y Catroan-Portable-<versión>.exe (Docker)
+npm run dist         # las tres salidas
+```
+
+## Notas
+
+- El Wine local de CachyOS se queda colgado al generar el desinstalador de NSIS; por eso los .exe se hacen con Docker.
+- Los .exe no van firmados: Windows muestra SmartScreen ("Windows protegió su PC") la primera vez. Se abre con
+  **Más información → Ejecutar de todas formas**. Firmarlos requiere un certificado de firma de código (de pago).
+- La primera vez que el anfitrión crea una partida **Local**, Windows pregunta si Catroan puede usar la red: hay que
+  permitir **redes privadas**. Si no, los demás no lo encuentran.
