@@ -45,6 +45,7 @@ function refresh(){
   $('#hint').textContent = hint;
   updateHexbar(); renderFan(); if (HL.kind) highlightPieces(HL.kind);
   $('#v-turn').style.display = (my && mode !== 'board') ? 'block' : 'none';
+  $('#v-turn .vt').textContent = G.phase === 'main' ? 'Es tu turno: puedes terminarlo aquí o volver al tablero' : 'Es tu turno: vuelve al tablero para jugar';
 }
 
 const markerMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.7 });

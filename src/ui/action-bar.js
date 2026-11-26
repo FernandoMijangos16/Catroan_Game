@@ -32,6 +32,7 @@ function initHexbar(){
   end.innerHTML = '<svg viewBox="0 0 12 16" width="18" height="24" shape-rendering="crispEdges"><path fill="#2a1a0c" d="M1 0h10v2H1zM1 14h10v2H1z"/><path fill="#e9c46a" d="M2 2h8v1H2zM3 3h6v2H3zM4 5h4v2H4zM5 7h2v2H5zM4 9h4v2H4zM3 11h6v2H3zM2 13h8v1H2z"/><path fill="#f6e7c1" d="M4 3h4v1H4zM5 10h2v1H5zM4 11h4v2H4z"/></svg><span>Terminar turno</span>';
   document.body.appendChild(end);
   end.onclick = () => { if (G && G.current === 0 && G.phase === 'main'){ SFX.click?.(); endTurn(); } };
+  HB.end = end;
   const cv = wrap.querySelector('canvas');
   let r; try { r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch { return; }
   r.setPixelRatio(Math.min(devicePixelRatio, 2)); r.outputColorSpace = THREE.SRGBColorSpace; r.shadowMap.enabled = true;
@@ -163,8 +164,11 @@ function hbWhy(k){
 }
 function updateHexbar(){
   updateTrophies();
-  if (!HB.tokens.length || !G) return;
+  if (!G) return;
   const my = G.current === 0 && !G.over, main = my && G.phase === 'main';
+  // "Terminar turno" also works from the village, where the hex tokens may not be built yet
+  if (HB.end){ HB.end.disabled = !main; HB.end.classList.toggle('ready', main); }
+  if (!HB.tokens.length) return;
   const en = {
     dados: my && G.phase === 'roll',
     camino: !$('#b-road').disabled || (main && G.freeRoads > 0), pueblo: !$('#b-set').disabled, ciudad: !$('#b-city').disabled,
@@ -174,8 +178,6 @@ function updateHexbar(){
     T.enabled = en[T.k]; T.active = G.buildMode === T.k;
     T.mats.forEach(([m, c]) => m.color.copy(c).multiplyScalar(T.enabled ? 1 : .42));
   });
-  HB.end.disabled = !main;
-  HB.end.classList.toggle('ready', main);
   const st = $('#hb-status');
   st.querySelector('b').textContent = $('#turn-label').textContent;
   st.querySelector('span').textContent = G.phase === 'robber' && my ? 'Toca un terreno para mandar al ladrón' : G.buildMode ? 'Toca un lugar marcado en el tablero · Esc para cancelar' : '';

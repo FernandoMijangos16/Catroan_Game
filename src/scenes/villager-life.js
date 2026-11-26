@@ -105,7 +105,13 @@ function goHome(V, p, stay){
   if (!p.home){ goTo(p, 0, 0, () => idle(p, 3)); return; }
   goTo(p, p.home.door[0], p.home.door[1], () => enterHouse(p, p.home, stay));
 }
-function enterHouse(p, h, stay){ p.st = { kind: 'enter', t: 0, h, stay, fx: p.g.position.x, fz: p.g.position.z }; }
+// doors: open for a moment, then swing shut on their own (the village eases them every frame: tickDoors)
+const doorNow = () => performance.now()/1000;
+function doorKick(h, secs){ const d = h && h.g && h.g.userData.door; if (d) d.userData.until = Math.max(d.userData.until, doorNow() + secs); }
+function tickDoors(list, dt){ const now = doorNow(); for (const h of list){ const d = h.g && h.g.userData.door; if (!d) continue; const want = now < d.userData.until ? 1 : 0;
+  if (d.userData.open === want) continue; d.userData.open = want > d.userData.open ? Math.min(1, d.userData.open + dt*2.4) : Math.max(0, d.userData.open - dt*1.8);
+  const k = d.userData.open, e = k*k*(3 - 2*k); d.rotation.y = e*1.45; } }
+function enterHouse(p, h, stay){ doorKick(h, 2.2); p.st = { kind: 'enter', t: 0, h, stay, fx: p.g.position.x, fz: p.g.position.z }; }
 function newMeet(V, x, z, members, topic){
   const m = { x, z, members, t: 0, done: false, kids: !!members[0].kid, topic: topic || pick(['la cosecha', 'el clima', 'los caminos nuevos', 'el mercado', 'los vecinos', 'el ladrón', 'la taberna', 'los animales', 'el precio del trigo']) };
   V.meets.push(m); slotMeet(m); members.forEach(w => walkToSlot(V, w, m)); return m;
@@ -170,6 +176,8 @@ function decide(V, p){
     if (startChat(V, p, 18)) return;
     ERRANDS.plaza(V, p); return;
   }
+  // now and then they just stop and look around instead of walking straight to the next errand
+  if (!evening && p.g.visible && Math.random() < .25){ p.st = { kind: 'watch', t: 3 + Math.random()*5 }; return; }
   let list;
   if (evening) list = [weighted([['tavern', p.old ? 1 : 4], ['plaza', 2], ['home', 3]])];
   else if (h < 12) list = [weighted([['water', 2], ['market', 2], ['shop', 4], ['garden', 2], ['visit', 2], ['bench', p.old ? 3 : .5], ['stroll', 1]])];
@@ -212,6 +220,9 @@ function personTick(V, p, dt, t){
     case 'walk': {
       st.t += dt;
       if (isNight() && st.interruptible && !p.guard){ goHome(V, p, 999); break; }
+      // a wave to a neighbor walking by
+      if ((p.greetCD = (p.greetCD || 0) - dt) <= 0 && !p.kid){ const q = V.people.find(o => o !== p && o.g.visible && o.st.kind === 'walk' && Math.hypot(o.g.position.x - p.g.position.x, o.g.position.z - p.g.position.z) < 2.4);
+        if (q){ say3D(p, '👋', 1.3); p.greetCD = 25 + Math.random()*25; q.greetCD = Math.max(q.greetCD || 0, 4); } else p.greetCD = 1; }
       const wp = st.wi < st.wps.length ? st.wps[st.wi] : null;
       if (wp){ stepToward(V, p, wp[0], wp[1], p.speed, dt); if (Math.hypot(wp[0] - p.g.position.x, wp[1] - p.g.position.z) < .8 || p.stuck > 1.5){ st.wi++; p.stuck = 0; } break; }
       const arrived = stepToward(V, p, st.tx, st.tz, p.speed, dt);
@@ -241,7 +252,7 @@ function personTick(V, p, dt, t){
       if (p.talking > 0) p.talking -= dt;
       break; }
     case 'enter': {
-      st.t += dt; const h = st.h, k = Math.min(1, st.t/.8);
+      st.t += dt; const h = st.h, k = Math.max(0, Math.min(1, (st.t - .45)/.8));   // waits for the door to swing open
       const ix = h.door[0] + (h.x - h.door[0])*.35, iz = h.door[1] + (h.z - h.door[1])*.35;
       p.g.position.x = st.fx + (ix - st.fx)*k; p.g.position.z = st.fz + (iz - st.fz)*k; faceTo(p, h.x, h.z, dt); p.ph += dt*3; p.moving = true; p.spd = .5;
       if (k >= 1){ p.g.visible = false; setCarry(p, null); p.st = { kind: 'inside', h, t: st.stay }; }
@@ -249,7 +260,7 @@ function personTick(V, p, dt, t){
     case 'inside': {
       st.t -= dt;
       const leave = isNight() ? false : (st.t <= 0 || st.t > 900);
-      if (leave && Math.random() < dt*.6){ p.g.visible = true; const [ox, oz] = toWorld(st.h.x, st.h.z, st.h.face, 0, st.h.d/2 + 1.3); p.g.position.set(ox, V.vh(ox, oz), oz); p.g.rotation.y = st.h.face; idle(p, 1.5 + Math.random()*2);
+      if (leave && Math.random() < dt*.6){ doorKick(st.h, 1.6); p.g.visible = true; const [ox, oz] = toWorld(st.h.x, st.h.z, st.h.face, 0, st.h.d/2 + 1.3); p.g.position.set(ox, V.vh(ox, oz), oz); p.g.rotation.y = st.h.face; idle(p, 1.5 + Math.random()*2);
         const sh = st.h.shop; if (sh && p !== sh.vendor){ if (sh.carry != null){ setCarry(p, typeof sh.carry === 'string' ? (RES_EMOJI[sh.carry] || CARRY_COLORS[sh.carry] || 0xd9a050) : sh.carry); p.carryT = 35; } say3D(p, pick(['😊', '👍', sh.icon]), 1.5); p.after = Math.random() < .5 ? 'home' : 'plaza'; } }
       break; }
     case 'sit': st.t -= dt; p.spd = 0; if (st.icon && Math.random() < dt*.12) say3D(p, st.icon); if (!st.icon && Math.random() < dt*.03) say3D(p, pick(['😌','🎶','☀️'])); if (st.t <= 0 || (isNight() && hourNow() > 23)){ st.seat.occ = null; p.g.position.set(st.seat.front[0], p.g.position.y, st.seat.front[1]); idle(p, .5); } break;

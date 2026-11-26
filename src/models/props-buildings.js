@@ -64,8 +64,11 @@ function house(sc, x, z, w, d, h, wall, roof, face, rng=Math.random, o={}){
   }
   // door with frame and step
   g.add(mesh(GEO.box, 0x4a3020, 0,0,d/2 + .02, 1.1,1.95,.06, false));
-  g.add(mesh(GEO.box, 0x6b4a2f, 0,0,d/2 + .05, .9,1.8,.06, false));
-  g.add(mesh(GEO.sphere, 0xd9b44a, .3, .95, d/2 + .1, .05, .05, .05, false));
+  // the leaf hangs on a hinge (left edge) so villagers can open it (doorKick)
+  { const door = new THREE.Group(); door.position.set(-.45, 0, d/2 + .05); door.userData = { open: 0, until: 0 };
+    door.add(mesh(GEO.box, 0x6b4a2f, .45,0,0, .9,1.8,.06, false));
+    door.add(mesh(GEO.sphere, 0xd9b44a, .75, .95, .05, .05, .05, .05, false));
+    g.add(door); g.userData.door = door; }
   g.add(mesh(GEO.box, 0x9a948a, 0,-.2,d/2 + .45, 1.4,.32,.7));
   const shut = pick([0x2e6b8a, 0x3f7a45, 0x8a3a2a, 0x5a4a8a, 0x2f2f2f, 0x9a6a2a], rng);
   const win = (lx, ly, lz, rotY) => {

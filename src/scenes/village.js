@@ -367,6 +367,7 @@ function buildVillage(vid){
   const sitesPts = [];
   sites.filter(s2 => s2.type !== 'mar').forEach(s2 => { const ln = []; for (let r = coreR - 6; r <= s2.R - s2.rad*.55; r += 2.5) ln.push([Math.cos(s2.a)*r, Math.sin(s2.a)*r]); if (ln.length > 1){ navLines.push(ln); sitesPts.push(ln[ln.length - 1]); } });
   const V = { shops, people, colliders, vh, freeAround, plazaR, coreR, seats: POI.seats, gardens: POI.gardens, stalls, tavern, homes, sitesPts, meets: [], it: null, nav: buildNav(navLines, []), dayN: () => DAY.n || 0 };
+  anims.push(dt => tickDoors(houses, dt));   // doors swing open when someone goes in or out
   if (bak) stalls.push({ x: bak.x, z: bak.z, front: toWorld(bak.x, bak.z, bak.face, -.9, bak.d/2 + 1.6), back: toWorld(bak.x, bak.z, bak.face, -.9, bak.d/2 + .55), vendor: null, bakery: true });
   const roles = ['niño','niño','niño','anciano','anciano','panadero','guardia','guardia','comerciante','vecino','vecino','vecino','vecino','vecino'];
   if (city) roles.push('niño','niño','anciano','comerciante','comerciante','vecino','vecino','vecino','vecino','vecino','guardia');
@@ -418,7 +419,11 @@ const ctl = { yaw:0, pitch:-.05, keys:{}, pos: new THREE.Vector3(), bob:0 };
 function updateVillage(dt, t){
   const c = villageCtx, k = ctl.keys;
   const f = ((k.w || k.arrowup) ? 1 : 0) - ((k.s || k.arrowdown) ? 1 : 0);
-  const s = ((k.d || k.arrowright) ? 1 : 0) - ((k.a || k.arrowleft) ? 1 : 0);
+  const s = (k.d ? 1 : 0) - (k.a ? 1 : 0);
+  // Q / E and the side arrows turn the view (also while walking)
+  const turn = ((k.q || k.arrowleft) ? 1 : 0) - ((k.e || k.arrowright) ? 1 : 0);
+  if (turn) ctl.yaw += turn * (k.shift ? 2.6 : 1.9) * dt;
+  const px = ctl.pos.x, pz = ctl.pos.z;
   if (f || s){
     const sp = (k.shift ? 11 : 5.5) * dt;
     const fx = -Math.sin(ctl.yaw), fz = -Math.cos(ctl.yaw), rx = Math.cos(ctl.yaw), rz = -Math.sin(ctl.yaw);
@@ -427,10 +432,18 @@ function updateVillage(dt, t){
     const ob = Math.floor(ctl.bob/Math.PI); ctl.bob += dt*(k.shift ? 13 : 9);
     if (Math.floor(ctl.bob/Math.PI) !== ob) SFX.step(k.shift ? 1.4 : 1);
   }
+  // people and animals never shove you: walking into one only takes away the part of the step that goes toward it,
+  // so you slide past and can always walk away (even if it was the one that walked into you)
+  if (f || s){
+    const block = (x, z, r) => { const min = r + .4, dx = ctl.pos.x - x, dz = ctl.pos.z - z; if (Math.abs(dx) > min || Math.abs(dz) > min) return;
+      const d = Math.hypot(dx, dz), d0 = Math.hypot(px - x, pz - z); if (d >= min || d >= d0 || d < 1e-4) return;
+      const nx = dx/d, nz = dz/d, mx = ctl.pos.x - px, mz = ctl.pos.z - pz, into = mx*nx + mz*nz; if (into < 0){ ctl.pos.x -= into*nx; ctl.pos.z -= into*nz; } };
+    for (const p of c.people) if (p.g.visible && p.st.kind !== 'sit') block(p.g.position.x, p.g.position.z, .3*p.S);
+    for (const a of c.animals) block(a.g.position.x, a.g.position.z, .35);
+  }
+  // buildings, stalls and fences push you out; a few passes so two of them close together cannot trap you
   const push = (x, z, r) => { const dx = ctl.pos.x - x, dz = ctl.pos.z - z; if (Math.abs(dx) > r + .5 || Math.abs(dz) > r + .5) return; const d = Math.hypot(dx,dz), min = r + .4; if (d < min && d > 1e-4){ ctl.pos.x = x + dx/d*min; ctl.pos.z = z + dz/d*min; } };
-  for (const h of c.colliders) push(h.x, h.z, h.r);
-  if (f || s) for (const p of c.people) if (p.g.visible && p.st.kind !== 'sit') push(p.g.position.x, p.g.position.z, .3*p.S);
-  for (const a of c.animals) push(a.g.position.x, a.g.position.z, .35);
+  for (let pass = 0; pass < 3; pass++) for (const h of c.colliders) push(h.x, h.z, h.r);
   const R = Math.hypot(ctl.pos.x, ctl.pos.z); if (R > 150){ ctl.pos.x *= 150/R; ctl.pos.z *= 150/R; }
   const gy = Math.max(c.gh(ctl.pos.x, ctl.pos.z), -.3);
   ctl.y = ctl.y === undefined ? gy : ctl.y + (gy - ctl.y)*Math.min(1, dt*12);

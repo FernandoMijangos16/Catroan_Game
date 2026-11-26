@@ -141,7 +141,7 @@ function makeLupa(){
   return g;
 }
 const LUPAS = [];
-function stepLupas(t){ LUPAS.forEach((l, i) => { l.position.y = .74 + Math.sin(t*2 + i)*.03; l.children[0].rotation.y = Math.sin(t*.8 + i)*.6 + .3; }); }
+function stepLupas(t){ LUPAS.forEach((l, i) => { l.position.y = (l.userData.baseY || .74) + Math.sin(t*2 + i)*.03; l.children[0].rotation.y = Math.sin(t*.8 + i)*.6 + .3; }); }
 // ---------- ports ----------
 const PORT_ICON = { '3:1': '⚓' };
 function makePorts(tiles, verts, edges){
@@ -309,8 +309,12 @@ function drawBuilding(vid, quiet){
   const m = boardVillage(p, v.building.type === 'ciudad', v.conn, vid);
   m.position.set(v.x, .2, v.z); m.rotation.y = (vid*1.7) % Math.PI;
   addContour(m, G.players[p].color);
-  m.userData.vid = vid; v.mesh = m; boardScene.add(m); pop(m, quiet);
-  if (p === 0 && !v.lupa && scenesOn()){ const l = makeLupa(); l.position.set(v.x, .74, v.z); l.userData.lupa = vid; l.traverse(o => { if (o.isMesh) o.userData.lupa = vid; }); boardScene.add(l); LUPAS.push(l); v.lupa = l; pop(l, true); }
+  m.userData.vid = vid; v.mesh = m; boardScene.add(m);
+  // the glass floats just above the tallest roof (a city is much taller than a town); measured before pop() shrinks it
+  const topY = Math.max(.74, new THREE.Box3().setFromObject(m).max.y + .14), lupaY = () => topY;
+  pop(m, quiet);
+  if (v.lupa) v.lupa.userData.baseY = lupaY();
+  if (p === 0 && !v.lupa && scenesOn()){ const l = makeLupa(); l.userData.baseY = lupaY(); l.position.set(v.x, l.userData.baseY, v.z); l.userData.lupa = vid; l.traverse(o => { if (o.isMesh) o.userData.lupa = vid; }); boardScene.add(l); LUPAS.push(l); v.lupa = l; pop(l, true); }
 }
 function drawRoad(eid){
   const e = G.edges[eid], a = G.verts[e.a], b = G.verts[e.b];

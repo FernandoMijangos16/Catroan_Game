@@ -42,7 +42,7 @@ function openMainMenu(){
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
       <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
-      <div class="mview" data-v="exit"><h2>¿Salir de Catroan?</h2><div class="mrow"><button data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
+      <div class="mview" data-v="exit"><h2>¿Salir de Catroan?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar Catroan</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
       <button class="mdaynight"></button><div class="mver">Catroan · v0.2</div>`;
     el.addEventListener('click', menuClick);

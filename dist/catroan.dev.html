@@ -77,7 +77,8 @@ button small{display:block;font-weight:500;font-size:11px;opacity:.75;margin-top
 #b-endturn:disabled{filter:grayscale(.85) brightness(.6);opacity:.75}
 #b-endturn.ready{animation:endglow 2.2s ease-in-out infinite}
 @keyframes endglow{50%{box-shadow:inset 0 2px 0 rgba(255,225,170,.35),inset 0 -3px 0 rgba(0,0,0,.35),0 0 0 2px #f0c050,0 0 22px rgba(240,180,41,.65)}}
-body:not([data-mode=board]) #hexbar,body:not([data-mode=board]) #b-endturn,body:not([data-mode=board]) #cards{display:none}
+body:not([data-mode=board]) #hexbar,body:not([data-mode=board]):not([data-mode=village]) #b-endturn,body:not([data-mode=board]) #cards{display:none}
+body[data-mode=village] #b-endturn:disabled{display:none}
 #cards{position:fixed;left:38px;bottom:0;height:0;z-index:13}
 .card{position:absolute;bottom:0;left:0;width:96px;height:134px;transform:translate(var(--x),calc(48% + var(--ly))) rotate(var(--r));transform-origin:50% 130%;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .2s;cursor:pointer;perspective:600px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
 .card .cin{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.2,1)}
@@ -412,6 +413,7 @@ body:not([data-mode=board]) #board-ui, body:not([data-mode=board]) #log, body:no
 #village-ui{display:none}
 body[data-mode=village] #village-ui{display:block}
 #v-card{position:fixed;top:112px;left:170px;padding:12px 14px;max-width:300px;z-index:10}
+#v-card:empty{display:none}
 .v-name{font-family:'Pixelify Sans',monospace;font-size:26px;font-weight:800;line-height:1.1}
 .v-sub{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);margin:4px 0 8px}
 #v-btns{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
@@ -419,8 +421,8 @@ body[data-mode=village] #village-ui{display:block}
 #v-btns .mapbtn{padding:0;background:none;border:0;box-shadow:none;cursor:pointer;width:150px;height:118px}
 #v-btns .mapbtn canvas{width:150px;height:118px;display:block;image-rendering:pixelated;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
 #v-btns{bottom:4px}
-#v-help{position:fixed;bottom:66px;left:50%;transform:translateX(-50%);font-size:12.5px;color:#fff;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.6);white-space:nowrap;z-index:10}
-#v-turn{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1d1606;padding:7px 13px;border-radius:999px;font-weight:700;font-size:13px;display:none;z-index:10;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+#v-help{position:fixed;bottom:150px;left:50%;transform:translateX(-50%);font-size:12.5px;color:#fff;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.6);white-space:nowrap;z-index:10}
+#v-turn{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1d1606;padding:7px 13px;border-radius:999px;font-weight:700;font-size:13px;display:none;z-index:12;box-shadow:0 6px 18px rgba(0,0,0,.3)}
 #dpad{position:fixed;left:16px;bottom:16px;display:none;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:6px;z-index:10}
 #dpad button{font-size:20px;padding:0;background:rgba(18,22,27,.6);touch-action:none;user-select:none;-webkit-user-select:none}
 @media (pointer:coarse){#dpad{display:grid}#v-help{display:none}#v-btns{left:auto;right:12px;transform:none;flex-direction:column}}
@@ -533,9 +535,12 @@ body.pbon #hb-status{visibility:hidden}
 
 /* ---- every button: brass rim with hex-like ends, coloured cloth, engraved text ---- */
 :root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose){position:relative;isolation:isolate;border:0 !important;border-radius:0 !important;background:var(--brassimg) 0 0/32px !important;clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,9px 100%,0 50%);color:#f0d690 !important;font-family:'Pixelify Sans',monospace;font-weight:700;letter-spacing:.3px;text-shadow:0 1px 0 #120a04,0 -1px 0 rgba(255,230,160,.12) !important;box-shadow:none !important;outline:none !important;padding-left:18px;padding-right:18px;image-rendering:pixelated;transition:filter .15s,transform .12s}
-:root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose)::before{content:'';position:absolute;inset:3px;z-index:-1;background:var(--cloth,var(--cloth-g)) 0 0/48px;clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,7px 100%,0 50%);box-shadow:inset 0 2px 3px rgba(0,0,0,.55)}
+:root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose)::before{content:'';position:absolute;inset:3px;z-index:-1;background:var(--cloth,var(--cloth-n)) 0 0/48px;clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,7px 100%,0 50%);box-shadow:inset 0 2px 3px rgba(0,0,0,.55)}
 :root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose)::after{content:'';position:absolute;left:12px;right:12px;top:5px;bottom:5px;z-index:-1;border-top:1px dashed rgba(232,200,120,.35);border-bottom:1px dashed rgba(232,200,120,.35);pointer-events:none}
-:root button.primary,:root button.ok,:root button[data-ok],:root button.rgo,:root button.rok,:root button.rroll,:root #b-endturn{--cloth:var(--cloth-r)}
+/* confirm = green, reject / cancel = red, everything else = brown leather */
+:root button.primary,:root button.ok,:root button[data-ok],:root button.rgo,:root button.rok,:root button.rroll{--cloth:var(--cloth-g)}
+:root button.no,:root button.cancel,:root button[data-x],:root button[data-no]{--cloth:var(--cloth-r)}
+:root #b-endturn{--cloth:var(--cloth-r)}
 :root button.on{--cloth:var(--cloth-y)}
 :root #hud-right button.panel,:root .fwin button{--cloth:var(--cloth-d)}
 :root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose):hover:not(:disabled){filter:brightness(1.18);background:var(--brassimg) 0 0/32px !important}
@@ -735,8 +740,8 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 <div id="village-ui">
   <div id="v-card" class="panel"></div>
   <button id="v-info" title="Mostrar información (I)">ℹ Info del pueblo</button>
-  <div id="v-turn"><span class="m3" data-k="ic:campana"></span> Es tu turno: vuelve al tablero para jugar</div>
-  <div id="v-help">WASD / flechas para caminar · Shift para correr · arrastra para mirar · haz clic en una persona para platicar</div>
+  <div id="v-turn"><span class="m3" data-k="ic:campana"></span> <span class="vt">Es tu turno: vuelve al tablero para jugar</span></div>
+  <div id="v-help">WASD / ↑↓ para caminar · Q E / ←→ para girar · Shift para correr · arrastra para mirar · clic en una persona para platicar</div>
   <div id="v-btns"><button id="b-back" class="mapbtn" title="Volver al tablero"><canvas></canvas></button></div>
   <div id="dpad">
     <span></span><button data-k="w">▲</button><span></span>
@@ -1543,7 +1548,7 @@ function makeLupa(){
   return g;
 }
 const LUPAS = [];
-function stepLupas(t){ LUPAS.forEach((l, i) => { l.position.y = .74 + Math.sin(t*2 + i)*.03; l.children[0].rotation.y = Math.sin(t*.8 + i)*.6 + .3; }); }
+function stepLupas(t){ LUPAS.forEach((l, i) => { l.position.y = (l.userData.baseY || .74) + Math.sin(t*2 + i)*.03; l.children[0].rotation.y = Math.sin(t*.8 + i)*.6 + .3; }); }
 // ---------- ports ----------
 const PORT_ICON = { '3:1': '⚓' };
 function makePorts(tiles, verts, edges){
@@ -1711,8 +1716,12 @@ function drawBuilding(vid, quiet){
   const m = boardVillage(p, v.building.type === 'ciudad', v.conn, vid);
   m.position.set(v.x, .2, v.z); m.rotation.y = (vid*1.7) % Math.PI;
   addContour(m, G.players[p].color);
-  m.userData.vid = vid; v.mesh = m; boardScene.add(m); pop(m, quiet);
-  if (p === 0 && !v.lupa && scenesOn()){ const l = makeLupa(); l.position.set(v.x, .74, v.z); l.userData.lupa = vid; l.traverse(o => { if (o.isMesh) o.userData.lupa = vid; }); boardScene.add(l); LUPAS.push(l); v.lupa = l; pop(l, true); }
+  m.userData.vid = vid; v.mesh = m; boardScene.add(m);
+  // the glass floats just above the tallest roof (a city is much taller than a town); measured before pop() shrinks it
+  const topY = Math.max(.74, new THREE.Box3().setFromObject(m).max.y + .14), lupaY = () => topY;
+  pop(m, quiet);
+  if (v.lupa) v.lupa.userData.baseY = lupaY();
+  if (p === 0 && !v.lupa && scenesOn()){ const l = makeLupa(); l.userData.baseY = lupaY(); l.position.set(v.x, l.userData.baseY, v.z); l.userData.lupa = vid; l.traverse(o => { if (o.isMesh) o.userData.lupa = vid; }); boardScene.add(l); LUPAS.push(l); v.lupa = l; pop(l, true); }
 }
 function drawRoad(eid){
   const e = G.edges[eid], a = G.verts[e.a], b = G.verts[e.b];
@@ -2222,6 +2231,7 @@ function refresh(){
   $('#hint').textContent = hint;
   updateHexbar(); renderFan(); if (HL.kind) highlightPieces(HL.kind);
   $('#v-turn').style.display = (my && mode !== 'board') ? 'block' : 'none';
+  $('#v-turn .vt').textContent = G.phase === 'main' ? 'Es tu turno: puedes terminarlo aquí o volver al tablero' : 'Es tu turno: vuelve al tablero para jugar';
 }
 
 const markerMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.7 });
@@ -2580,8 +2590,11 @@ function house(sc, x, z, w, d, h, wall, roof, face, rng=Math.random, o={}){
   }
   // door with frame and step
   g.add(mesh(GEO.box, 0x4a3020, 0,0,d/2 + .02, 1.1,1.95,.06, false));
-  g.add(mesh(GEO.box, 0x6b4a2f, 0,0,d/2 + .05, .9,1.8,.06, false));
-  g.add(mesh(GEO.sphere, 0xd9b44a, .3, .95, d/2 + .1, .05, .05, .05, false));
+  // the leaf hangs on a hinge (left edge) so villagers can open it (doorKick)
+  { const door = new THREE.Group(); door.position.set(-.45, 0, d/2 + .05); door.userData = { open: 0, until: 0 };
+    door.add(mesh(GEO.box, 0x6b4a2f, .45,0,0, .9,1.8,.06, false));
+    door.add(mesh(GEO.sphere, 0xd9b44a, .75, .95, .05, .05, .05, .05, false));
+    g.add(door); g.userData.door = door; }
   g.add(mesh(GEO.box, 0x9a948a, 0,-.2,d/2 + .45, 1.4,.32,.7));
   const shut = pick([0x2e6b8a, 0x3f7a45, 0x8a3a2a, 0x5a4a8a, 0x2f2f2f, 0x9a6a2a], rng);
   const win = (lx, ly, lz, rotY) => {
@@ -6482,6 +6495,7 @@ function initHexbar(){
   end.innerHTML = '<svg viewBox="0 0 12 16" width="18" height="24" shape-rendering="crispEdges"><path fill="#2a1a0c" d="M1 0h10v2H1zM1 14h10v2H1z"/><path fill="#e9c46a" d="M2 2h8v1H2zM3 3h6v2H3zM4 5h4v2H4zM5 7h2v2H5zM4 9h4v2H4zM3 11h6v2H3zM2 13h8v1H2z"/><path fill="#f6e7c1" d="M4 3h4v1H4zM5 10h2v1H5zM4 11h4v2H4z"/></svg><span>Terminar turno</span>';
   document.body.appendChild(end);
   end.onclick = () => { if (G && G.current === 0 && G.phase === 'main'){ SFX.click?.(); endTurn(); } };
+  HB.end = end;
   const cv = wrap.querySelector('canvas');
   let r; try { r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch { return; }
   r.setPixelRatio(Math.min(devicePixelRatio, 2)); r.outputColorSpace = THREE.SRGBColorSpace; r.shadowMap.enabled = true;
@@ -6613,8 +6627,11 @@ function hbWhy(k){
 }
 function updateHexbar(){
   updateTrophies();
-  if (!HB.tokens.length || !G) return;
+  if (!G) return;
   const my = G.current === 0 && !G.over, main = my && G.phase === 'main';
+  // "Terminar turno" also works from the village, where the hex tokens may not be built yet
+  if (HB.end){ HB.end.disabled = !main; HB.end.classList.toggle('ready', main); }
+  if (!HB.tokens.length) return;
   const en = {
     dados: my && G.phase === 'roll',
     camino: !$('#b-road').disabled || (main && G.freeRoads > 0), pueblo: !$('#b-set').disabled, ciudad: !$('#b-city').disabled,
@@ -6624,8 +6641,6 @@ function updateHexbar(){
     T.enabled = en[T.k]; T.active = G.buildMode === T.k;
     T.mats.forEach(([m, c]) => m.color.copy(c).multiplyScalar(T.enabled ? 1 : .42));
   });
-  HB.end.disabled = !main;
-  HB.end.classList.toggle('ready', main);
   const st = $('#hb-status');
   st.querySelector('b').textContent = $('#turn-label').textContent;
   st.querySelector('span').textContent = G.phase === 'robber' && my ? 'Toca un terreno para mandar al ladrón' : G.buildMode ? 'Toca un lugar marcado en el tablero · Esc para cancelar' : '';
@@ -7103,7 +7118,13 @@ function goHome(V, p, stay){
   if (!p.home){ goTo(p, 0, 0, () => idle(p, 3)); return; }
   goTo(p, p.home.door[0], p.home.door[1], () => enterHouse(p, p.home, stay));
 }
-function enterHouse(p, h, stay){ p.st = { kind: 'enter', t: 0, h, stay, fx: p.g.position.x, fz: p.g.position.z }; }
+// doors: open for a moment, then swing shut on their own (the village eases them every frame: tickDoors)
+const doorNow = () => performance.now()/1000;
+function doorKick(h, secs){ const d = h && h.g && h.g.userData.door; if (d) d.userData.until = Math.max(d.userData.until, doorNow() + secs); }
+function tickDoors(list, dt){ const now = doorNow(); for (const h of list){ const d = h.g && h.g.userData.door; if (!d) continue; const want = now < d.userData.until ? 1 : 0;
+  if (d.userData.open === want) continue; d.userData.open = want > d.userData.open ? Math.min(1, d.userData.open + dt*2.4) : Math.max(0, d.userData.open - dt*1.8);
+  const k = d.userData.open, e = k*k*(3 - 2*k); d.rotation.y = e*1.45; } }
+function enterHouse(p, h, stay){ doorKick(h, 2.2); p.st = { kind: 'enter', t: 0, h, stay, fx: p.g.position.x, fz: p.g.position.z }; }
 function newMeet(V, x, z, members, topic){
   const m = { x, z, members, t: 0, done: false, kids: !!members[0].kid, topic: topic || pick(['la cosecha', 'el clima', 'los caminos nuevos', 'el mercado', 'los vecinos', 'el ladrón', 'la taberna', 'los animales', 'el precio del trigo']) };
   V.meets.push(m); slotMeet(m); members.forEach(w => walkToSlot(V, w, m)); return m;
@@ -7168,6 +7189,8 @@ function decide(V, p){
     if (startChat(V, p, 18)) return;
     ERRANDS.plaza(V, p); return;
   }
+  // now and then they just stop and look around instead of walking straight to the next errand
+  if (!evening && p.g.visible && Math.random() < .25){ p.st = { kind: 'watch', t: 3 + Math.random()*5 }; return; }
   let list;
   if (evening) list = [weighted([['tavern', p.old ? 1 : 4], ['plaza', 2], ['home', 3]])];
   else if (h < 12) list = [weighted([['water', 2], ['market', 2], ['shop', 4], ['garden', 2], ['visit', 2], ['bench', p.old ? 3 : .5], ['stroll', 1]])];
@@ -7210,6 +7233,9 @@ function personTick(V, p, dt, t){
     case 'walk': {
       st.t += dt;
       if (isNight() && st.interruptible && !p.guard){ goHome(V, p, 999); break; }
+      // a wave to a neighbor walking by
+      if ((p.greetCD = (p.greetCD || 0) - dt) <= 0 && !p.kid){ const q = V.people.find(o => o !== p && o.g.visible && o.st.kind === 'walk' && Math.hypot(o.g.position.x - p.g.position.x, o.g.position.z - p.g.position.z) < 2.4);
+        if (q){ say3D(p, '👋', 1.3); p.greetCD = 25 + Math.random()*25; q.greetCD = Math.max(q.greetCD || 0, 4); } else p.greetCD = 1; }
       const wp = st.wi < st.wps.length ? st.wps[st.wi] : null;
       if (wp){ stepToward(V, p, wp[0], wp[1], p.speed, dt); if (Math.hypot(wp[0] - p.g.position.x, wp[1] - p.g.position.z) < .8 || p.stuck > 1.5){ st.wi++; p.stuck = 0; } break; }
       const arrived = stepToward(V, p, st.tx, st.tz, p.speed, dt);
@@ -7239,7 +7265,7 @@ function personTick(V, p, dt, t){
       if (p.talking > 0) p.talking -= dt;
       break; }
     case 'enter': {
-      st.t += dt; const h = st.h, k = Math.min(1, st.t/.8);
+      st.t += dt; const h = st.h, k = Math.max(0, Math.min(1, (st.t - .45)/.8));   // waits for the door to swing open
       const ix = h.door[0] + (h.x - h.door[0])*.35, iz = h.door[1] + (h.z - h.door[1])*.35;
       p.g.position.x = st.fx + (ix - st.fx)*k; p.g.position.z = st.fz + (iz - st.fz)*k; faceTo(p, h.x, h.z, dt); p.ph += dt*3; p.moving = true; p.spd = .5;
       if (k >= 1){ p.g.visible = false; setCarry(p, null); p.st = { kind: 'inside', h, t: st.stay }; }
@@ -7247,7 +7273,7 @@ function personTick(V, p, dt, t){
     case 'inside': {
       st.t -= dt;
       const leave = isNight() ? false : (st.t <= 0 || st.t > 900);
-      if (leave && Math.random() < dt*.6){ p.g.visible = true; const [ox, oz] = toWorld(st.h.x, st.h.z, st.h.face, 0, st.h.d/2 + 1.3); p.g.position.set(ox, V.vh(ox, oz), oz); p.g.rotation.y = st.h.face; idle(p, 1.5 + Math.random()*2);
+      if (leave && Math.random() < dt*.6){ doorKick(st.h, 1.6); p.g.visible = true; const [ox, oz] = toWorld(st.h.x, st.h.z, st.h.face, 0, st.h.d/2 + 1.3); p.g.position.set(ox, V.vh(ox, oz), oz); p.g.rotation.y = st.h.face; idle(p, 1.5 + Math.random()*2);
         const sh = st.h.shop; if (sh && p !== sh.vendor){ if (sh.carry != null){ setCarry(p, typeof sh.carry === 'string' ? (RES_EMOJI[sh.carry] || CARRY_COLORS[sh.carry] || 0xd9a050) : sh.carry); p.carryT = 35; } say3D(p, pick(['😊', '👍', sh.icon]), 1.5); p.after = Math.random() < .5 ? 'home' : 'plaza'; } }
       break; }
     case 'sit': st.t -= dt; p.spd = 0; if (st.icon && Math.random() < dt*.12) say3D(p, st.icon); if (!st.icon && Math.random() < dt*.03) say3D(p, pick(['😌','🎶','☀️'])); if (st.t <= 0 || (isNight() && hourNow() > 23)){ st.seat.occ = null; p.g.position.set(st.seat.front[0], p.g.position.y, st.seat.front[1]); idle(p, .5); } break;
@@ -7710,6 +7736,7 @@ function buildVillage(vid){
   const sitesPts = [];
   sites.filter(s2 => s2.type !== 'mar').forEach(s2 => { const ln = []; for (let r = coreR - 6; r <= s2.R - s2.rad*.55; r += 2.5) ln.push([Math.cos(s2.a)*r, Math.sin(s2.a)*r]); if (ln.length > 1){ navLines.push(ln); sitesPts.push(ln[ln.length - 1]); } });
   const V = { shops, people, colliders, vh, freeAround, plazaR, coreR, seats: POI.seats, gardens: POI.gardens, stalls, tavern, homes, sitesPts, meets: [], it: null, nav: buildNav(navLines, []), dayN: () => DAY.n || 0 };
+  anims.push(dt => tickDoors(houses, dt));   // doors swing open when someone goes in or out
   if (bak) stalls.push({ x: bak.x, z: bak.z, front: toWorld(bak.x, bak.z, bak.face, -.9, bak.d/2 + 1.6), back: toWorld(bak.x, bak.z, bak.face, -.9, bak.d/2 + .55), vendor: null, bakery: true });
   const roles = ['niño','niño','niño','anciano','anciano','panadero','guardia','guardia','comerciante','vecino','vecino','vecino','vecino','vecino'];
   if (city) roles.push('niño','niño','anciano','comerciante','comerciante','vecino','vecino','vecino','vecino','vecino','guardia');
@@ -7761,7 +7788,11 @@ const ctl = { yaw:0, pitch:-.05, keys:{}, pos: new THREE.Vector3(), bob:0 };
 function updateVillage(dt, t){
   const c = villageCtx, k = ctl.keys;
   const f = ((k.w || k.arrowup) ? 1 : 0) - ((k.s || k.arrowdown) ? 1 : 0);
-  const s = ((k.d || k.arrowright) ? 1 : 0) - ((k.a || k.arrowleft) ? 1 : 0);
+  const s = (k.d ? 1 : 0) - (k.a ? 1 : 0);
+  // Q / E and the side arrows turn the view (also while walking)
+  const turn = ((k.q || k.arrowleft) ? 1 : 0) - ((k.e || k.arrowright) ? 1 : 0);
+  if (turn) ctl.yaw += turn * (k.shift ? 2.6 : 1.9) * dt;
+  const px = ctl.pos.x, pz = ctl.pos.z;
   if (f || s){
     const sp = (k.shift ? 11 : 5.5) * dt;
     const fx = -Math.sin(ctl.yaw), fz = -Math.cos(ctl.yaw), rx = Math.cos(ctl.yaw), rz = -Math.sin(ctl.yaw);
@@ -7770,10 +7801,18 @@ function updateVillage(dt, t){
     const ob = Math.floor(ctl.bob/Math.PI); ctl.bob += dt*(k.shift ? 13 : 9);
     if (Math.floor(ctl.bob/Math.PI) !== ob) SFX.step(k.shift ? 1.4 : 1);
   }
+  // people and animals never shove you: walking into one only takes away the part of the step that goes toward it,
+  // so you slide past and can always walk away (even if it was the one that walked into you)
+  if (f || s){
+    const block = (x, z, r) => { const min = r + .4, dx = ctl.pos.x - x, dz = ctl.pos.z - z; if (Math.abs(dx) > min || Math.abs(dz) > min) return;
+      const d = Math.hypot(dx, dz), d0 = Math.hypot(px - x, pz - z); if (d >= min || d >= d0 || d < 1e-4) return;
+      const nx = dx/d, nz = dz/d, mx = ctl.pos.x - px, mz = ctl.pos.z - pz, into = mx*nx + mz*nz; if (into < 0){ ctl.pos.x -= into*nx; ctl.pos.z -= into*nz; } };
+    for (const p of c.people) if (p.g.visible && p.st.kind !== 'sit') block(p.g.position.x, p.g.position.z, .3*p.S);
+    for (const a of c.animals) block(a.g.position.x, a.g.position.z, .35);
+  }
+  // buildings, stalls and fences push you out; a few passes so two of them close together cannot trap you
   const push = (x, z, r) => { const dx = ctl.pos.x - x, dz = ctl.pos.z - z; if (Math.abs(dx) > r + .5 || Math.abs(dz) > r + .5) return; const d = Math.hypot(dx,dz), min = r + .4; if (d < min && d > 1e-4){ ctl.pos.x = x + dx/d*min; ctl.pos.z = z + dz/d*min; } };
-  for (const h of c.colliders) push(h.x, h.z, h.r);
-  if (f || s) for (const p of c.people) if (p.g.visible && p.st.kind !== 'sit') push(p.g.position.x, p.g.position.z, .3*p.S);
-  for (const a of c.animals) push(a.g.position.x, a.g.position.z, .35);
+  for (let pass = 0; pass < 3; pass++) for (const h of c.colliders) push(h.x, h.z, h.r);
   const R = Math.hypot(ctl.pos.x, ctl.pos.z); if (R > 150){ ctl.pos.x *= 150/R; ctl.pos.z *= 150/R; }
   const gy = Math.max(c.gh(ctl.pos.x, ctl.pos.z), -.3);
   ctl.y = ctl.y === undefined ? gy : ctl.y + (gy - ctl.y)*Math.min(1, dt*12);
@@ -9268,7 +9307,7 @@ function openMainMenu(){
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
       <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
-      <div class="mview" data-v="exit"><h2>¿Salir de Catroan?</h2><div class="mrow"><button data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
+      <div class="mview" data-v="exit"><h2>¿Salir de Catroan?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar Catroan</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
       <button class="mdaynight"></button><div class="mver">Catroan · v0.2</div>`;
     el.addEventListener('click', menuClick);
@@ -9531,6 +9570,7 @@ setRetro(true);   // the pixel look is always on
   st.setProperty('--cloth-g', cloth('#3e4a2a', ['#36421f', '#4a5832', '#2f3a1c', '#46522c']));
   st.setProperty('--cloth-r', cloth('#5e1e28', ['#521a22', '#6e2630', '#48161e', '#682430']));
   st.setProperty('--cloth-d', cloth('#2a2420', ['#221d1a', '#332b26', '#1d1916', '#2e2622']));
+  st.setProperty('--cloth-n', cloth('#4e3422', ['#452e1e', '#5a3c28', '#3e2a1a', '#543826']));   // neutral: brown leather
   st.setProperty('--cloth-y', cloth('#7a5a1a', ['#6e5016', '#8a6a22', '#5e4412', '#846020']));
 })();
 addEventListener('pointerdown', () => audioInit(), { once: false, passive: true });

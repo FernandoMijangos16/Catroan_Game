@@ -96,6 +96,7 @@ setRetro(true);   // the pixel look is always on
   st.setProperty('--cloth-g', cloth('#3e4a2a', ['#36421f', '#4a5832', '#2f3a1c', '#46522c']));
   st.setProperty('--cloth-r', cloth('#5e1e28', ['#521a22', '#6e2630', '#48161e', '#682430']));
   st.setProperty('--cloth-d', cloth('#2a2420', ['#221d1a', '#332b26', '#1d1916', '#2e2622']));
+  st.setProperty('--cloth-n', cloth('#4e3422', ['#452e1e', '#5a3c28', '#3e2a1a', '#543826']));   // neutral: brown leather
   st.setProperty('--cloth-y', cloth('#7a5a1a', ['#6e5016', '#8a6a22', '#5e4412', '#846020']));
 })();
 addEventListener('pointerdown', () => audioInit(), { once: false, passive: true });

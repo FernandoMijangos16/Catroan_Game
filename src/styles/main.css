@@ -68,7 +68,8 @@ button small{display:block;font-weight:500;font-size:11px;opacity:.75;margin-top
 #b-endturn:disabled{filter:grayscale(.85) brightness(.6);opacity:.75}
 #b-endturn.ready{animation:endglow 2.2s ease-in-out infinite}
 @keyframes endglow{50%{box-shadow:inset 0 2px 0 rgba(255,225,170,.35),inset 0 -3px 0 rgba(0,0,0,.35),0 0 0 2px #f0c050,0 0 22px rgba(240,180,41,.65)}}
-body:not([data-mode=board]) #hexbar,body:not([data-mode=board]) #b-endturn,body:not([data-mode=board]) #cards{display:none}
+body:not([data-mode=board]) #hexbar,body:not([data-mode=board]):not([data-mode=village]) #b-endturn,body:not([data-mode=board]) #cards{display:none}
+body[data-mode=village] #b-endturn:disabled{display:none}
 #cards{position:fixed;left:38px;bottom:0;height:0;z-index:13}
 .card{position:absolute;bottom:0;left:0;width:96px;height:134px;transform:translate(var(--x),calc(48% + var(--ly))) rotate(var(--r));transform-origin:50% 130%;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .2s;cursor:pointer;perspective:600px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
 .card .cin{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.2,1)}
@@ -403,6 +404,7 @@ body:not([data-mode=board]) #board-ui, body:not([data-mode=board]) #log, body:no
 #village-ui{display:none}
 body[data-mode=village] #village-ui{display:block}
 #v-card{position:fixed;top:112px;left:170px;padding:12px 14px;max-width:300px;z-index:10}
+#v-card:empty{display:none}
 .v-name{font-family:'Pixelify Sans',monospace;font-size:26px;font-weight:800;line-height:1.1}
 .v-sub{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);margin:4px 0 8px}
 #v-btns{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
@@ -410,8 +412,8 @@ body[data-mode=village] #village-ui{display:block}
 #v-btns .mapbtn{padding:0;background:none;border:0;box-shadow:none;cursor:pointer;width:150px;height:118px}
 #v-btns .mapbtn canvas{width:150px;height:118px;display:block;image-rendering:pixelated;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
 #v-btns{bottom:4px}
-#v-help{position:fixed;bottom:66px;left:50%;transform:translateX(-50%);font-size:12.5px;color:#fff;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.6);white-space:nowrap;z-index:10}
-#v-turn{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1d1606;padding:7px 13px;border-radius:999px;font-weight:700;font-size:13px;display:none;z-index:10;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+#v-help{position:fixed;bottom:150px;left:50%;transform:translateX(-50%);font-size:12.5px;color:#fff;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.6);white-space:nowrap;z-index:10}
+#v-turn{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1d1606;padding:7px 13px;border-radius:999px;font-weight:700;font-size:13px;display:none;z-index:12;box-shadow:0 6px 18px rgba(0,0,0,.3)}
 #dpad{position:fixed;left:16px;bottom:16px;display:none;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:6px;z-index:10}
 #dpad button{font-size:20px;padding:0;background:rgba(18,22,27,.6);touch-action:none;user-select:none;-webkit-user-select:none}
 @media (pointer:coarse){#dpad{display:grid}#v-help{display:none}#v-btns{left:auto;right:12px;transform:none;flex-direction:column}}
@@ -524,9 +526,12 @@ body.pbon #hb-status{visibility:hidden}
 
 /* ---- every button: brass rim with hex-like ends, coloured cloth, engraved text ---- */
 :root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose){position:relative;isolation:isolate;border:0 !important;border-radius:0 !important;background:var(--brassimg) 0 0/32px !important;clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,9px 100%,0 50%);color:#f0d690 !important;font-family:'Pixelify Sans',monospace;font-weight:700;letter-spacing:.3px;text-shadow:0 1px 0 #120a04,0 -1px 0 rgba(255,230,160,.12) !important;box-shadow:none !important;outline:none !important;padding-left:18px;padding-right:18px;image-rendering:pixelated;transition:filter .15s,transform .12s}
-:root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose)::before{content:'';position:absolute;inset:3px;z-index:-1;background:var(--cloth,var(--cloth-g)) 0 0/48px;clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,7px 100%,0 50%);box-shadow:inset 0 2px 3px rgba(0,0,0,.55)}
+:root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose)::before{content:'';position:absolute;inset:3px;z-index:-1;background:var(--cloth,var(--cloth-n)) 0 0/48px;clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,7px 100%,0 50%);box-shadow:inset 0 2px 3px rgba(0,0,0,.55)}
 :root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose)::after{content:'';position:absolute;left:12px;right:12px;top:5px;bottom:5px;z-index:-1;border-top:1px dashed rgba(232,200,120,.35);border-bottom:1px dashed rgba(232,200,120,.35);pointer-events:none}
-:root button.primary,:root button.ok,:root button[data-ok],:root button.rgo,:root button.rok,:root button.rroll,:root #b-endturn{--cloth:var(--cloth-r)}
+/* confirm = green, reject / cancel = red, everything else = brown leather */
+:root button.primary,:root button.ok,:root button[data-ok],:root button.rgo,:root button.rok,:root button.rroll{--cloth:var(--cloth-g)}
+:root button.no,:root button.cancel,:root button[data-x],:root button[data-no]{--cloth:var(--cloth-r)}
+:root #b-endturn{--cloth:var(--cloth-r)}
 :root button.on{--cloth:var(--cloth-y)}
 :root #hud-right button.panel,:root .fwin button{--cloth:var(--cloth-d)}
 :root button:not(.rcol):not(.av):not(.mapbtn):not(.rpor):not(.inkc):not(.ink):not(.flip):not(.vclose):hover:not(:disabled){filter:brightness(1.18);background:var(--brassimg) 0 0/32px !important}
