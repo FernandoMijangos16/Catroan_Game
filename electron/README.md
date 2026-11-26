@@ -2,7 +2,7 @@
 
 - `main.js`: la ventana. Carga `dist/desktop/` (el build sin internet: three.js r160 y Pixelify Sans copiados) por
   un esquema propio `app://` para que los módulos carguen y `localStorage` tenga un origen fijo. Abre maximizada,
-  sin barra de menús; **F11** cambia a pantalla completa. "Salir" del menú cierra la app (`window.close()`).
+  sin barra de menús; **F11** cambia a pantalla completa y **F12** (o Ctrl+Shift+I) abre la consola para ver errores. "Salir" del menú cierra la app (`window.close()`).
 - `icon.png`: ícono de 512 px, renderizado con los modelos del juego (hexágono de pradera, ciudad roja, árboles).
 - `lan.js` + `preload.cjs`: multijugador en red local. El anfitrión abre un servidor WebSocket (puerto 47213);
   la página solo ve `window.catroanDesk` (enviar/recibir texto), nada más de Node.

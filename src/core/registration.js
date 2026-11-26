@@ -76,7 +76,7 @@ function startRegistration(){
   ov.querySelectorAll('.rav').forEach(b => b.onclick = () => { const i = AVATARS.findIndex(a => a.id === me.avatar); me.avatar = AVATARS[(i + (b.classList.contains('l') ? -1 : 1) + AVATARS.length) % AVATARS.length].id; regSign(me, { blank: true }); SFX.click?.(); });
   ov.querySelector('.rpor').onclick = () => { $('#reg').classList.remove('show'); chooseAvatar(); const mb = modalBody.onclick; modalBody.onclick = e => { mb && mb(e); if (modal.classList.contains('hidden')){ $('#reg').classList.add('show'); regSign(me, { blank: true }); } }; };
   ov.querySelectorAll('.rcol').forEach(b => b.onclick = () => { if (b.disabled) return; setMyColor(b.dataset.c); ov.querySelectorAll('.rcol').forEach(x => x.classList.toggle('on', x === b)); regSign(me, { blank: true }); SFX.click?.(); });
-  ov.querySelector('.rok').onclick = () => { me.name = inp.value.trim() || 'Alcalde'; try { localStorage.setItem('hexterra-name', me.name); localStorage.setItem('hexterra-color', me.color); localStorage.setItem('hexterra-avatar', me.avatar); } catch {} SFX.click?.(); PLATES.forEach(p => p.build()); updatePlates(true); if (NG.on) netRegRoll(); else orderRolls(); };
+  ov.querySelector('.rok').onclick = () => { me.name = inp.value.trim() || 'Alcalde'; try { localStorage.setItem('hexterra-name', me.name); localStorage.setItem('hexterra-color', me.color); localStorage.setItem('hexterra-avatar', me.avatar); } catch {} SFX.click?.(); PLATES.forEach(p => p.build()); updatePlates(true); if (NG.on){ netRegName(); netRegRoll(); } else orderRolls(); };
   setTimeout(() => inp.focus(), 300);
 }
 // the dice box inside the extension

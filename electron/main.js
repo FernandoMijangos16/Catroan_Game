@@ -22,9 +22,11 @@ function createWindow() {
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload: path.join(HERE, 'preload.cjs') },
   });
   win.once('ready-to-show', () => { win.maximize(); win.show(); });
-  // F11 toggles full screen (there is no menu bar to hold the shortcut)
+  // F11 toggles full screen and F12 / Ctrl+Shift+I the developer console (there is no menu bar to hold the shortcuts)
   win.webContents.on('before-input-event', (e, input) => {
-    if (input.type === 'keyDown' && input.key === 'F11') { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
+    if (input.type !== 'keyDown') return;
+    if (input.key === 'F11') { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
+    else if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) { win.webContents.toggleDevTools(); e.preventDefault(); }
   });
   // links that try to open a new window are blocked: the game never needs one
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

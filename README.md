@@ -61,8 +61,11 @@ modelos con código, con color por jugador y variaciones.
 ## Multijugador
 
 - **Crear partida**: genera una clave (como `K7M-2QX`) y la carta de la partida; luego eliges modo y jugadores (2 a 4).
-  El anfitrión espera en el tablero; cada quien pone su nombre y tira sus dados al entrar; nadie construye hasta que
-  todos tiren. El hexágono **Comenzar** arranca antes y llena los lugares libres con bots.
+  El anfitrión espera en el tablero; cada quien pone su nombre (los demás lo ven al guardar) y tira sus dados al entrar;
+  nadie construye hasta que todos tiren. Con **Bots: Sí**, el hexágono **Comenzar** arranca antes y llena los lugares
+  libres con bots; con **Bots: No**, la partida empieza sola cuando se ocupan todos los lugares.
+- **Complemento 5–6 jugadores** (vista Jugar, solo o en línea): tablero grande de 30 hexágonos.
+- Máximo **2 trueques con cada jugador por turno**.
 - **Unirse**: escribes la clave. Chat con **T**. Si alguien se desconecta, un bot juega por él hasta que vuelva.
 - Quien está actuando corre las reglas y manda el estado; los demás lo aplican (ver `CLAUDE.md`).
 - Dentro de claude.ai usa la capacidad `room` del artifact. Fuera, un canal entre pestañas del mismo navegador

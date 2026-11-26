@@ -143,11 +143,14 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
 - **Jugar:**
   - Dos mini tableros inclinados (Clásico y Catroan) con modelos girando en su eje.
   - El interruptor de primera persona.
-  - La sección Complementos ("próximamente").
-  - El número de jugadores (solo en línea).
+  - La sección Complementos: la primera casilla es el complemento **5–6 jugadores**; las otras, "próximamente".
+  - El número de jugadores (en línea 2–4, o 2–6 con el complemento; solo, 5–6 con el complemento) y, en línea,
+    **Bots: Sí / No**.
 - **Multijugador:**
   - Carta grande con el nombre de la partida y la clave, con los botones 3D Copiar y Siguiente.
-  - La espera en el tablero con el panel de jugadores y el hexágono 3D "Comenzar" (llena con bots).
+  - La espera en el tablero con el panel de jugadores y el hexágono 3D "Comenzar" (llena con bots; no aparece con
+    Bots: No). El nombre se envía al guardar el letrero (`netRegName`), antes de los dados.
+  - Trueques entre jugadores: máximo `TRADE_MAX` (2) por pareja y turno (`tradeCount`, `G.trades`, va en `netSnap`).
   - Al entrar, cada quien pone su nombre y tira sus dados.
   - El chat con T.
 - **Tablero:** el inventario en la orilla izquierda, los letreros de jugadores arriba a la derecha, la barra de

@@ -36,7 +36,8 @@ async function proposeTrade(target, give, want){
   if (NG.on && G.current !== 0){ notify('En línea solo puedes proponer tratos durante tu turno.', G.players[0].color, 'sys'); return; }
   if (!ALL.some(r => give[r]) || !ALL.some(r => want[r])){ notify('Elige qué das y qué pides', G.players[0].color, 'sys'); return; }
   if (G.current !== 0 && G.tradeOpen !== G.turnId){ notify(`Solo puedes hacer trueques fuera de tu turno después de que ${G.players[G.current].name} haga uno`, G.players[0].color, 'sys'); return; }
-  const order = (target === 'todos' ? shuffle(G.players.map((_, i) => i).filter(i => i)) : [target]).filter(q => G.current === 0 || q === G.current);
+  if (target !== 'todos' && !tradesLeft(0, target)){ notify(tradeLimitMsg(G.players[target].name), G.players[0].color, 'sys'); return; }
+  const order = (target === 'todos' ? shuffle(G.players.map((_, i) => i).filter(i => i)) : [target]).filter(q => (G.current === 0 || q === G.current) && tradesLeft(0, q) > 0);
   notify(`Propusiste un trueque: das ${resList(give)} por ${resList(want)}`, G.players[0].color);
   let q; for (const c of order){ if (isRemote(c) ? await netAsk(c, 'offer', { give, want }, () => false, 60000) : botAcceptTrade(c, give, want)){ q = c; break; } }
   if (q === undefined){ notify(target === 'todos' ? 'Nadie aceptó tu trueque' : `${G.players[target].name} rechazó tu trueque`, G.players[target === 'todos' ? 0 : target].color); return; }

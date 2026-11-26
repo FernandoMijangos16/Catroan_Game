@@ -55,6 +55,7 @@ function netGameMsg(m){
     if (d.t === 'ans'){ const a = NG.asks[d.id]; if (a && (!a.pid || a.pid === from)) a.res(d.d); return; }
     if (d.t === 'op'){ if (netAuth()) netApplyOp(d, from); return; }
     if (d.t === 'reg'){ if (NG.seat === 0) netHostReg(d, from); return; }
+    if (d.t === 'regname'){ if (NG.seat === 0) netHostRegName(d, from); return; }
     if (d.t === 'bye'){ if (from === hostPeer() || NG.seat !== 0) netEnded('El anfitrión cerró la partida.'); return; }
   } catch (e) { console.warn('net', e); }
 }
@@ -63,7 +64,7 @@ function netSnap(){
   const pl = [];
   G.players.forEach((P, l) => { const o = JSON.parse(JSON.stringify(P)); delete o.tok; if (o.fx) for (const k in o.fx) if (o.fx[k] && typeof o.fx[k].from === 'number') o.fx[k].from = gSeat(o.fx[k].from); pl[gSeat(l)] = o; });
   return { v: ++NG.ver, ph: G.phase, cur: gSeat(G.current), ord: G.order ? G.order.map(gSeat) : null, dice: G.dice, rob: G.robber, deck: G.deck, army: mapP(G.army, gSeat), lon: mapP(G.longest, gSeat),
-    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, to: G.tradeOpen, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
+    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
     q: (G.quests || []).map(q => ({ ...q, p: gSeat(q.p), txt: packHtml(q.txt) })), gos: G.gossip, nm: G.names, pl,
     b: G.verts.filter(v => v.building).map(v => [v.id, gSeat(v.building.p), v.building.type === 'ciudad' ? 1 : 0, v.name]), r: G.edges.filter(e => e.road !== null).map(e => [e.id, gSeat(e.road)]) };
 }
@@ -88,7 +89,8 @@ function netApply(s, from){
       Object.keys(P).forEach(k => { if (!(k in o) && k !== 'tok') delete P[k]; }); Object.assign(P, o); });
     if (keep){ Object.assign(G.players[0], keep); regTaken(); }
     Object.assign(G, { phase: s.ph, current: lSeat(s.cur | 0), order: Array.isArray(s.ord) ? s.ord.map(lSeat) : null, dice: s.dice, deck: s.deck || [], army: mapP(s.army, lSeat), longest: mapP(s.lon, lSeat), merchant: s.mer, bag: Array.isArray(s.bag) ? s.bag.filter(v => v >= 11 && v <= 66) : null, playedTurn: s.pt, turnId: s.tid | 0,
-      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [] });
+      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [],
+      trades: s.tc && Array.isArray(s.tc.l) ? { t: s.tc.t | 0, l: s.tc.l.filter(x => Array.isArray(x)).map(([a, b, n]) => { const x = lSeat(a | 0), y = lSeat(b | 0); return [Math.min(x, y), Math.max(x, y), n | 0]; }) } : null });
     SETUP.k = s.sk | 0; SETUP.queue = (s.sq || []).map(lSeat);
     G.quests = (s.q || []).map(q => ({ ...q, p: lSeat(q.p | 0), txt: netHtml(q.txt) }));
     // board pieces: draw what is new, take away what is gone
@@ -204,8 +206,8 @@ function netApplyOp(o, from){
   if (o.k === 'qacc'){ const q = (G.quests || []).find(x => x.id === (o.d && o.d.id) && x.p === l); if (q && q.state === 'new'){ q.state = 'accepted'; refresh(); } }
 }
 // ---------- the host: seats, joins, leaves ----------
-function netHostStart(n){
-  Object.assign(NG, { on: true, seat: 0, n, ver: 0, started: false, startReq: false, last: null, turnSeen: -1, setupSeen: '', asks: {}, lost: {} });
+function netHostStart(n, fill = true){
+  Object.assign(NG, { on: true, seat: 0, n, fill, ver: 0, started: false, startReq: false, last: null, turnSeen: -1, setupSeen: '', asks: {}, lost: {} });
   GAME_OPTS.online = true; closeMainMenu(); applyGameOpts(); newGame(n);
   G.players.forEach((P, i) => { if (i) Object.assign(P, { name: 'Libre', color: '#5a5650', bot: true, empty: true }); });
   Object.assign(G.players[0], { tok: NG.tok, pid: myPeer(), bot: false });
@@ -234,7 +236,7 @@ function netHostPeers(){
   G.players.forEach((P, l) => { if (l === 0 || P.bot || P.empty || !P.pid) return; if (NET.peers.some(p => p.peer === P.pid)) { delete NG.lost[l]; return; } NG.lost[l] ||= Date.now(); });
 }
 const freeColor = (l, want) => { const used = G.players.filter((P, i) => i !== l && !P.empty).map(P => P.color); return want && !used.includes(want) ? want : COLOR_CHOICES.find(c => !used.includes(c)) || '#888888'; };
-function netSendSeat(l, tok, rejoin){ netSend({ t: 'seat', tok, seat: l, n: NG.n, board: NG.board, opts: { mode: GAME_OPTS.mode, fp: GAME_OPTS.firstPerson }, match: NET.match, rejoin: !!rejoin, started: NG.started }); }
+function netSendSeat(l, tok, rejoin){ netSend({ t: 'seat', tok, seat: l, n: NG.n, board: NG.board, opts: { mode: GAME_OPTS.mode, fp: GAME_OPTS.firstPerson, fill: NG.fill !== false }, match: NET.match, rejoin: !!rejoin, started: NG.started }); }
 function netSeatLost(l){
   delete NG.lost[l]; const P = G.players[l]; if (!P || P.bot || P.empty) return;
   if (!NG.started && G.phase === 'register'){ chatSystem(`${P.name} salió.`); Object.assign(P, { name: 'Libre', color: '#5a5650', bot: true, empty: true, tok: null, pid: null, roll: 0, joining: false }); PLATES.forEach(x => x.build()); updatePlates(true); netFlush(true); netWaitRender(); return; }
@@ -266,6 +268,17 @@ function netHostReg(d, from){
   chatSystem(`${P.name} sacó ${P.roll} en los dados.`); SFX.click?.();
   PLATES.forEach(x => x.build()); updatePlates(true); netFlush(true); netWaitRender(); netCheckStart();
 }
+// the name, color and avatar go out as soon as the sign is saved, so the others see them before the dice
+function netRegName(){
+  const me = G.players[0]; me.joining = false; NET.me.name = me.name; NET.me.color = me.color; netPresence();
+  if (NG.seat === 0){ netFlush(true); netWaitRender(); }
+  else netSend({ t: 'regname', seat: NG.seat, name: me.name, color: me.color, avatar: me.avatar });
+}
+function netHostRegName(d, from){
+  const l = d.seat | 0, P = G.players[l]; if (!P || l === 0 || P.empty || P.pid !== from || NG.started) return;
+  P.name = cleanName(d.name) || 'Jugador'; P.avatar = avOk(String(d.avatar || 'campesino')); P.color = freeColor(l, okColor(d.color) ? d.color : null); P.joining = false;
+  PLATES.forEach(x => x.build()); updatePlates(true); netFlush(true); netWaitRender();
+}
 function netRegDone(roll){
   NG.regLocal = false; const me = G.players[0]; me.roll = roll; me.joining = false;
   try { localStorage.setItem('hexterra-name', me.name); } catch {}
@@ -276,7 +289,7 @@ function netRegDone(roll){
 }
 function netCheckStart(){
   if (NG.started || NG.seat !== 0 || !(G.players[0].roll > 0)) return;
-  const full = G.players.every(P => !P.empty && P.roll > 0), early = NG.startReq && G.players.every(P => P.empty || P.roll > 0);
+  const full = G.players.every(P => !P.empty && P.roll > 0), early = NG.fill !== false && NG.startReq && G.players.every(P => P.empty || P.roll > 0);
   if (full || early) netBegin();
 }
 // everybody rolled (or the host pressed Comenzar): bots fill the empty seats, the order is set and the setup starts
@@ -301,7 +314,7 @@ function netGotSeat(d, from){
   const n = d.n | 0, b = d.board; if (n < 2 || n > 6 || !b || !Array.isArray(b.types) || b.types.some(t => !TERRAIN[t])) return;
   clearTimeout(NG.joinT);
   if (NG.on && d.rejoin){ NG.ver = 0; return; }   // already at the table: the next state brings everything back
-  Object.assign(NG, { on: true, seat: d.seat | 0, n, ver: 0, board: b, started: !!d.started, last: null, turnSeen: -1, setupSeen: '', asks: {}, hostLostAt: 0 });
+  Object.assign(NG, { on: true, seat: d.seat | 0, n, fill: !(d.opts && d.opts.fill === false), ver: 0, board: b, started: !!d.started, last: null, turnSeen: -1, setupSeen: '', asks: {}, hostLostAt: 0 });
   GAME_OPTS.mode = d.opts && d.opts.mode === 'clasico' ? 'clasico' : 'catroan'; GAME_OPTS.firstPerson = !(d.opts && d.opts.fp === false); GAME_OPTS.online = true;
   NET.match = cleanName(d.match) || NET.match;
   closeMainMenu(); applyGameOpts(); newGame(n, { types: b.types, nums: b.nums, ports: b.ports });
@@ -315,7 +328,7 @@ function netEnded(msg){
   openModal(`<h3>${msg}</h3><p class="muted">La partida en línea terminó para ti.</p><div class="row end"><button class="primary" data-k="menu">Volver al menú</button></div>`, false);
   modalBody.onclick = async e => { if (!e.target.closest('button')) return; closeModal(); await netLeave(); netReset(); newGame(); openMainMenu(); };
 }
-function netReset(){ Object.assign(NG, { on: false, seat: 0, n: 0, ver: 0, started: false, startReq: false, last: null, regLocal: false, held: null, hold: false, asks: {}, lost: {} }); GAME_OPTS.online = false; netWaitRender(); chatEnsure().classList.remove('pinned'); }
+function netReset(){ Object.assign(NG, { on: false, seat: 0, n: 0, fill: true, ver: 0, started: false, startReq: false, last: null, regLocal: false, held: null, hold: false, asks: {}, lost: {} }); GAME_OPTS.online = false; netWaitRender(); chatEnsure().classList.remove('pinned'); }
 addEventListener('pagehide', () => { if (NG.on && NG.seat === 0) netSend({ t: 'bye' }); if (NET.room) try { NET.room.leave(); } catch {} });
 // while I fill in my sign, colors the others already took get greyed out (and mine moves if someone got there first)
 function regTaken(){
@@ -338,13 +351,14 @@ function netWaitRender(){
   G.players.forEach((P, i) => { const li = document.createElement('li'), dot = document.createElement('i'), nm = document.createElement('span'), st = document.createElement('em');
     dot.style.background = P.empty ? 'transparent' : P.color; li.classList.toggle('empty', !!P.empty);
     const g = gSeat(i); nm.textContent = P.empty ? (NG.seat === 0 && NG.startReq ? 'Bot' : 'Lugar libre') : P.name + (i === 0 ? ' (tú)' : '');
-    st.textContent = P.empty ? 'esperando…' : P.joining || !(P.roll > 0) ? 'registrándose…' : `🎲 ${P.roll}`; if (g === 0){ const h = document.createElement('small'); h.textContent = 'anfitrión'; nm.appendChild(h); }
+    st.textContent = P.empty ? 'esperando…' : P.joining ? 'registrándose…' : !(P.roll > 0) ? 'tirando los dados…' : `🎲 ${P.roll}`; if (g === 0){ const h = document.createElement('small'); h.textContent = 'anfitrión'; nm.appendChild(h); }
     li.append(dot, nm, st); ul.appendChild(li); });
   const waiting = G.players.filter(P => !P.empty && !(P.roll > 0)).map(P => P.name), free = G.players.filter(P => P.empty).length;
   el.querySelector('.nwmsg').textContent = NG.startReq ? (waiting.length ? `Comenzando en cuanto ${waiting.join(' y ')} ${waiting.length > 1 ? 'tiren' : 'tire'} los dados…` : 'Comenzando…')
     : free ? `Esperando ${free} jugador${free > 1 ? 'es' : ''} más · comparte la clave` : waiting.length ? `Esperando a que ${waiting.join(' y ')} ${waiting.length > 1 ? 'tiren' : 'tire'} los dados…` : 'Todos listos';
-  if (NG.seat !== 0) el.querySelector('.nwmsg').textContent += ' · el anfitrión puede comenzar antes';
-  const go = el.querySelector('.nwgo'); go.style.display = NG.seat === 0 ? '' : 'none'; go.classList.toggle('on', NG.seat === 0 && G.players[0].roll > 0 && !NG.startReq);
+  if (NG.seat !== 0 && NG.fill !== false) el.querySelector('.nwmsg').textContent += ' · el anfitrión puede comenzar antes';
+  if (NG.fill === false && free) el.querySelector('.nwmsg').textContent += ' · sin bots: empieza cuando estén todos';
+  const go = el.querySelector('.nwgo'); go.style.display = NG.seat === 0 && NG.fill !== false ? '' : 'none'; go.classList.toggle('on', NG.seat === 0 && G.players[0].roll > 0 && !NG.startReq);
   if (NG.seat === 0 && !NG.waitV && miniInit()){
     const g = new THREE.Group(), plate = new THREE.Mesh(sg(new THREE.CylinderGeometry(1, 1.03, .26, 6)), icm(0xa8823a, { m: .55, r: .45 })); plate.rotation.y = Math.PI/6; g.add(plate);
     const felt = new THREE.Mesh(sg(new THREE.CylinderGeometry(.86, .86, .03, 6)), icm(0x4f5e34)); felt.rotation.y = Math.PI/6; felt.position.y = .14; g.add(felt);

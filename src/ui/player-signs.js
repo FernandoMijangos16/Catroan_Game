@@ -51,8 +51,8 @@ function initPlates(){
 function plateMenu(i, el){
   const old = $('#pl-menu'); if (old){ old.remove(); if (+old.dataset.i === i) return; }
   const P = G.players[i], r = el.getBoundingClientRect();
-  const can = !G.over && !G.players[0].bot && ((G.current === 0 && G.phase === 'main') || (!NG.on && G.current === i && G.tradeOpen === G.turnId));
-  const why = G.over ? 'La partida terminó.' : G.current === 0 ? 'Primero tira los dados.' : G.current !== i ? `Fuera de tu turno solo puedes cambiar con ${G.players[G.current].name}.` : `Espera a que ${P.name} haga un trueque primero.`;
+  const can = !G.over && !G.players[0].bot && tradesLeft(0, i) > 0 && ((G.current === 0 && G.phase === 'main') || (!NG.on && G.current === i && G.tradeOpen === G.turnId));
+  const why = G.over ? 'La partida terminó.' : !tradesLeft(0, i) ? tradeLimitMsg(P.name) : G.current === 0 ? 'Primero tira los dados.' : G.current !== i ? `Fuera de tu turno solo puedes cambiar con ${G.players[G.current].name}.` : `Espera a que ${P.name} haga un trueque primero.`;
   const m = document.createElement('div'); m.id = 'pl-menu'; m.dataset.i = i;
   m.innerHTML = `<button ${can ? '' : 'disabled'}><i class="dot" style="background:${P.color}"></i> Proponer trueque a ${P.name}</button>${can ? '' : `<small>${why}</small>`}`;
   m.style.left = (r.left + r.width/2) + 'px'; m.style.top = (r.bottom + 2) + 'px'; document.body.appendChild(m); SFX.click?.();

@@ -611,6 +611,9 @@ body.inmenu #hud-top,body.inmenu #hexbar,body.inmenu #b-endturn,body.inmenu .fwi
 #menu .mhexes{display:flex;gap:12px}
 #menu .mhx{width:74px;height:84px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(#3a342c,#1e1a16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 #menu .mhx b{font-size:24px;color:#7a6a5a}#menu .mhx span{font-size:9px;color:#9a8a7a}
+#menu .mhx.mext{cursor:pointer;background:linear-gradient(#5a4a30,#2e2416)}#menu .mhx.mext b{color:#c8b088;font-size:22px}#menu .mhx.mext span{color:#c8b898;font-size:10px}
+#menu .mhx.mext:hover{filter:brightness(1.15)}#menu .mhx.mext.on{background:linear-gradient(#c8a040,#7a5a20);filter:drop-shadow(0 0 10px rgba(255,200,100,.6))}#menu .mhx.mext.on b,#menu .mhx.mext.on span{color:#fff2cc}
+#menu .mcomp:has(.mext){opacity:1}#menu .mcomp:has(.mext) .mhx:not(.mext){opacity:.6}
 #menu .mbig{display:flex;flex-direction:column;gap:12px}
 #menu .mbig button{font-size:20px;padding:12px 30px;min-width:300px}
 #menu .mnote{font-size:13px;color:#d8b8a0;max-width:520px;text-align:center;min-height:1em;margin:0}
@@ -649,6 +652,7 @@ body.noscenes #pp-enter{display:none !important}
 
 /* players per online match */
 #menu .mnp{align-items:center;gap:8px}
+#menu .mnp .mbots{margin-left:14px}
 #menu .mnp span{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c8b898;margin-right:6px}
 #menu .mnpb{width:46px;height:40px;padding:0;font-size:18px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 #menu .mnpb.on{filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,200,100,.6));color:#ffd890}
@@ -4874,8 +4878,8 @@ function initPlates(){
 function plateMenu(i, el){
   const old = $('#pl-menu'); if (old){ old.remove(); if (+old.dataset.i === i) return; }
   const P = G.players[i], r = el.getBoundingClientRect();
-  const can = !G.over && !G.players[0].bot && ((G.current === 0 && G.phase === 'main') || (!NG.on && G.current === i && G.tradeOpen === G.turnId));
-  const why = G.over ? 'La partida terminó.' : G.current === 0 ? 'Primero tira los dados.' : G.current !== i ? `Fuera de tu turno solo puedes cambiar con ${G.players[G.current].name}.` : `Espera a que ${P.name} haga un trueque primero.`;
+  const can = !G.over && !G.players[0].bot && tradesLeft(0, i) > 0 && ((G.current === 0 && G.phase === 'main') || (!NG.on && G.current === i && G.tradeOpen === G.turnId));
+  const why = G.over ? 'La partida terminó.' : !tradesLeft(0, i) ? tradeLimitMsg(P.name) : G.current === 0 ? 'Primero tira los dados.' : G.current !== i ? `Fuera de tu turno solo puedes cambiar con ${G.players[G.current].name}.` : `Espera a que ${P.name} haga un trueque primero.`;
   const m = document.createElement('div'); m.id = 'pl-menu'; m.dataset.i = i;
   m.innerHTML = `<button ${can ? '' : 'disabled'}><i class="dot" style="background:${P.color}"></i> Proponer trueque a ${P.name}</button>${can ? '' : `<small>${why}</small>`}`;
   m.style.left = (r.left + r.width/2) + 'px'; m.style.top = (r.bottom + 2) + 'px'; document.body.appendChild(m); SFX.click?.();
@@ -6216,8 +6220,19 @@ function doTrade(a, b, aGives, bGives){
     if (RES.includes(r)){ G.players[a].res[r] += y - x; G.players[b].res[r] += x - y; }
     else { [a, b].forEach(p => G.players[p].special = G.players[p].special || {}); G.players[a].special[r] = (G.players[a].special[r] || 0) + y - x; G.players[b].special[r] = (G.players[b].special[r] || 0) + x - y; } });
   if (a === G.current || b === G.current) G.tradeOpen = G.turnId;
+  tradeCount(a, b, 1);
   updateInventory();
 }
+// at most TRADE_MAX trades between the same two players in one turn (G.trades: { t: turnId, l: [[a, b, n]] })
+const TRADE_MAX = 2;
+function tradeCount(a, b, add = 0){
+  if (!G.trades || G.trades.t !== G.turnId) G.trades = { t: G.turnId, l: [] };
+  const lo = Math.min(a, b), hi = Math.max(a, b); let e = G.trades.l.find(x => x[0] === lo && x[1] === hi);
+  if (add){ if (!e) G.trades.l.push(e = [lo, hi, 0]); e[2] += add; }
+  return e ? e[2] : 0;
+}
+const tradesLeft = (a, b) => Math.max(0, TRADE_MAX - tradeCount(a, b));
+const tradeLimitMsg = n => `Ya hiciste ${TRADE_MAX} trueques con ${n} en este turno.`;
 const haveOf = (p, k) => RES.includes(k) ? G.players[p].res[k] : ((G.players[p].special || {})[k] || 0);
 function specValue(p, k, giving){ const need = (G.quests || []).some(q => q.p === p && q.state !== 'done' && qItems(q)[k] && ((G.players[p].special || {})[k] || 0) < qItems(q)[k] + (giving ? 1 : 0)); return need ? 2.6 : SPECIAL[k].val*.5; }
 const resList = o => Object.entries(o).filter(([, n]) => n > 0).map(([r, n]) => `${n} ${RES.includes(r) ? resImg(r) : specImg(r)}`).join(' ') || 'nada';
@@ -6229,12 +6244,13 @@ const mayorName = () => G.players[0].name === 'Tú' ? 'El Alcalde' : G.players[0
 async function tradeLetter(target){
   const Q = G.players[target];
   if (NG.on && G.current !== 0){ sysNote('En línea solo puedes proponer tratos durante tu turno.', { ms: 2600 }); return; }
+  if (!tradesLeft(0, target)){ sysNote(tradeLimitMsg(Q.name), { ms: 2600 }); return; }
   if (!scenesOn()){ openTrade('jug', { target }); return; }
   if (marketCtx || $('#offer').classList.contains('show')){ sysNote('Termina primero lo que estás haciendo.', { ms: 2200 }); return; }
   if (mode !== 'board'){ if (mode === 'village') backToBoard(); for (let k=0;k<80 && mode !== 'board';k++) await wait(200); }
   for (let k=0;k<60 && (busy || marketCtx);k++) await wait(200);
   const r = await officeScene({ mode: 'write', to: Q.name, toColor: Q.color, toF: FEM.has(Q.name), from: mayorName(),
-    decide: (offer, ask) => { if (G.current !== 0 && (G.tradeOpen !== G.turnId || target !== G.current)) return false; return isRemote(target) ? netAsk(target, 'offer', { give: offer, want: ask }, () => false, 60000) : botAcceptTrade(target, offer, ask); } });
+    decide: (offer, ask) => { if (!tradesLeft(0, target) || (G.current !== 0 && (G.tradeOpen !== G.turnId || target !== G.current))) return false; return isRemote(target) ? netAsk(target, 'offer', { give: offer, want: ask }, () => false, 60000) : botAcceptTrade(target, offer, ask); } });
   if (r === null) return;
   if (r.ok){ await courierScene(target, r.offer, r.ask); refresh(); }
   else if (!r.cancel) notify(`${Q.name} rechazó tu carta de trueque`, Q.color);
@@ -6246,7 +6262,7 @@ async function botOfferTrade(p, st){
   if (st.offered || Math.random() > .35) return false;
   st.offered = true;
   // online the bot writes to any of the humans at the table (away players excluded), offline to you
-  const hs = NG.on ? humanSeats().filter(h => h !== p && !G.players[h].away) : [0]; if (!hs.length) return false;
+  const hs = (NG.on ? humanSeats().filter(h => h !== p && !G.players[h].away) : [0]).filter(h => tradesLeft(h, p) > 0); if (!hs.length) return false;
   const h = pick(hs), H = G.players[h], you = h === 0, P = G.players[p], { tgt, need } = botNeeds(p);
   const ask = (give, want) => you ? askHuman(p, give, want) : netAsk(h, 'offer', { give, want }, () => false, 45000);
   const no = () => notify(you ? `Rechazaste el trueque de ${P.name}` : `${H.name} rechazó el trueque de ${P.name}`, H.color);
@@ -8034,7 +8050,7 @@ function startRegistration(){
   ov.querySelectorAll('.rav').forEach(b => b.onclick = () => { const i = AVATARS.findIndex(a => a.id === me.avatar); me.avatar = AVATARS[(i + (b.classList.contains('l') ? -1 : 1) + AVATARS.length) % AVATARS.length].id; regSign(me, { blank: true }); SFX.click?.(); });
   ov.querySelector('.rpor').onclick = () => { $('#reg').classList.remove('show'); chooseAvatar(); const mb = modalBody.onclick; modalBody.onclick = e => { mb && mb(e); if (modal.classList.contains('hidden')){ $('#reg').classList.add('show'); regSign(me, { blank: true }); } }; };
   ov.querySelectorAll('.rcol').forEach(b => b.onclick = () => { if (b.disabled) return; setMyColor(b.dataset.c); ov.querySelectorAll('.rcol').forEach(x => x.classList.toggle('on', x === b)); regSign(me, { blank: true }); SFX.click?.(); });
-  ov.querySelector('.rok').onclick = () => { me.name = inp.value.trim() || 'Alcalde'; try { localStorage.setItem('hexterra-name', me.name); localStorage.setItem('hexterra-color', me.color); localStorage.setItem('hexterra-avatar', me.avatar); } catch {} SFX.click?.(); PLATES.forEach(p => p.build()); updatePlates(true); if (NG.on) netRegRoll(); else orderRolls(); };
+  ov.querySelector('.rok').onclick = () => { me.name = inp.value.trim() || 'Alcalde'; try { localStorage.setItem('hexterra-name', me.name); localStorage.setItem('hexterra-color', me.color); localStorage.setItem('hexterra-avatar', me.avatar); } catch {} SFX.click?.(); PLATES.forEach(p => p.build()); updatePlates(true); if (NG.on){ netRegName(); netRegRoll(); } else orderRolls(); };
   setTimeout(() => inp.focus(), 300);
 }
 // the dice box inside the extension
@@ -8412,7 +8428,8 @@ async function proposeTrade(target, give, want){
   if (NG.on && G.current !== 0){ notify('En línea solo puedes proponer tratos durante tu turno.', G.players[0].color, 'sys'); return; }
   if (!ALL.some(r => give[r]) || !ALL.some(r => want[r])){ notify('Elige qué das y qué pides', G.players[0].color, 'sys'); return; }
   if (G.current !== 0 && G.tradeOpen !== G.turnId){ notify(`Solo puedes hacer trueques fuera de tu turno después de que ${G.players[G.current].name} haga uno`, G.players[0].color, 'sys'); return; }
-  const order = (target === 'todos' ? shuffle(G.players.map((_, i) => i).filter(i => i)) : [target]).filter(q => G.current === 0 || q === G.current);
+  if (target !== 'todos' && !tradesLeft(0, target)){ notify(tradeLimitMsg(G.players[target].name), G.players[0].color, 'sys'); return; }
+  const order = (target === 'todos' ? shuffle(G.players.map((_, i) => i).filter(i => i)) : [target]).filter(q => (G.current === 0 || q === G.current) && tradesLeft(0, q) > 0);
   notify(`Propusiste un trueque: das ${resList(give)} por ${resList(want)}`, G.players[0].color);
   let q; for (const c of order){ if (isRemote(c) ? await netAsk(c, 'offer', { give, want }, () => false, 60000) : botAcceptTrade(c, give, want)){ q = c; break; } }
   if (q === undefined){ notify(target === 'todos' ? 'Nadie aceptó tu trueque' : `${G.players[target].name} rechazó tu trueque`, G.players[target === 'todos' ? 0 : target].color); return; }
@@ -8756,6 +8773,7 @@ function netGameMsg(m){
     if (d.t === 'ans'){ const a = NG.asks[d.id]; if (a && (!a.pid || a.pid === from)) a.res(d.d); return; }
     if (d.t === 'op'){ if (netAuth()) netApplyOp(d, from); return; }
     if (d.t === 'reg'){ if (NG.seat === 0) netHostReg(d, from); return; }
+    if (d.t === 'regname'){ if (NG.seat === 0) netHostRegName(d, from); return; }
     if (d.t === 'bye'){ if (from === hostPeer() || NG.seat !== 0) netEnded('El anfitrión cerró la partida.'); return; }
   } catch (e) { console.warn('net', e); }
 }
@@ -8764,7 +8782,7 @@ function netSnap(){
   const pl = [];
   G.players.forEach((P, l) => { const o = JSON.parse(JSON.stringify(P)); delete o.tok; if (o.fx) for (const k in o.fx) if (o.fx[k] && typeof o.fx[k].from === 'number') o.fx[k].from = gSeat(o.fx[k].from); pl[gSeat(l)] = o; });
   return { v: ++NG.ver, ph: G.phase, cur: gSeat(G.current), ord: G.order ? G.order.map(gSeat) : null, dice: G.dice, rob: G.robber, deck: G.deck, army: mapP(G.army, gSeat), lon: mapP(G.longest, gSeat),
-    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, to: G.tradeOpen, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
+    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
     q: (G.quests || []).map(q => ({ ...q, p: gSeat(q.p), txt: packHtml(q.txt) })), gos: G.gossip, nm: G.names, pl,
     b: G.verts.filter(v => v.building).map(v => [v.id, gSeat(v.building.p), v.building.type === 'ciudad' ? 1 : 0, v.name]), r: G.edges.filter(e => e.road !== null).map(e => [e.id, gSeat(e.road)]) };
 }
@@ -8789,7 +8807,8 @@ function netApply(s, from){
       Object.keys(P).forEach(k => { if (!(k in o) && k !== 'tok') delete P[k]; }); Object.assign(P, o); });
     if (keep){ Object.assign(G.players[0], keep); regTaken(); }
     Object.assign(G, { phase: s.ph, current: lSeat(s.cur | 0), order: Array.isArray(s.ord) ? s.ord.map(lSeat) : null, dice: s.dice, deck: s.deck || [], army: mapP(s.army, lSeat), longest: mapP(s.lon, lSeat), merchant: s.mer, bag: Array.isArray(s.bag) ? s.bag.filter(v => v >= 11 && v <= 66) : null, playedTurn: s.pt, turnId: s.tid | 0,
-      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [] });
+      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [],
+      trades: s.tc && Array.isArray(s.tc.l) ? { t: s.tc.t | 0, l: s.tc.l.filter(x => Array.isArray(x)).map(([a, b, n]) => { const x = lSeat(a | 0), y = lSeat(b | 0); return [Math.min(x, y), Math.max(x, y), n | 0]; }) } : null });
     SETUP.k = s.sk | 0; SETUP.queue = (s.sq || []).map(lSeat);
     G.quests = (s.q || []).map(q => ({ ...q, p: lSeat(q.p | 0), txt: netHtml(q.txt) }));
     // board pieces: draw what is new, take away what is gone
@@ -8905,8 +8924,8 @@ function netApplyOp(o, from){
   if (o.k === 'qacc'){ const q = (G.quests || []).find(x => x.id === (o.d && o.d.id) && x.p === l); if (q && q.state === 'new'){ q.state = 'accepted'; refresh(); } }
 }
 // ---------- the host: seats, joins, leaves ----------
-function netHostStart(n){
-  Object.assign(NG, { on: true, seat: 0, n, ver: 0, started: false, startReq: false, last: null, turnSeen: -1, setupSeen: '', asks: {}, lost: {} });
+function netHostStart(n, fill = true){
+  Object.assign(NG, { on: true, seat: 0, n, fill, ver: 0, started: false, startReq: false, last: null, turnSeen: -1, setupSeen: '', asks: {}, lost: {} });
   GAME_OPTS.online = true; closeMainMenu(); applyGameOpts(); newGame(n);
   G.players.forEach((P, i) => { if (i) Object.assign(P, { name: 'Libre', color: '#5a5650', bot: true, empty: true }); });
   Object.assign(G.players[0], { tok: NG.tok, pid: myPeer(), bot: false });
@@ -8935,7 +8954,7 @@ function netHostPeers(){
   G.players.forEach((P, l) => { if (l === 0 || P.bot || P.empty || !P.pid) return; if (NET.peers.some(p => p.peer === P.pid)) { delete NG.lost[l]; return; } NG.lost[l] ||= Date.now(); });
 }
 const freeColor = (l, want) => { const used = G.players.filter((P, i) => i !== l && !P.empty).map(P => P.color); return want && !used.includes(want) ? want : COLOR_CHOICES.find(c => !used.includes(c)) || '#888888'; };
-function netSendSeat(l, tok, rejoin){ netSend({ t: 'seat', tok, seat: l, n: NG.n, board: NG.board, opts: { mode: GAME_OPTS.mode, fp: GAME_OPTS.firstPerson }, match: NET.match, rejoin: !!rejoin, started: NG.started }); }
+function netSendSeat(l, tok, rejoin){ netSend({ t: 'seat', tok, seat: l, n: NG.n, board: NG.board, opts: { mode: GAME_OPTS.mode, fp: GAME_OPTS.firstPerson, fill: NG.fill !== false }, match: NET.match, rejoin: !!rejoin, started: NG.started }); }
 function netSeatLost(l){
   delete NG.lost[l]; const P = G.players[l]; if (!P || P.bot || P.empty) return;
   if (!NG.started && G.phase === 'register'){ chatSystem(`${P.name} salió.`); Object.assign(P, { name: 'Libre', color: '#5a5650', bot: true, empty: true, tok: null, pid: null, roll: 0, joining: false }); PLATES.forEach(x => x.build()); updatePlates(true); netFlush(true); netWaitRender(); return; }
@@ -8967,6 +8986,17 @@ function netHostReg(d, from){
   chatSystem(`${P.name} sacó ${P.roll} en los dados.`); SFX.click?.();
   PLATES.forEach(x => x.build()); updatePlates(true); netFlush(true); netWaitRender(); netCheckStart();
 }
+// the name, color and avatar go out as soon as the sign is saved, so the others see them before the dice
+function netRegName(){
+  const me = G.players[0]; me.joining = false; NET.me.name = me.name; NET.me.color = me.color; netPresence();
+  if (NG.seat === 0){ netFlush(true); netWaitRender(); }
+  else netSend({ t: 'regname', seat: NG.seat, name: me.name, color: me.color, avatar: me.avatar });
+}
+function netHostRegName(d, from){
+  const l = d.seat | 0, P = G.players[l]; if (!P || l === 0 || P.empty || P.pid !== from || NG.started) return;
+  P.name = cleanName(d.name) || 'Jugador'; P.avatar = avOk(String(d.avatar || 'campesino')); P.color = freeColor(l, okColor(d.color) ? d.color : null); P.joining = false;
+  PLATES.forEach(x => x.build()); updatePlates(true); netFlush(true); netWaitRender();
+}
 function netRegDone(roll){
   NG.regLocal = false; const me = G.players[0]; me.roll = roll; me.joining = false;
   try { localStorage.setItem('hexterra-name', me.name); } catch {}
@@ -8977,7 +9007,7 @@ function netRegDone(roll){
 }
 function netCheckStart(){
   if (NG.started || NG.seat !== 0 || !(G.players[0].roll > 0)) return;
-  const full = G.players.every(P => !P.empty && P.roll > 0), early = NG.startReq && G.players.every(P => P.empty || P.roll > 0);
+  const full = G.players.every(P => !P.empty && P.roll > 0), early = NG.fill !== false && NG.startReq && G.players.every(P => P.empty || P.roll > 0);
   if (full || early) netBegin();
 }
 // everybody rolled (or the host pressed Comenzar): bots fill the empty seats, the order is set and the setup starts
@@ -9002,7 +9032,7 @@ function netGotSeat(d, from){
   const n = d.n | 0, b = d.board; if (n < 2 || n > 6 || !b || !Array.isArray(b.types) || b.types.some(t => !TERRAIN[t])) return;
   clearTimeout(NG.joinT);
   if (NG.on && d.rejoin){ NG.ver = 0; return; }   // already at the table: the next state brings everything back
-  Object.assign(NG, { on: true, seat: d.seat | 0, n, ver: 0, board: b, started: !!d.started, last: null, turnSeen: -1, setupSeen: '', asks: {}, hostLostAt: 0 });
+  Object.assign(NG, { on: true, seat: d.seat | 0, n, fill: !(d.opts && d.opts.fill === false), ver: 0, board: b, started: !!d.started, last: null, turnSeen: -1, setupSeen: '', asks: {}, hostLostAt: 0 });
   GAME_OPTS.mode = d.opts && d.opts.mode === 'clasico' ? 'clasico' : 'catroan'; GAME_OPTS.firstPerson = !(d.opts && d.opts.fp === false); GAME_OPTS.online = true;
   NET.match = cleanName(d.match) || NET.match;
   closeMainMenu(); applyGameOpts(); newGame(n, { types: b.types, nums: b.nums, ports: b.ports });
@@ -9016,7 +9046,7 @@ function netEnded(msg){
   openModal(`<h3>${msg}</h3><p class="muted">La partida en línea terminó para ti.</p><div class="row end"><button class="primary" data-k="menu">Volver al menú</button></div>`, false);
   modalBody.onclick = async e => { if (!e.target.closest('button')) return; closeModal(); await netLeave(); netReset(); newGame(); openMainMenu(); };
 }
-function netReset(){ Object.assign(NG, { on: false, seat: 0, n: 0, ver: 0, started: false, startReq: false, last: null, regLocal: false, held: null, hold: false, asks: {}, lost: {} }); GAME_OPTS.online = false; netWaitRender(); chatEnsure().classList.remove('pinned'); }
+function netReset(){ Object.assign(NG, { on: false, seat: 0, n: 0, fill: true, ver: 0, started: false, startReq: false, last: null, regLocal: false, held: null, hold: false, asks: {}, lost: {} }); GAME_OPTS.online = false; netWaitRender(); chatEnsure().classList.remove('pinned'); }
 addEventListener('pagehide', () => { if (NG.on && NG.seat === 0) netSend({ t: 'bye' }); if (NET.room) try { NET.room.leave(); } catch {} });
 // while I fill in my sign, colors the others already took get greyed out (and mine moves if someone got there first)
 function regTaken(){
@@ -9039,13 +9069,14 @@ function netWaitRender(){
   G.players.forEach((P, i) => { const li = document.createElement('li'), dot = document.createElement('i'), nm = document.createElement('span'), st = document.createElement('em');
     dot.style.background = P.empty ? 'transparent' : P.color; li.classList.toggle('empty', !!P.empty);
     const g = gSeat(i); nm.textContent = P.empty ? (NG.seat === 0 && NG.startReq ? 'Bot' : 'Lugar libre') : P.name + (i === 0 ? ' (tú)' : '');
-    st.textContent = P.empty ? 'esperando…' : P.joining || !(P.roll > 0) ? 'registrándose…' : `🎲 ${P.roll}`; if (g === 0){ const h = document.createElement('small'); h.textContent = 'anfitrión'; nm.appendChild(h); }
+    st.textContent = P.empty ? 'esperando…' : P.joining ? 'registrándose…' : !(P.roll > 0) ? 'tirando los dados…' : `🎲 ${P.roll}`; if (g === 0){ const h = document.createElement('small'); h.textContent = 'anfitrión'; nm.appendChild(h); }
     li.append(dot, nm, st); ul.appendChild(li); });
   const waiting = G.players.filter(P => !P.empty && !(P.roll > 0)).map(P => P.name), free = G.players.filter(P => P.empty).length;
   el.querySelector('.nwmsg').textContent = NG.startReq ? (waiting.length ? `Comenzando en cuanto ${waiting.join(' y ')} ${waiting.length > 1 ? 'tiren' : 'tire'} los dados…` : 'Comenzando…')
     : free ? `Esperando ${free} jugador${free > 1 ? 'es' : ''} más · comparte la clave` : waiting.length ? `Esperando a que ${waiting.join(' y ')} ${waiting.length > 1 ? 'tiren' : 'tire'} los dados…` : 'Todos listos';
-  if (NG.seat !== 0) el.querySelector('.nwmsg').textContent += ' · el anfitrión puede comenzar antes';
-  const go = el.querySelector('.nwgo'); go.style.display = NG.seat === 0 ? '' : 'none'; go.classList.toggle('on', NG.seat === 0 && G.players[0].roll > 0 && !NG.startReq);
+  if (NG.seat !== 0 && NG.fill !== false) el.querySelector('.nwmsg').textContent += ' · el anfitrión puede comenzar antes';
+  if (NG.fill === false && free) el.querySelector('.nwmsg').textContent += ' · sin bots: empieza cuando estén todos';
+  const go = el.querySelector('.nwgo'); go.style.display = NG.seat === 0 && NG.fill !== false ? '' : 'none'; go.classList.toggle('on', NG.seat === 0 && G.players[0].roll > 0 && !NG.startReq);
   if (NG.seat === 0 && !NG.waitV && miniInit()){
     const g = new THREE.Group(), plate = new THREE.Mesh(sg(new THREE.CylinderGeometry(1, 1.03, .26, 6)), icm(0xa8823a, { m: .55, r: .45 })); plate.rotation.y = Math.PI/6; g.add(plate);
     const felt = new THREE.Mesh(sg(new THREE.CylinderGeometry(.86, .86, .03, 6)), icm(0x4f5e34)); felt.rotation.y = Math.PI/6; felt.position.y = .14; g.add(felt);
@@ -9194,7 +9225,7 @@ function fallingView(canvas){
   return v;
 }
 // ================= MAIN MENU (Buckshot-Roulette-like): still of a village behind 70 % dark, falling models, the title in a biome =================
-const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, btnViews: [] };
+const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, btnViews: [] };
 const isNightNow = () => { const h = new Date().getHours() + new Date().getMinutes()/60; return h < 6.5 || h >= 19.5; };
 // a still of a village (black owner, nobody on the streets) seen from the plaza, by day or by night
 function menuBackdrop(night){
@@ -9227,8 +9258,8 @@ function openMainMenu(){
       <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
       <div class="mview" data-v="play"><h2>Elige el modo</h2><div class="mmodes"></div>
         <div class="mrow"><button class="mtoggle" data-fp="1"></button></div>
-        <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}</div>
-        <div class="mcomp"><h3>Complementos</h3><div class="mhexes">${[0, 1, 2].map(() => '<div class="mhx"><b>?</b><span>Próximamente</span></div>').join('')}</div></div>
+        <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4, 5, 6].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}<button class="mtoggle mbots"></button></div>
+        <div class="mcomp"><h3>Complementos</h3><div class="mhexes"><div class="mhx mext" data-ext="56" title="Tablero grande de 30 hexágonos para 5 o 6 jugadores"><b>5–6</b><span>jugadores</span></div>${[0, 1].map(() => '<div class="mhx"><b>?</b><span>Próximamente</span></div>').join('')}</div></div>
         <div class="mrow"><button data-go="back">◀ Volver</button><button class="primary" data-go="start">Comenzar ▶</button></div></div>
       <div class="mview" data-v="mp"><h2>Multijugador</h2><div class="mbig"><button class="primary" data-go="create">Crear partida</button><button data-go="join">Unirse con clave</button></div><p class="mnote"></p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="create"><h2>Nueva partida</h2><div class="mcardwrap"><canvas class="mcard"></canvas></div>
@@ -9257,7 +9288,7 @@ function menuGo(v){
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
   if (v === 'main') buildMenuTitle();
-  if (v === 'play'){ buildModeHexes(); el.querySelector('.mnp').style.display = MENU.online ? '' : 'none'; updNp(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
+  if (v === 'play'){ buildModeHexes(); updNp(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
   if (v === 'mp') el.querySelector('[data-v=mp] .mnote').textContent = '';
   if (v === 'create'){ updNetToggle(); if (!MENU.key) MENU.key = menuNewKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
   if (v === 'join') setTimeout(() => el.querySelector('.mkey').focus(), 50);
@@ -9305,7 +9336,15 @@ function buildModeHexes(){
     v.cam.position.set(0, 4.6, 9.6); v.cam.lookAt(0, -.2, .2); g.rotation.set(.12, -.35, 0); v.sc.add(g); MENU.modeViews.push(v); });
   updFpToggle();
 }
-const updNp = () => MENU.el.querySelectorAll('.mnpb').forEach(b => b.classList.toggle('on', +b.dataset.np === MENU.np));
+// players: online 2-4 (5-6 with the extension); alone it is 4, or 5-6 with the extension. Online also chooses bots or not
+function npChoices(){ return MENU.online ? (MENU.ext56 ? [2, 3, 4, 5, 6] : [2, 3, 4]) : MENU.ext56 ? [5, 6] : []; }
+function updNp(){ const el = MENU.el, ch = npChoices(); if (ch.length && !ch.includes(MENU.np)) MENU.np = ch.includes(4) ? 4 : ch[ch.length - 1];
+  el.querySelector('.mnp').style.display = ch.length ? '' : 'none';
+  el.querySelectorAll('.mnpb').forEach(b => { b.style.display = ch.includes(+b.dataset.np) ? '' : 'none'; b.classList.toggle('on', +b.dataset.np === MENU.np); });
+  el.querySelectorAll('.mext').forEach(h => h.classList.toggle('on', MENU.ext56));
+  const bt = el.querySelector('.mbots'); bt.style.display = MENU.online ? '' : 'none';
+  bt.innerHTML = `Bots: <b>${MENU.bots ? 'Sí' : 'No'}</b>`; bt.classList.toggle('off', !MENU.bots);
+  bt.title = MENU.bots ? 'El anfitrión puede comenzar antes: los lugares libres los ocupan bots' : 'Sin bots: la partida empieza cuando se ocupen todos los lugares'; }
 function updFpToggle(){ const b = MENU.el.querySelector('.mtoggle[data-fp]'); b.innerHTML = `${ic('ojo')} Vista en primera persona: <b>${MENU.fp ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.fp); b.title = MENU.fp ? 'Podrás recorrer tus pueblos y ver las escenas 3D (mercado, despacho, muelle…)' : 'Sin recorridos ni escenas: todo se resuelve con paneles, como el juego de mesa'; }
 // ---------- desktop only: the room lives on this computer's local network (LAN key) or online (WebRTC) ----------
 function updNetToggle(){ const b = MENU.el.querySelector('.mnet'); if (!b) return; const ip = deskLanIP(); if (!ip) NET.lan = false; else if (NET.lan === undefined) NET.lan = true;
@@ -9371,6 +9410,8 @@ async function menuClick(e){
   if (e.target.closest('.mnet')){ if (deskLanIP()){ NET.lan = !NET.lan; MENU.key = menuNewKey(); updNetToggle(); drawMatchCards(); } SFX.click?.(); return; }
   if (e.target.closest('.mtoggle[data-fp]')){ MENU.fp = !MENU.fp; updFpToggle(); SFX.click?.(); return; }
   const np = e.target.closest('.mnpb'); if (np){ MENU.np = +np.dataset.np; updNp(); SFX.click?.(); return; }
+  if (e.target.closest('.mext')){ MENU.ext56 = !MENU.ext56; if (MENU.ext56 && !MENU.online) MENU.np = 6; updNp(); SFX.click?.(); return; }
+  if (e.target.closest('.mbots')){ MENU.bots = !MENU.bots; updNp(); SFX.click?.(); return; }
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
   const go = a.dataset.go;
@@ -9378,8 +9419,8 @@ async function menuClick(e){
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
     GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp;
-    if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala: ' + netErrText(r.error); menuGo('mp'); return; } netHostStart(MENU.np); return; }
-    closeMainMenu(); applyGameOpts(); newGame(); startRegistration();
+    if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala: ' + netErrText(r.error); menuGo('mp'); return; } netHostStart(MENU.np, MENU.bots); return; }
+    closeMainMenu(); applyGameOpts(); newGame(MENU.ext56 ? MENU.np : undefined); startRegistration();
   }
   else if (go === 'create'){ MENU.key = menuNewKey(); MENU.match = ''; el.querySelector('.mname').value = ''; menuGo('create'); }
   else if (go === 'dojoin'){ const k = cleanKey(el.querySelector('.mkey').value), note = el.querySelector('.jnote');

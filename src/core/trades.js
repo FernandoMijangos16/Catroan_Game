@@ -22,8 +22,19 @@ function doTrade(a, b, aGives, bGives){
     if (RES.includes(r)){ G.players[a].res[r] += y - x; G.players[b].res[r] += x - y; }
     else { [a, b].forEach(p => G.players[p].special = G.players[p].special || {}); G.players[a].special[r] = (G.players[a].special[r] || 0) + y - x; G.players[b].special[r] = (G.players[b].special[r] || 0) + x - y; } });
   if (a === G.current || b === G.current) G.tradeOpen = G.turnId;
+  tradeCount(a, b, 1);
   updateInventory();
 }
+// at most TRADE_MAX trades between the same two players in one turn (G.trades: { t: turnId, l: [[a, b, n]] })
+const TRADE_MAX = 2;
+function tradeCount(a, b, add = 0){
+  if (!G.trades || G.trades.t !== G.turnId) G.trades = { t: G.turnId, l: [] };
+  const lo = Math.min(a, b), hi = Math.max(a, b); let e = G.trades.l.find(x => x[0] === lo && x[1] === hi);
+  if (add){ if (!e) G.trades.l.push(e = [lo, hi, 0]); e[2] += add; }
+  return e ? e[2] : 0;
+}
+const tradesLeft = (a, b) => Math.max(0, TRADE_MAX - tradeCount(a, b));
+const tradeLimitMsg = n => `Ya hiciste ${TRADE_MAX} trueques con ${n} en este turno.`;
 const haveOf = (p, k) => RES.includes(k) ? G.players[p].res[k] : ((G.players[p].special || {})[k] || 0);
 function specValue(p, k, giving){ const need = (G.quests || []).some(q => q.p === p && q.state !== 'done' && qItems(q)[k] && ((G.players[p].special || {})[k] || 0) < qItems(q)[k] + (giving ? 1 : 0)); return need ? 2.6 : SPECIAL[k].val*.5; }
 const resList = o => Object.entries(o).filter(([, n]) => n > 0).map(([r, n]) => `${n} ${RES.includes(r) ? resImg(r) : specImg(r)}`).join(' ') || 'nada';
@@ -35,12 +46,13 @@ const mayorName = () => G.players[0].name === 'Tú' ? 'El Alcalde' : G.players[0
 async function tradeLetter(target){
   const Q = G.players[target];
   if (NG.on && G.current !== 0){ sysNote('En línea solo puedes proponer tratos durante tu turno.', { ms: 2600 }); return; }
+  if (!tradesLeft(0, target)){ sysNote(tradeLimitMsg(Q.name), { ms: 2600 }); return; }
   if (!scenesOn()){ openTrade('jug', { target }); return; }
   if (marketCtx || $('#offer').classList.contains('show')){ sysNote('Termina primero lo que estás haciendo.', { ms: 2200 }); return; }
   if (mode !== 'board'){ if (mode === 'village') backToBoard(); for (let k=0;k<80 && mode !== 'board';k++) await wait(200); }
   for (let k=0;k<60 && (busy || marketCtx);k++) await wait(200);
   const r = await officeScene({ mode: 'write', to: Q.name, toColor: Q.color, toF: FEM.has(Q.name), from: mayorName(),
-    decide: (offer, ask) => { if (G.current !== 0 && (G.tradeOpen !== G.turnId || target !== G.current)) return false; return isRemote(target) ? netAsk(target, 'offer', { give: offer, want: ask }, () => false, 60000) : botAcceptTrade(target, offer, ask); } });
+    decide: (offer, ask) => { if (!tradesLeft(0, target) || (G.current !== 0 && (G.tradeOpen !== G.turnId || target !== G.current))) return false; return isRemote(target) ? netAsk(target, 'offer', { give: offer, want: ask }, () => false, 60000) : botAcceptTrade(target, offer, ask); } });
   if (r === null) return;
   if (r.ok){ await courierScene(target, r.offer, r.ask); refresh(); }
   else if (!r.cancel) notify(`${Q.name} rechazó tu carta de trueque`, Q.color);
@@ -52,7 +64,7 @@ async function botOfferTrade(p, st){
   if (st.offered || Math.random() > .35) return false;
   st.offered = true;
   // online the bot writes to any of the humans at the table (away players excluded), offline to you
-  const hs = NG.on ? humanSeats().filter(h => h !== p && !G.players[h].away) : [0]; if (!hs.length) return false;
+  const hs = (NG.on ? humanSeats().filter(h => h !== p && !G.players[h].away) : [0]).filter(h => tradesLeft(h, p) > 0); if (!hs.length) return false;
   const h = pick(hs), H = G.players[h], you = h === 0, P = G.players[p], { tgt, need } = botNeeds(p);
   const ask = (give, want) => you ? askHuman(p, give, want) : netAsk(h, 'offer', { give, want }, () => false, 45000);
   const no = () => notify(you ? `Rechazaste el trueque de ${P.name}` : `${H.name} rechazó el trueque de ${P.name}`, H.color);
