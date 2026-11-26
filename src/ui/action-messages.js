@@ -62,7 +62,7 @@ function nextScroll(){
   const late = S.act === 'amuleto' ? 'late' : '', what = S.piece ? `<div class="aitems"><span class="ai"><span class="m3 pz" data-k="pz:${S.piece}:${S.p}"></span></span></div>` : hasItems ? `<div class="aitems ${late}">${itemsHTML(S.items, true)}</div>` : '';
   const res = what + (S.victim >= 0 ? `<span class="aarrow ${late}">${ic('flecha')}</span>${whoHTML(S.victim, 'victim ' + late)}` : '');
   el.style.setProperty('--pc', m.color);
-  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${iconImg(T.place === 'Comercio' ? 'moneda' : 'ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
+  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${T.place === 'Comercio' ? merchantAvatarURL() : iconImg('ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
     el.innerHTML = `${whoHTML(S.p)}<div class="aitems">${itemsHTML(T.give, true)}</div><div class="aact"><canvas></canvas><small>trueque</small></div><div class="aitems">${itemsHTML(T.want, true)}</div>${to}`; }
   else el.innerHTML = `${whoHTML(S.p)}<div class="aact"><canvas></canvas><small>${S.cap}</small></div>${res}`;
   el.classList.toggle('left', CORNER_SIDE === 'l');

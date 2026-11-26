@@ -337,7 +337,7 @@ function applyPose(p, t, dt){
   if (p.talking > 0) hp += Math.sin(t*9)*.08;
   p.head.rotation.y += (hy - p.head.rotation.y)*k; p.head.rotation.x += (hp - p.head.rotation.x)*k;
   p.body.scale.y = p.S*(1 + Math.sin(t*1.6 + p.ph)*.012);
-  let bodyY = 0, lean = p.old ? .12 : 0;
+  let bodyY = 0, lean = p.old ? .22 : 0;
   const holds = p.guard || p.tool === 'baston' || p.tool === 'cayado' || p.tool === 'lanza';
   const carryL = !!p.carry;
   if (p.moving){
@@ -346,7 +346,7 @@ function applyPose(p, t, dt){
     p.kneeL.rotation.x = .06 + Math.max(0, c)*amp*1.6; p.kneeR.rotation.x = .06 + Math.max(0, -c)*amp*1.6;
     if (carryL){ p.armL.rotation.x = -.45; p.elbowL.rotation.x = -1.1; } else { p.armL.rotation.x = s*amp*.8; p.elbowL.rotation.x = -.2 - Math.max(0, s)*.35 - (run ? .6 : 0); }
     if (holds){ p.armR.rotation.x = -.25; p.elbowR.rotation.x = -.55; } else { p.armR.rotation.x = -s*amp*.8; p.elbowR.rotation.x = -.2 - Math.max(0, -s)*.35 - (run ? .6 : 0); }
-    bodyY = Math.abs(c)*.04*(p.kid ? 2 : 1); p.body.rotation.z = s*.03; lean = (p.old ? .16 : .05) + (run ? .12 : 0);
+    bodyY = Math.abs(c)*.04*(p.kid ? 2 : 1); p.body.rotation.z = s*.03; lean = (p.old ? .26 : .05) + (run ? .12 : 0);
   } else if (kind === 'sit'){
     E(p.legL, -1.45); E(p.legR, -1.4); E(p.kneeL, 1.5); E(p.kneeR, 1.45);
     E(p.armL, -.45); E(p.armR, -.45); E(p.elbowL, -.75); E(p.elbowR, -.75);

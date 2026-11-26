@@ -18,7 +18,13 @@ function makeAnimal(kind, rng){
   // rounded low-poly parts: ellipsoids, tapered limbs
   const E = (par, c, x, y, z, sx, sy, sz, rx=0, ry=0, rz=0) => { const m = mesh(PGEO.joint, c, x, y, z, sx, sy, sz); m.rotation.set(rx, ry, rz); par.add(m); return m; };
   const L = (par, c, x, y, z, r, len, rx=0, ry=0, rz=0) => { const m = mesh(PGEO.limb, c, x, y, z, r, len, r); m.rotation.set(rx, ry, rz, 'YXZ'); par.add(m); return m; };
-  const eyes = (par, x, y, z, s=.022, col=0x15120f) => [-1,1].forEach(k => E(par, col, k*x, y, z, s, s, s*.6));
+  // eyes sit ON the head: if the given spot is inside the head's ellipsoid (its first round part), push it out to the skin
+  const eyes = (par, x, y, z, s=.022, col=0x15120f) => {
+    const h = par !== g && par.children.find(c => c.geometry === PGEO.joint);
+    if (h){ const dx = x - h.position.x, dy = y - h.position.y, dz = z - h.position.z, v = Math.hypot(dx/h.scale.x, dy/h.scale.y, dz/h.scale.z);
+      if (v > 1e-3 && v < 1.02){ const f = 1.02/v; x = h.position.x + dx*f; y = h.position.y + dy*f; z = h.position.z + dz*f; } }
+    [-1,1].forEach(k => E(par, col, k*x, y, z, s, s, s*.6));
+  };
   switch (kind){
     case 'oveja': {
       const w = 0xf2eee4;
@@ -51,7 +57,7 @@ function makeAnimal(kind, rng){
       E(extra.head, 0xe8a0a0, 0, -.12, .34, .18, .13, .12);
       [-1,1].forEach(k => { E(extra.head, 0x8a4a4a, k*.06, -.1, .45, .025, .02, .01); E(extra.head, wht, k*.24, .08, -.02, .11, .04, .07, 0, 0, k*.3); L(extra.head, 0xe0d8c0, k*.12, .2, 0, .028, .2, 0, 0, k*2.3); });
       eyes(extra.head, .15, .06, .18);
-      extra.tail = grp(g, 0, 1.42, -.98); L(extra.tail, wht, 0, 0, 0, .025, .8, .18); E(extra.tail, spot, 0, -.82, .14, .05, .1, .05);
+      extra.tail = grp(g, 0, 1.42, -.98); L(extra.tail, wht, 0, 0, 0, .025, .8, .18); E(extra.tail, spot, 0, -.79, -.14, .05, .1, .05);
       legs = legs4(g, wht, .085, .9, .3, .7, 0x3a2f28); extra.speed = .55; break; }
     case 'cerdo': {
       const pk = 0xf0a5a8, dk = 0xe58c90;
@@ -82,14 +88,14 @@ function makeAnimal(kind, rng){
       const c = pick([0x7a4a2a, 0x4a3020, 0xd9c7a0, 0x2b2522, 0x9a6a3a], rng), mane = pick([0x2b1d14, 0xe8e0cc, 0x4a3020], rng);
       E(g, c, 0, 1.45, 0, .36, .4, .92); E(g, c, 0, 1.42, .58, .34, .4, .4); E(g, c, 0, 1.52, -.58, .36, .4, .42);
       L(g, c, 0, 1.6, .74, .2, 1, -2.5);
-      { const mn = E(g, mane, 0, 2.02, .98, .05, .52, .14, -.65); }
+      for (let k=0;k<5;k++){ const f = k/4; E(g, mane, 0, 1.76 + f*.66, .64 + f*.5, .055, .13, .075, .64); }   // mane: tufts along the back of the neck
       extra.head = grp(g, 0, 2.3, 1.36);
       E(extra.head, c, 0, -.06, .16, .14, .17, .34, .6); E(extra.head, c, 0, .02, 0, .14, .16, .16);
       E(extra.head, 0x2b2522, 0, -.24, .4, .12, .11, .13, .6);
       [-1,1].forEach(k => { const ear = mesh(GEO.cone4, c, k*.07, .12, -.04, .04, .14, .03); ear.rotation.z = -k*.2; extra.head.add(ear); });
       E(extra.head, mane, 0, .1, .05, .05, .06, .1);
       eyes(extra.head, .13, -.02, .14, .022);
-      extra.tail = grp(g, 0, 1.75, -.98); L(extra.tail, mane, 0, 0, 0, .07, .95, .3); E(extra.tail, mane, 0, -.95, .3, .06, .12, .06);
+      extra.tail = grp(g, 0, 1.75, -.98); L(extra.tail, mane, 0, 0, 0, .07, .95, .3); E(extra.tail, mane, 0, -.9, -.27, .075, .14, .075);
       legs = legs4(g, c, .065, 1.25, .22, .64, 0x2b2522); extra.speed = .9; break; }
     case 'perro': {
       const c = pick([0xb5651d, 0x2b2522, 0xd9c7a0, 0x8a6a48], rng), c2 = new THREE.Color(c).multiplyScalar(.75).getHex();

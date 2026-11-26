@@ -1,5 +1,8 @@
 // ================= MARKET STALL SCENE (bank trade) AND THE THIEF (on a 7) =================
 let marketCtx = null;
+// the trader: always the same man (fixed seed), so his portrait in the action messages matches the one at the stall
+const MERCHANT = { s: 61, o: { must: true, beard: false, expr: 'sonrisa', skin: 0xc68a5a, hair: 0x2b1d14 } };
+const merchantAvatarURL = () => avatarCanvas({ id: 'mercader', role: 'comerciante', g: 'm', s: MERCHANT.s, o: MERCHANT.o }).toDataURL();
 function handModel(sleeve, noCuff){
   const g = new THREE.Group(), skin = mat(0xd9a07a);
   const palm = new THREE.Mesh(PGEO.rbox, skin); palm.scale.set(.17, .055, .19); g.add(palm);
@@ -45,13 +48,9 @@ function buildMarket(kind, opts){
   RES.forEach((r, k) => { const it = makeResourceItem(r); it.scale.setScalar(.38); it.position.set(-1.3 + k*.65, 1.66, .05); it.rotation.y = rng()*3; sh.add(it); });
   barrel(sc, -2.6, -.6, rng); barrel(sc, 2.7, -.2, rng); crate(sc, 2.5, .9, .55, rng); crate(sc, -2.5, 1, .5, rng);
   // the npc
-  const npc = makePerson(rng, 'comerciante', 'm', 0x3a2a4a); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
-  npc.head.children.forEach(o => { if (o.position.y > .3 || (o.scale && o.scale.x > .25)) o.visible = false; });
+  const npc = makePerson(mulberry32(MERCHANT.s*97), 'comerciante', 'm', 0x3a2a4a, MERCHANT.o); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
   const hoodC = 0x2e2438;
-  const hood = mesh(GEO.sphere, hoodC, 0, .31, -.04, .23, .26, .25); npc.head.add(hood);
-  const hoodF = mesh(GEO.sphere, 0x0a0806, 0, .27, .06, .15, .17, .14); npc.head.add(hoodF);
-  [-1, 1].forEach(s => npc.head.add(mesh(GEO.sphere, keepMat(new THREE.MeshBasicMaterial({ color: 0xffd27a })), s*.05, .28, .18, .016, .012, .01, false)));
-  const cloak = mesh(GEO.cone7, hoodC, 0, .55, 0, .36, .95, .3); npc.g.add(cloak);
+  npc.act = { kind: 'wave', t: 0 };   // he greets you as you come in
   // hands (player's from the front, npc's from behind)
   const myHand = handModel(G.players[0].color); myHand.visible = false; sc.add(myHand);
   const npcHand = handModel(hoodC); npcHand.rotation.y = Math.PI; npcHand.visible = false; sc.add(npcHand);

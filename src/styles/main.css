@@ -350,6 +350,7 @@ body.registering #hexbar,body.registering #b-endturn,body.registering .fwin,body
 body[data-corner=l] #hud-top .brand{margin-left:auto;transform-origin:top right}
 #corner #players{gap:2px;flex-wrap:nowrap}
 #corner #hud-right{flex-direction:column;margin:4px 0 0 2px}
+#corner #hud-right{align-items:flex-end}   /* the wide clock (village) must not stretch the small buttons under it */
 #corner #news-board,#corner #quest-icon{margin:8px 0 0}
 #hud-top .brand{transform:scale(var(--ui,1));transform-origin:top left}
 .fwin{transform:scale(var(--ui,1))}

@@ -53,7 +53,8 @@ function faceMat(skin, hair, o){
   const sk = new THREE.Color(skin), dk = sk.clone().multiplyScalar(.82), hr = hex(hair);
   const P = (x, y, col, w=1, h=1) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
   P(0, 0, hex(skin), 16, 16);
-  P(0, 0, hr, 16, 2); [1,4,6,9,11,14].forEach(x => P(x, 2, hr));
+  if (o.old && !o.f){ P(0, 0, hex(skin), 16, 2); P(0, 0, hr, 2, 3); P(14, 0, hr, 2, 3); }   // receding: skin up top, white only at the temples
+  else { P(0, 0, hr, 16, 2); [1,4,6,9,11,14].forEach(x => P(x, 2, hr)); }
   const dkh = '#' + dk.getHexString(), lid = '#' + dk.clone().multiplyScalar(.85).getHexString();
   // brows tell most of the mood
   if (ex === 'enojo' || ex === 'serio'){ P(3, 4, hr); P(4, 5, hr, 2); P(12, 4, hr); P(10, 5, hr, 2); if (ex === 'enojo'){ P(6, 5, hr); P(9, 5, hr); } }
@@ -66,7 +67,12 @@ function faceMat(skin, hair, o){
   if (ex === 'cansado') { P(4, 8, dkh, 2, 1); P(10, 8, dkh, 2, 1); }
   P(7, 8, '#' + dk.getHexString(), 2, 2); P(7, 9, '#' + dk.clone().multiplyScalar(.9).getHexString(), 2, 1);
   if (o.f || o.kid) { P(2, 9, '#e8908a', 2, 1); P(12, 9, '#e8908a', 2, 1); }
-  if (o.old) { P(3, 4, '#' + dk.getHexString(), 3); P(10, 4, '#' + dk.getHexString(), 3); P(3, 9, '#' + dk.getHexString()); P(12, 9, '#' + dk.getHexString()); }
+  if (o.old) { const w = '#' + dk.getHexString(), w2 = '#' + dk.clone().multiplyScalar(.9).getHexString();
+    P(4, 2, w, 8, 1); P(5, 3, w2, 6, 1);   // forehead lines
+    P(2, 6, w); P(2, 7, w2); P(13, 6, w); P(13, 7, w2);   // crow's feet
+    P(4, 8, w2, 2, 1); P(10, 8, w2, 2, 1);   // bags under the eyes
+    P(5, 9, w); P(5, 10, w2); P(10, 9, w); P(10, 10, w2);   // laugh lines
+    P(3, 11, w2); P(12, 11, w2); }
   if (o.beard) { P(2, 10, hr, 12, 6); P(3, 9, hr, 1); P(12, 9, hr, 1); P(6, 11, '#' + sk.getHexString(), 4, 1); }
   if (o.must) P(5, 10, hr, 6, 1);
   const lip = '#8a3a32';
@@ -110,7 +116,7 @@ const RUSTIC = [0xc9b48a, 0xa08a68, 0x7a5a3a, 0x8a3a2a, 0x5a6a3a, 0x4a5a6a, 0xd8
 const VESTS = [0x5a3a22, 0x4a3a2a, 0x3a4a3a, 0x6a2a22, 0x2a3a4a, 0x7a5a32];
 function makePerson(rng, role, gender, ownerColor, opt = {}){
   const kid = role === 'niño', old = role === 'anciano' || !!opt.old, f = gender === 'f';
-  const S = kid ? .6 + rng()*.1 : old ? .92 + rng()*.05 : (f ? .93 : .99) + rng()*.09;
+  const S = kid ? .6 + rng()*.1 : old ? .87 + rng()*.04 : (f ? .93 : .99) + rng()*.09;
   const g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(S); g.add(body);
   const skin0 = pick(SKIN, rng), skin = opt.skin != null ? opt.skin : skin0;
   const hairC0 = role === 'brujo' ? 0xe8e4dc : old ? pick([0xd8d4cc, 0xbdb8b0, 0xeeeeee], rng) : pick([0x2b1d14, 0x4a3020, 0x111111, 0x8a6a3a, 0xb5651d, 0xd9b26a], rng), hairC = opt.hair != null ? opt.hair : hairC0;
@@ -197,7 +203,7 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
   const head = new THREE.Group(); head.position.set(0, 1.45, 0); body.add(head);
   if (kid) head.scale.setScalar(1.18);
   add(head, PGEO.crown, skin, 0, 0, 0, .05, .14, .05);
-  const bR = rng(), mR = rng(), beard = opt.beard !== undefined ? opt.beard : (role === 'brujo' && !f) || (!f && !kid && bR < .3), must = opt.must !== undefined ? opt.must : !f && !kid && !beard && mR < .3;
+  const bR = rng(), mR = rng(), beard = opt.beard !== undefined ? opt.beard : (role === 'brujo' && !f) || (!f && !kid && bR < (old ? .55 : .3)), must = opt.must !== undefined ? opt.must : !f && !kid && !beard && mR < .3;
   const MOODS = ['sonrisa', 'sonrisa', 'serio', 'serio', 'risa', 'cansado', 'duda', 'triste', 'sorpresa', 'guiño', 'enojo'];
   const eyeC = pick([0x2b1d14, 0x3a5a8a, 0x3f6a3a, 0x5a3a20], rng), expr = opt.expr || (role === 'brujo' ? 'serio' : role === 'guardia' ? pick(['serio', 'enojo', 'cansado'], rng) : pick(MOODS, rng));
   const fm = faceMat(skin, hairC, { f, kid, old, beard, must, eye: eyeC, expr });
@@ -206,7 +212,8 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
   [-1,1].forEach(s => add(head, PGEO.joint, skin, s*.125, .25, -.01, .025, .045, .03));
   const T = .405;
   const capM = mat(hairC);
-  if (!hat || f){ const cap = add(head, PGEO.rbox, hairC, 0, T - .025, -.012, f ? .262 : .258, .12, .268); }
+  if (old && !f && !hat){ [-1,1].forEach(s => add(head, PGEO.rbox, hairC, s*.108, .28, -.045, .03, .085, .17)); add(head, PGEO.rbox, hairC, 0, .28, -.118, .22, .095, .03); }   // bald on top
+  else if (!hat || f){ const cap = add(head, PGEO.rbox, hairC, 0, T - .025, -.012, f ? .262 : .258, .12, .268); }
   if (f){
     const style = old ? 'chongo' : pick(['largo','trenzas','chongo','coleta','corto'], rng);
     if (style === 'largo') add(head, PGEO.rbox, hairC, 0, .18, -.08, .26, .3, .12);
@@ -244,9 +251,13 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
       case 'baston': case 'cayado': tg.add(mesh(PGEO.brim, 0x6b4a2f, 0, -.62, .05, .022, 1.24, .022, true)); if (role === 'brujo') tg.add(mesh(GEO.sphere, keepMat(new THREE.MeshStandardMaterial({ color: 0xb07aff, emissive: 0x7a3ac8, emissiveIntensity: 1, flatShading: true })), 0, .66, .05, .06, .08, .06, false)); if (tool === 'cayado') tg.add(mesh(GEO.box, 0x6b4a2f, 0, .62, .12, .035, .035, .18, true)); break;
     }
   }
-  if (old) body.rotation.x = .1;
+  if (old){ body.rotation.x = .2; head.rotation.x = -.12; }   // stooped, head pushed forward
   const names = f ? NAMES_F : NAMES_M;
   let name = pick(names, rng);
   if (old) name = (f ? 'Doña ' : 'Don ') + name; else if (!kid && rng() < .25) name = (f ? 'Doña ' : 'Don ') + name;
-  return { g, body, head, legL, legR, armL, armR, kneeL: legL.knee, kneeR: legR.knee, elbowL: armL.elbow, elbowR: armR.elbow, ph: rng()*6, role, gender, name, label: ROLE_LABEL[role][f ? 1 : 0], kid, old, tool, S, spd: 0 };
+  return { g, body, head, legL, legR, armL, armR, kneeL: legL.knee, kneeR: legR.knee, elbowL: armL.elbow, elbowR: armR.elbow, ph: rng()*6, role, gender, name, label: ROLE_LABEL[role][f ? 1 : 0], kid, old, tool, S, spd: 0,
+    face: { mesh: hd, skin, hair: hairC, f, kid, old, beard, must, eye: eyeC, expr } };
+}
+// change a person's face on the fly (the front of the head is material 4)
+function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = faceMat(F.skin, F.hair, { ...F, expr });
 }

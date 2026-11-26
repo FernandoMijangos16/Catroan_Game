@@ -157,7 +157,11 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
   acciones en hexágonos abajo, "Terminar turno", el abanico de cartas abajo a la izquierda y la caja de amuletos
   detrás de la baraja.
 - **Escenas:** el pueblo en primera persona, el mercado, el muelle con el pirata, la oficina, el mensajero y el
-  ladrón en el callejón. En el callejón el inventario baja como barra para entregar recursos; no hay mesa.
+  ladrón en el callejón.
+  - Primera persona: WASD/↑↓ caminan, Q E/←→ giran. Animales y aldeanos no empujan al jugador (solo lo frenan).
+    "Terminar turno" también aparece en el pueblo. Las puertas tienen bisagra (`doorKick`).
+  - El comerciante de la tienda es un personaje fijo (`MERCHANT`, misma semilla para su modelo y su avatar
+    `merchantAvatarURL`): saluda, piensa, entrega con su brazo y cambia de cara (`setFaceExpr`). En el callejón el inventario baja como barra para entregar recursos; no hay mesa.
 - **Registro:** el letrero con nombre, avatar, color y dados, y después la elección de recursos iniciales.
 
 ## Pendientes (orden sugerido)

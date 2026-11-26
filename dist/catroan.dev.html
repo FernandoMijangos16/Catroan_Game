@@ -359,6 +359,7 @@ body.registering #hexbar,body.registering #b-endturn,body.registering .fwin,body
 body[data-corner=l] #hud-top .brand{margin-left:auto;transform-origin:top right}
 #corner #players{gap:2px;flex-wrap:nowrap}
 #corner #hud-right{flex-direction:column;margin:4px 0 0 2px}
+#corner #hud-right{align-items:flex-end}   /* the wide clock (village) must not stretch the small buttons under it */
 #corner #news-board,#corner #quest-icon{margin:8px 0 0}
 #hud-top .brand{transform:scale(var(--ui,1));transform-origin:top left}
 .fwin{transform:scale(var(--ui,1))}
@@ -2917,7 +2918,13 @@ function makeAnimal(kind, rng){
   // rounded low-poly parts: ellipsoids, tapered limbs
   const E = (par, c, x, y, z, sx, sy, sz, rx=0, ry=0, rz=0) => { const m = mesh(PGEO.joint, c, x, y, z, sx, sy, sz); m.rotation.set(rx, ry, rz); par.add(m); return m; };
   const L = (par, c, x, y, z, r, len, rx=0, ry=0, rz=0) => { const m = mesh(PGEO.limb, c, x, y, z, r, len, r); m.rotation.set(rx, ry, rz, 'YXZ'); par.add(m); return m; };
-  const eyes = (par, x, y, z, s=.022, col=0x15120f) => [-1,1].forEach(k => E(par, col, k*x, y, z, s, s, s*.6));
+  // eyes sit ON the head: if the given spot is inside the head's ellipsoid (its first round part), push it out to the skin
+  const eyes = (par, x, y, z, s=.022, col=0x15120f) => {
+    const h = par !== g && par.children.find(c => c.geometry === PGEO.joint);
+    if (h){ const dx = x - h.position.x, dy = y - h.position.y, dz = z - h.position.z, v = Math.hypot(dx/h.scale.x, dy/h.scale.y, dz/h.scale.z);
+      if (v > 1e-3 && v < 1.02){ const f = 1.02/v; x = h.position.x + dx*f; y = h.position.y + dy*f; z = h.position.z + dz*f; } }
+    [-1,1].forEach(k => E(par, col, k*x, y, z, s, s, s*.6));
+  };
   switch (kind){
     case 'oveja': {
       const w = 0xf2eee4;
@@ -2950,7 +2957,7 @@ function makeAnimal(kind, rng){
       E(extra.head, 0xe8a0a0, 0, -.12, .34, .18, .13, .12);
       [-1,1].forEach(k => { E(extra.head, 0x8a4a4a, k*.06, -.1, .45, .025, .02, .01); E(extra.head, wht, k*.24, .08, -.02, .11, .04, .07, 0, 0, k*.3); L(extra.head, 0xe0d8c0, k*.12, .2, 0, .028, .2, 0, 0, k*2.3); });
       eyes(extra.head, .15, .06, .18);
-      extra.tail = grp(g, 0, 1.42, -.98); L(extra.tail, wht, 0, 0, 0, .025, .8, .18); E(extra.tail, spot, 0, -.82, .14, .05, .1, .05);
+      extra.tail = grp(g, 0, 1.42, -.98); L(extra.tail, wht, 0, 0, 0, .025, .8, .18); E(extra.tail, spot, 0, -.79, -.14, .05, .1, .05);
       legs = legs4(g, wht, .085, .9, .3, .7, 0x3a2f28); extra.speed = .55; break; }
     case 'cerdo': {
       const pk = 0xf0a5a8, dk = 0xe58c90;
@@ -2981,14 +2988,14 @@ function makeAnimal(kind, rng){
       const c = pick([0x7a4a2a, 0x4a3020, 0xd9c7a0, 0x2b2522, 0x9a6a3a], rng), mane = pick([0x2b1d14, 0xe8e0cc, 0x4a3020], rng);
       E(g, c, 0, 1.45, 0, .36, .4, .92); E(g, c, 0, 1.42, .58, .34, .4, .4); E(g, c, 0, 1.52, -.58, .36, .4, .42);
       L(g, c, 0, 1.6, .74, .2, 1, -2.5);
-      { const mn = E(g, mane, 0, 2.02, .98, .05, .52, .14, -.65); }
+      for (let k=0;k<5;k++){ const f = k/4; E(g, mane, 0, 1.76 + f*.66, .64 + f*.5, .055, .13, .075, .64); }   // mane: tufts along the back of the neck
       extra.head = grp(g, 0, 2.3, 1.36);
       E(extra.head, c, 0, -.06, .16, .14, .17, .34, .6); E(extra.head, c, 0, .02, 0, .14, .16, .16);
       E(extra.head, 0x2b2522, 0, -.24, .4, .12, .11, .13, .6);
       [-1,1].forEach(k => { const ear = mesh(GEO.cone4, c, k*.07, .12, -.04, .04, .14, .03); ear.rotation.z = -k*.2; extra.head.add(ear); });
       E(extra.head, mane, 0, .1, .05, .05, .06, .1);
       eyes(extra.head, .13, -.02, .14, .022);
-      extra.tail = grp(g, 0, 1.75, -.98); L(extra.tail, mane, 0, 0, 0, .07, .95, .3); E(extra.tail, mane, 0, -.95, .3, .06, .12, .06);
+      extra.tail = grp(g, 0, 1.75, -.98); L(extra.tail, mane, 0, 0, 0, .07, .95, .3); E(extra.tail, mane, 0, -.9, -.27, .075, .14, .075);
       legs = legs4(g, c, .065, 1.25, .22, .64, 0x2b2522); extra.speed = .9; break; }
     case 'perro': {
       const c = pick([0xb5651d, 0x2b2522, 0xd9c7a0, 0x8a6a48], rng), c2 = new THREE.Color(c).multiplyScalar(.75).getHex();
@@ -3183,7 +3190,8 @@ function faceMat(skin, hair, o){
   const sk = new THREE.Color(skin), dk = sk.clone().multiplyScalar(.82), hr = hex(hair);
   const P = (x, y, col, w=1, h=1) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
   P(0, 0, hex(skin), 16, 16);
-  P(0, 0, hr, 16, 2); [1,4,6,9,11,14].forEach(x => P(x, 2, hr));
+  if (o.old && !o.f){ P(0, 0, hex(skin), 16, 2); P(0, 0, hr, 2, 3); P(14, 0, hr, 2, 3); }   // receding: skin up top, white only at the temples
+  else { P(0, 0, hr, 16, 2); [1,4,6,9,11,14].forEach(x => P(x, 2, hr)); }
   const dkh = '#' + dk.getHexString(), lid = '#' + dk.clone().multiplyScalar(.85).getHexString();
   // brows tell most of the mood
   if (ex === 'enojo' || ex === 'serio'){ P(3, 4, hr); P(4, 5, hr, 2); P(12, 4, hr); P(10, 5, hr, 2); if (ex === 'enojo'){ P(6, 5, hr); P(9, 5, hr); } }
@@ -3196,7 +3204,12 @@ function faceMat(skin, hair, o){
   if (ex === 'cansado') { P(4, 8, dkh, 2, 1); P(10, 8, dkh, 2, 1); }
   P(7, 8, '#' + dk.getHexString(), 2, 2); P(7, 9, '#' + dk.clone().multiplyScalar(.9).getHexString(), 2, 1);
   if (o.f || o.kid) { P(2, 9, '#e8908a', 2, 1); P(12, 9, '#e8908a', 2, 1); }
-  if (o.old) { P(3, 4, '#' + dk.getHexString(), 3); P(10, 4, '#' + dk.getHexString(), 3); P(3, 9, '#' + dk.getHexString()); P(12, 9, '#' + dk.getHexString()); }
+  if (o.old) { const w = '#' + dk.getHexString(), w2 = '#' + dk.clone().multiplyScalar(.9).getHexString();
+    P(4, 2, w, 8, 1); P(5, 3, w2, 6, 1);   // forehead lines
+    P(2, 6, w); P(2, 7, w2); P(13, 6, w); P(13, 7, w2);   // crow's feet
+    P(4, 8, w2, 2, 1); P(10, 8, w2, 2, 1);   // bags under the eyes
+    P(5, 9, w); P(5, 10, w2); P(10, 9, w); P(10, 10, w2);   // laugh lines
+    P(3, 11, w2); P(12, 11, w2); }
   if (o.beard) { P(2, 10, hr, 12, 6); P(3, 9, hr, 1); P(12, 9, hr, 1); P(6, 11, '#' + sk.getHexString(), 4, 1); }
   if (o.must) P(5, 10, hr, 6, 1);
   const lip = '#8a3a32';
@@ -3240,7 +3253,7 @@ const RUSTIC = [0xc9b48a, 0xa08a68, 0x7a5a3a, 0x8a3a2a, 0x5a6a3a, 0x4a5a6a, 0xd8
 const VESTS = [0x5a3a22, 0x4a3a2a, 0x3a4a3a, 0x6a2a22, 0x2a3a4a, 0x7a5a32];
 function makePerson(rng, role, gender, ownerColor, opt = {}){
   const kid = role === 'niño', old = role === 'anciano' || !!opt.old, f = gender === 'f';
-  const S = kid ? .6 + rng()*.1 : old ? .92 + rng()*.05 : (f ? .93 : .99) + rng()*.09;
+  const S = kid ? .6 + rng()*.1 : old ? .87 + rng()*.04 : (f ? .93 : .99) + rng()*.09;
   const g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(S); g.add(body);
   const skin0 = pick(SKIN, rng), skin = opt.skin != null ? opt.skin : skin0;
   const hairC0 = role === 'brujo' ? 0xe8e4dc : old ? pick([0xd8d4cc, 0xbdb8b0, 0xeeeeee], rng) : pick([0x2b1d14, 0x4a3020, 0x111111, 0x8a6a3a, 0xb5651d, 0xd9b26a], rng), hairC = opt.hair != null ? opt.hair : hairC0;
@@ -3327,7 +3340,7 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
   const head = new THREE.Group(); head.position.set(0, 1.45, 0); body.add(head);
   if (kid) head.scale.setScalar(1.18);
   add(head, PGEO.crown, skin, 0, 0, 0, .05, .14, .05);
-  const bR = rng(), mR = rng(), beard = opt.beard !== undefined ? opt.beard : (role === 'brujo' && !f) || (!f && !kid && bR < .3), must = opt.must !== undefined ? opt.must : !f && !kid && !beard && mR < .3;
+  const bR = rng(), mR = rng(), beard = opt.beard !== undefined ? opt.beard : (role === 'brujo' && !f) || (!f && !kid && bR < (old ? .55 : .3)), must = opt.must !== undefined ? opt.must : !f && !kid && !beard && mR < .3;
   const MOODS = ['sonrisa', 'sonrisa', 'serio', 'serio', 'risa', 'cansado', 'duda', 'triste', 'sorpresa', 'guiño', 'enojo'];
   const eyeC = pick([0x2b1d14, 0x3a5a8a, 0x3f6a3a, 0x5a3a20], rng), expr = opt.expr || (role === 'brujo' ? 'serio' : role === 'guardia' ? pick(['serio', 'enojo', 'cansado'], rng) : pick(MOODS, rng));
   const fm = faceMat(skin, hairC, { f, kid, old, beard, must, eye: eyeC, expr });
@@ -3336,7 +3349,8 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
   [-1,1].forEach(s => add(head, PGEO.joint, skin, s*.125, .25, -.01, .025, .045, .03));
   const T = .405;
   const capM = mat(hairC);
-  if (!hat || f){ const cap = add(head, PGEO.rbox, hairC, 0, T - .025, -.012, f ? .262 : .258, .12, .268); }
+  if (old && !f && !hat){ [-1,1].forEach(s => add(head, PGEO.rbox, hairC, s*.108, .28, -.045, .03, .085, .17)); add(head, PGEO.rbox, hairC, 0, .28, -.118, .22, .095, .03); }   // bald on top
+  else if (!hat || f){ const cap = add(head, PGEO.rbox, hairC, 0, T - .025, -.012, f ? .262 : .258, .12, .268); }
   if (f){
     const style = old ? 'chongo' : pick(['largo','trenzas','chongo','coleta','corto'], rng);
     if (style === 'largo') add(head, PGEO.rbox, hairC, 0, .18, -.08, .26, .3, .12);
@@ -3374,11 +3388,15 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
       case 'baston': case 'cayado': tg.add(mesh(PGEO.brim, 0x6b4a2f, 0, -.62, .05, .022, 1.24, .022, true)); if (role === 'brujo') tg.add(mesh(GEO.sphere, keepMat(new THREE.MeshStandardMaterial({ color: 0xb07aff, emissive: 0x7a3ac8, emissiveIntensity: 1, flatShading: true })), 0, .66, .05, .06, .08, .06, false)); if (tool === 'cayado') tg.add(mesh(GEO.box, 0x6b4a2f, 0, .62, .12, .035, .035, .18, true)); break;
     }
   }
-  if (old) body.rotation.x = .1;
+  if (old){ body.rotation.x = .2; head.rotation.x = -.12; }   // stooped, head pushed forward
   const names = f ? NAMES_F : NAMES_M;
   let name = pick(names, rng);
   if (old) name = (f ? 'Doña ' : 'Don ') + name; else if (!kid && rng() < .25) name = (f ? 'Doña ' : 'Don ') + name;
-  return { g, body, head, legL, legR, armL, armR, kneeL: legL.knee, kneeR: legR.knee, elbowL: armL.elbow, elbowR: armR.elbow, ph: rng()*6, role, gender, name, label: ROLE_LABEL[role][f ? 1 : 0], kid, old, tool, S, spd: 0 };
+  return { g, body, head, legL, legR, armL, armR, kneeL: legL.knee, kneeR: legR.knee, elbowL: armL.elbow, elbowR: armR.elbow, ph: rng()*6, role, gender, name, label: ROLE_LABEL[role][f ? 1 : 0], kid, old, tool, S, spd: 0,
+    face: { mesh: hd, skin, hair: hairC, f, kid, old, beard, must, eye: eyeC, expr } };
+}
+// change a person's face on the fly (the front of the head is material 4)
+function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = faceMat(F.skin, F.hair, { ...F, expr });
 }
 // ================= PRODUCTION SITES =================
 const SITE_INFO = {
@@ -4578,7 +4596,7 @@ function nextScroll(){
   const late = S.act === 'amuleto' ? 'late' : '', what = S.piece ? `<div class="aitems"><span class="ai"><span class="m3 pz" data-k="pz:${S.piece}:${S.p}"></span></span></div>` : hasItems ? `<div class="aitems ${late}">${itemsHTML(S.items, true)}</div>` : '';
   const res = what + (S.victim >= 0 ? `<span class="aarrow ${late}">${ic('flecha')}</span>${whoHTML(S.victim, 'victim ' + late)}` : '');
   el.style.setProperty('--pc', m.color);
-  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${iconImg(T.place === 'Comercio' ? 'moneda' : 'ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
+  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${T.place === 'Comercio' ? merchantAvatarURL() : iconImg('ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
     el.innerHTML = `${whoHTML(S.p)}<div class="aitems">${itemsHTML(T.give, true)}</div><div class="aact"><canvas></canvas><small>trueque</small></div><div class="aitems">${itemsHTML(T.want, true)}</div>${to}`; }
   else el.innerHTML = `${whoHTML(S.p)}<div class="aact"><canvas></canvas><small>${S.cap}</small></div>${res}`;
   el.classList.toggle('left', CORNER_SIDE === 'l');
@@ -4923,6 +4941,9 @@ function updatePlates(force){
 
 // ================= MARKET STALL SCENE (bank trade) AND THE THIEF (on a 7) =================
 let marketCtx = null;
+// the trader: always the same man (fixed seed), so his portrait in the action messages matches the one at the stall
+const MERCHANT = { s: 61, o: { must: true, beard: false, expr: 'sonrisa', skin: 0xc68a5a, hair: 0x2b1d14 } };
+const merchantAvatarURL = () => avatarCanvas({ id: 'mercader', role: 'comerciante', g: 'm', s: MERCHANT.s, o: MERCHANT.o }).toDataURL();
 function handModel(sleeve, noCuff){
   const g = new THREE.Group(), skin = mat(0xd9a07a);
   const palm = new THREE.Mesh(PGEO.rbox, skin); palm.scale.set(.17, .055, .19); g.add(palm);
@@ -4968,13 +4989,9 @@ function buildMarket(kind, opts){
   RES.forEach((r, k) => { const it = makeResourceItem(r); it.scale.setScalar(.38); it.position.set(-1.3 + k*.65, 1.66, .05); it.rotation.y = rng()*3; sh.add(it); });
   barrel(sc, -2.6, -.6, rng); barrel(sc, 2.7, -.2, rng); crate(sc, 2.5, .9, .55, rng); crate(sc, -2.5, 1, .5, rng);
   // the npc
-  const npc = makePerson(rng, 'comerciante', 'm', 0x3a2a4a); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
-  npc.head.children.forEach(o => { if (o.position.y > .3 || (o.scale && o.scale.x > .25)) o.visible = false; });
+  const npc = makePerson(mulberry32(MERCHANT.s*97), 'comerciante', 'm', 0x3a2a4a, MERCHANT.o); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
   const hoodC = 0x2e2438;
-  const hood = mesh(GEO.sphere, hoodC, 0, .31, -.04, .23, .26, .25); npc.head.add(hood);
-  const hoodF = mesh(GEO.sphere, 0x0a0806, 0, .27, .06, .15, .17, .14); npc.head.add(hoodF);
-  [-1, 1].forEach(s => npc.head.add(mesh(GEO.sphere, keepMat(new THREE.MeshBasicMaterial({ color: 0xffd27a })), s*.05, .28, .18, .016, .012, .01, false)));
-  const cloak = mesh(GEO.cone7, hoodC, 0, .55, 0, .36, .95, .3); npc.g.add(cloak);
+  npc.act = { kind: 'wave', t: 0 };   // he greets you as you come in
   // hands (player's from the front, npc's from behind)
   const myHand = handModel(G.players[0].color); myHand.visible = false; sc.add(myHand);
   const npcHand = handModel(hoodC); npcHand.rotation.y = Math.PI; npcHand.visible = false; sc.add(npcHand);
@@ -5544,10 +5561,11 @@ function updateOffice(C, dt, t){
     case 'qtalk': { relaxP(C.npc, dt*5); C.npc.head.rotation.x = -.15;
       if (C.pt > .8 && !C.qit){ const it = new THREE.Group(); it.userData.inner = it; const ks = Object.keys(qItems(C.q)); ks.forEach((k, i) => { const o = spinner(itemOf(k), ks.length > 1 ? .09 : .12); o.position.set((i - (ks.length - 1)/2)*.1, 0, 0); it.add(o); }); it.position.set(.15, C.DY + .32, -.45); C.desk.add(it); const hd = handModel(G.players[0].color, true); hd.scale.setScalar(.6); hd.position.set(.15, C.DY + .25, -.4); C.desk.add(hd); C.qhand = hd; it.traverse(o => { if (o.isMesh) o.userData.mk = { type: 'qitem' }; }); C.qit = it; C.items = [{ obj: it, type: 'qitem' }]; C.ph = 'qoffer'; C.pt = 0; C.ready = false; C.busy = true; mkSay(`Le entregas ${qListM(C.q)}…`, 2200); }
       break; }
-    case 'qoffer': { relaxP(C.npc, dt*5); C.npc.armR.rotation.x += (-1.1 - C.npc.armR.rotation.x)*Math.min(1, dt*4); C.qit.userData.inner.rotation.y += dt*1.5; if (C.pt > 1.1){ C.ph = 'qgive'; C.pt = 0; C.ready = false; SFX.click?.(); } break; }
-    case 'qgive': { const n = C.npc, k = ez2(Math.min(1, C.pt/.6)); n.g.updateMatrixWorld(true); const hw = new THREE.Vector3(0, -.36, .06); n.elbowR.localToWorld(hw); hw.sub(C.desk.position);
-      if (!C.taken){ C.qit.position.lerpVectors(new THREE.Vector3(.15, C.DY + .32, -.45), hw, k); C.qhand.position.set(C.qit.position.x, C.qit.position.y - .07, C.qit.position.z + .05); if (k >= 1){ C.qhand.visible = false; C.taken = true; n.elbowR.attach(C.qit); SFX.pick?.(); mkSay(`<b>${C.q.name}:</b> ${pick(['¡Gracias, de corazón! Le dejo esto.', '¡Justo lo que necesitaba! Esto es para usted.', '¡Qué alivio! Tome, se lo ganó.'])}`); } }
-      else { n.armR.rotation.x += (0 - n.armR.rotation.x)*Math.min(1, dt*5); n.armL.rotation.x = -1.1*Math.min(1, (C.pt - .6)/.4); }
+    case 'qoffer': { relaxP(C.npc, dt*5); const ha = C.npc.tool ? C.npc.armL : C.npc.armR; ha.rotation.x += (-1.1 - ha.rotation.x)*Math.min(1, dt*4);   // a cane stays in the right hand: take it with the left
+ C.qit.userData.inner.rotation.y += dt*1.5; if (C.pt > 1.1){ C.ph = 'qgive'; C.pt = 0; C.ready = false; SFX.click?.(); } break; }
+    case 'qgive': { const n = C.npc, k = ez2(Math.min(1, C.pt/.6)), L = !!n.tool, armT = L ? n.armL : n.armR, armO = L ? n.armR : n.armL, elT = L ? n.elbowL : n.elbowR; n.g.updateMatrixWorld(true); const hw = new THREE.Vector3(0, -.36, .06); elT.localToWorld(hw); hw.sub(C.desk.position);
+      if (!C.taken){ C.qit.position.lerpVectors(new THREE.Vector3(.15, C.DY + .32, -.45), hw, k); C.qhand.position.set(C.qit.position.x, C.qit.position.y - .07, C.qit.position.z + .05); if (k >= 1){ C.qhand.visible = false; C.taken = true; elT.attach(C.qit); SFX.pick?.(); mkSay(`<b>${C.q.name}:</b> ${pick(['¡Gracias, de corazón! Le dejo esto.', '¡Justo lo que necesitaba! Esto es para usted.', '¡Qué alivio! Tome, se lo ganó.'])}`); } }
+      else { armT.rotation.x += (0 - armT.rotation.x)*Math.min(1, dt*5); if (!L) armO.rotation.x = -1.1*Math.min(1, (C.pt - .6)/.4); }
       if (C.pt > 1.0 && !C.sack){ const s = sackModel(); s.scale.setScalar(.32); s.position.set(-.05, C.DY, -.55); C.desk.add(s); C.sack = s; SFX.click?.(); }
       if (C.pt > 1.6){ C.ph = 'qturn'; C.pt = 0; }
       break; }
@@ -5907,7 +5925,7 @@ function ringBell(){
   const y = C.TOP, copies = [], shown = Object.entries(cards).flatMap(([r, n]) => Array(Math.min(n, 4)).fill(r)), k = shown.length, gap = k > 8 ? .11 : .17;
   shown.forEach((r, j) => { const c = makeResourceItem(r); c.scale.setScalar(.36); c.position.set(-.5 + j*gap - k*gap/2, y, .75); c.rotation.y = .3; C.sc.add(c); copies.push(c); });
   const gots = toks.map((o, j) => { const g = makeResourceItem(o.r); g.scale.setScalar(.42); g.userData.dx = (j - (toks.length - 1)/2)*.24; g.position.set(.4 + g.userData.dx, y, -.75); C.sc.add(g); return g; });
-  const H = C.myHand, N = C.npcHand; H.visible = true; N.visible = true;
+  const H = C.myHand; H.visible = true; C.npcHand.visible = false;   // the trader hands it over with his own arm
   C.anim = { t: 0, copies, gots, toks, k, gap };
   C.sel = { give: {}, want: {} }; markSel();
   mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.']));
@@ -5918,8 +5936,19 @@ function updateMarket(dt, t){
   if (C.courier) return updateCourier(C, dt, t);
   if (C.office) return updateOffice(C, dt, t);
   if (C.pier) return updatePier(C, dt, t);
-  // npc idle
-  C.npc.head.rotation.y = Math.sin(t*.6)*.15; C.npc.head.rotation.x = -.08 + Math.sin(t*.9)*.03; C.npc.g.position.y = Math.sin(t*1.6)*.01;
+  // the trader: waves when you come in, rubs his chin while you choose, smiles when the deal adds up, reaches out to give
+  { const n = C.npc, A0 = C.anim, lots = mkLots(C.sel.give), wants = mkCount(C.sel.want), act = n.act || (n.act = { kind: 'idle', t: 0 }); act.t += dt;
+    let kind = A0 ? 'give' : act.kind === 'wave' && act.t < 2.2 ? 'wave' : act.kind === 'wink' && act.t < 1.6 ? 'wink' : (lots || wants) ? (lots === wants ? 'happy' : 'think') : 'idle';
+    if (kind !== act.kind){ act.kind = kind; act.t = 0; }
+    setFaceExpr(n, { wave: 'risa', give: 'risa', wink: 'guiño', happy: 'sonrisa', think: 'duda', idle: Math.sin(t*.13) > .7 ? 'serio' : 'sonrisa' }[kind]);
+    let ax = 0, az = 0, ex = -.15, lx = 0, lex = -.15;
+    if (kind === 'wave'){ ax = -2.5; az = -.2; ex = -.35 - Math.abs(Math.sin(t*9))*.55; }
+    else if (kind === 'think'){ ax = -1.75; az = .35; ex = -2.25; lx = -.5; lex = -1.3; }   // hand on the chin, the other arm folded
+    else if (kind === 'happy'){ lx = -.35; lex = -.9; ax = -.35; ex = -.9; }
+    else if (kind === 'give'){ const k = clamp((A0.t - .9)/.5, 0, 1) - clamp((A0.t - 2.4)/.4, 0, 1); ax = -1.35*k; ex = -.25*k - .15; }
+    const e = Math.min(1, dt*7); n.armR.rotation.x += (ax - n.armR.rotation.x)*e; n.armR.rotation.z += (az - n.armR.rotation.z)*e; n.elbowR.rotation.x += (ex - n.elbowR.rotation.x)*e;
+    n.armL.rotation.x += (lx - n.armL.rotation.x)*e; n.elbowL.rotation.x += (lex - n.elbowL.rotation.x)*e;
+    n.head.rotation.y = Math.sin(t*.6)*.15*(kind === 'idle' ? 1 : .3); n.head.rotation.x = (kind === 'think' ? .12 : -.08) + Math.sin(t*.9)*.03; n.g.position.y = Math.sin(t*1.6)*.01; }
   // hovered item lifts a bit, selected ones float
   C.items.forEach(i => { if (i.type === 'bell') return; const sel = mkIsSel(C, i), hov = C.hover === i; const ty = C.TOP + (sel ? .12 + Math.sin(t*3)*.02 : hov ? .05 : 0); i.obj.position.y += (ty - i.obj.position.y)*Math.min(1, dt*10); i.obj.rotation.y = sel ? i.obj.rotation.y + dt*1.5 : i.rot; i.obj.rotation.z = sel ? .3 : 0; });
   if (C.bell && C.bellT !== undefined){ C.bellT += dt; C.bell.userData.bell.rotation.z = Math.sin(C.bellT*28)*.35*Math.max(0, 1 - C.bellT/.8); }
@@ -5930,10 +5959,9 @@ function updateMarket(dt, t){
     const k1 = ez(clamp((T - .2)/1.1, 0, 1)), k2 = ez(clamp((T - 1.0)/1.1, 0, 1)), k3 = ez(clamp((T - 2.2)/.6, 0, 1)), kr = ez(clamp((T - 1.4)/.5, 0, 1));
     A.copies.forEach((c, j) => { c.position.z = .75 - k1*1.25 - k3*.9; c.position.x = -.5 + j*A.gap - A.k*A.gap/2; c.position.y = y; c.visible = k3 < .98; });
     C.myHand.position.set(-.5, y + .06, .98 - k1*1.25 + kr*1.6); C.myHand.visible = T < 2.2;
-    A.gots.forEach(g => g.position.set(.4 + g.userData.dx, y, -.75 + k2*1.35)); C.npcHand.position.set(.4, y + .06, -.98 + k2*1.35 - k3*1.6); C.npcHand.rotation.set(0, Math.PI, 0);
-    if (T > 2.2 && T < 2.8){ C.npcHand.position.set(-.5, y + .06, -.72 - k3*.9); }
+    A.gots.forEach(g => g.position.set(.4 + g.userData.dx, y, -.75 + k2*1.35));
     if (T > 2.9 && !A.flown){ A.flown = true; A.gots.forEach((g, j) => { const [sx, sy] = toScreen(g.position.clone().setY(y + .1)); g.visible = false; flyToInventory(A.toks[j].tok, sx, sy, j*.08); }); C.npcHand.visible = false; A.copies.forEach(c => C.sc.remove(c)); }
-    if (T > 3.2){ A.gots.forEach(g => C.sc.remove(g)); C.anim = null; C.busy = false; C.items.filter(i => i.type === 'give').forEach(i => { i.tag.material[2].map = engraveTex(tradeRate(0, i.r) + ':1', 24, 14, 10, { light: true }); i.tag.material[2].needsUpdate = true; }); mkSay('¿Algo más, viajero? Si no, puedes <b>salir</b>.'); }
+    if (T > 3.2){ A.gots.forEach(g => C.sc.remove(g)); C.anim = null; C.npc.act = { kind: 'wink', t: 0 }; C.busy = false; C.items.filter(i => i.type === 'give').forEach(i => { i.tag.material[2].map = engraveTex(tradeRate(0, i.r) + ':1', 24, 14, 10, { light: true }); i.tag.material[2].needsUpdate = true; }); mkSay('¿Algo más, viajero? Si no, puedes <b>salir</b>.'); }
   }
 }
 
@@ -7382,7 +7410,7 @@ function applyPose(p, t, dt){
   if (p.talking > 0) hp += Math.sin(t*9)*.08;
   p.head.rotation.y += (hy - p.head.rotation.y)*k; p.head.rotation.x += (hp - p.head.rotation.x)*k;
   p.body.scale.y = p.S*(1 + Math.sin(t*1.6 + p.ph)*.012);
-  let bodyY = 0, lean = p.old ? .12 : 0;
+  let bodyY = 0, lean = p.old ? .22 : 0;
   const holds = p.guard || p.tool === 'baston' || p.tool === 'cayado' || p.tool === 'lanza';
   const carryL = !!p.carry;
   if (p.moving){
@@ -7391,7 +7419,7 @@ function applyPose(p, t, dt){
     p.kneeL.rotation.x = .06 + Math.max(0, c)*amp*1.6; p.kneeR.rotation.x = .06 + Math.max(0, -c)*amp*1.6;
     if (carryL){ p.armL.rotation.x = -.45; p.elbowL.rotation.x = -1.1; } else { p.armL.rotation.x = s*amp*.8; p.elbowL.rotation.x = -.2 - Math.max(0, s)*.35 - (run ? .6 : 0); }
     if (holds){ p.armR.rotation.x = -.25; p.elbowR.rotation.x = -.55; } else { p.armR.rotation.x = -s*amp*.8; p.elbowR.rotation.x = -.2 - Math.max(0, -s)*.35 - (run ? .6 : 0); }
-    bodyY = Math.abs(c)*.04*(p.kid ? 2 : 1); p.body.rotation.z = s*.03; lean = (p.old ? .16 : .05) + (run ? .12 : 0);
+    bodyY = Math.abs(c)*.04*(p.kid ? 2 : 1); p.body.rotation.z = s*.03; lean = (p.old ? .26 : .05) + (run ? .12 : 0);
   } else if (kind === 'sit'){
     E(p.legL, -1.45); E(p.legR, -1.4); E(p.kneeL, 1.5); E(p.kneeR, 1.45);
     E(p.armL, -.45); E(p.armR, -.45); E(p.elbowL, -.75); E(p.elbowR, -.75);
