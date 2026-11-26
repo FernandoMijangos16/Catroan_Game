@@ -35,7 +35,7 @@ function clickCard(i){
   if (!ok){ notify(st, G.players[0].color, 'sys'); return; }
   const d = CARD_DEFS[c.t];
   const go = choice => { playCard(0, i, choice); renderFan(); };
-  if (c.t === 'abundancia') pickRes('Fortuna de temporada', 'Elige el primer recurso', r1 => pickRes('Fortuna de temporada', 'Elige el segundo recurso', r2 => go([r1, r2])));
+  if (c.t === 'abundancia') pickRes('Temporada de abundancia', 'Elige el primer recurso', r1 => pickRes('Temporada de abundancia', 'Elige el segundo recurso', r2 => go([r1, r2])));
   else if (c.t === 'monopolio') pickRes('Avaricia', 'Todos te darán este recurso', r => go(r));
   else if (c.t === 'espia') pickRes('Espía', 'Robarás 1 al rival que más tenga', r => go(r));
   else go(null);
