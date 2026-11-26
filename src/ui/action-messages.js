@@ -15,7 +15,7 @@ function actionSpec(html, color){
   const S = { p, items, victim, txt, act: 'globo', model: null, cap: '' };
   const am = AMK.find(k => txt.toLowerCase().includes(AMULETS[k].name.toLowerCase()));
   if (/ganó la partida|Ganaste/.test(txt)){ S.act = 'trofeo'; S.cap = '¡Ganó la partida!'; S.items = {}; }
-  else if (/Ejército más grande/.test(txt)){ S.model = 'trofeo:army'; S.cap = 'Ejército más grande'; }
+  else if (/Guardia más poderosa/.test(txt)){ S.model = 'trofeo:army'; S.cap = 'Guardia más poderosa'; }
   else if (/Camino más largo/.test(txt)){ S.model = 'trofeo:road'; S.cap = 'Camino más largo'; }
   else if (/demol/i.test(txt)){ S.act = 'bomba'; S.cap = 'demolió un camino'; if (/sus caminos|tus caminos/.test(txt)) S.victim = -1; }
   else if (am && /lanz|bloque|robó|robaste|pluma|escudo/i.test(txt)){ S.act = 'amuleto'; S.amulet = am; S.cap = AMULETS[am].name; if (/escudo de roble/i.test(txt)){ S.cap = 'Escudo de roble'; S.amulet = 'escudo'; } }

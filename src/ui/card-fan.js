@@ -7,7 +7,7 @@ function cardStatus(p, c){
   if (c.turn === G.turnId) return ['La compraste este turno: podrás jugarla en el siguiente', false];
   if (G.playedTurn === G.turnId) return ['Ya jugaste una carta este turno', false];
   if (G.phase === 'rolling' || G.phase === 'robber' || G.over) return ['Ahora no se puede', false];
-  if (G.phase === 'roll' && c.t !== 'caballero') return ['Primero tira los dados (solo el Caballero se juega antes)', false];
+  if (G.phase === 'roll' && c.t !== 'caballero') return ['Primero tira los dados (solo la Guardia se juega antes)', false];
   return ['Haz clic para jugarla', true];
 }
 function renderFan(newIdx = -1){
@@ -35,8 +35,8 @@ function clickCard(i){
   if (!ok){ notify(st, G.players[0].color, 'sys'); return; }
   const d = CARD_DEFS[c.t];
   const go = choice => { playCard(0, i, choice); renderFan(); };
-  if (c.t === 'abundancia') pickRes('Año de abundancia', 'Elige el primer recurso', r1 => pickRes('Año de abundancia', 'Elige el segundo recurso', r2 => go([r1, r2])));
-  else if (c.t === 'monopolio') pickRes('Monopolio', 'Todos te darán este recurso', r => go(r));
+  if (c.t === 'abundancia') pickRes('Fortuna de temporada', 'Elige el primer recurso', r1 => pickRes('Fortuna de temporada', 'Elige el segundo recurso', r2 => go([r1, r2])));
+  else if (c.t === 'monopolio') pickRes('Avaricia', 'Todos te darán este recurso', r => go(r));
   else if (c.t === 'espia') pickRes('Espía', 'Robarás 1 al rival que más tenga', r => go(r));
   else go(null);
 }

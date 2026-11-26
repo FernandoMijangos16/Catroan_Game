@@ -33,7 +33,7 @@ function playCard(p, i, choice){
 }
 function updateArmy(p){
   const P = G.players[p], cur = G.army ?? -1;
-  if ((P.knights || 0) >= 3 && (cur === -1 || (P.knights > (G.players[cur].knights || 0) && cur !== p))){ G.army = p; notify(`🛡️ ${p === 0 ? 'Tienes' : P.name + ' tiene'} el <b>Ejército más grande</b> (+2 PV)`, P.color); SFX.win?.(); checkWin(p); }
+  if ((P.knights || 0) >= 3 && (cur === -1 || (P.knights > (G.players[cur].knights || 0) && cur !== p))){ G.army = p; notify(`🛡️ ${p === 0 ? 'Tienes' : P.name + ' tiene'} la <b>Guardia más poderosa</b> (+2 PV)`, P.color); SFX.win?.(); checkWin(p); }
 }
 function longestRoadOf(p){
   const es = G.edges.filter(e => e.road === p); if (!es.length) return 0;

@@ -135,7 +135,7 @@ function netPersp(h, A){
     [/Tenías más de 7 cartas: descartaste/g, `${A} tenía más de 7 cartas y descartó`], [/\bSacaste\b/g, `${A} sacó`], [/\bMoviste\b/g, `${A} movió`], [/\bLe robaste\b/g, `${A} le robó`], [/\ble robaste\b/g, 'le robó'],
     [/\bJugaste\b/g, `${A} jugó`], [/\bCompraste\b/g, `${A} compró`], [/\bFundaste\b/g, `${A} fundó`], [/\bConstruiste\b/g, `${A} construyó`], [/\bColocaste tu\b/g, `${A} colocó su`], [/\bCambiaste\b/g, `${A} cambió`], [/en tu puerto/g, 'en su puerto'],
     [/\bLanzaste\b/g, `${A} lanzó`], [/Demoliste uno de tus caminos y recuperaste/g, `${A} demolió uno de sus caminos y recuperó`], [/\bDemoliste\b/g, `${A} demolió`], [/\brecuperaste\b/g, 'se quedó con'],
-    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`],
+    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`], [/\bTienes la\b/g, `${A} tiene la`],
     [/Propusiste un trueque: das/g, `${A} propuso un trueque: da`], [/Rechazaste el trueque de/g, `${A} rechazó el trueque de`], [/Nadie aceptó tu trueque/g, `Nadie aceptó el trueque de ${A}`],
     [/aceptó tu trueque/g, `aceptó el trueque de ${A}`], [/rechazó tu carta de trueque/g, `rechazó la carta de trueque de ${A}`], [/rechazó tu trueque/g, `rechazó el trueque de ${A}`],
     [/hizo un trueque contigo: te dio/g, `hizo un trueque con ${A}: le dio`], [/\bte cambió\b/g, `le cambió a ${A}`], [/Trueque con ([^:]+): diste (.+?) y recibiste/g, `${A} hizo un trueque con $1: dio $2 y recibió`],

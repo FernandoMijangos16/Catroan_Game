@@ -1103,7 +1103,7 @@ const PLAYER_DEFS = [
 // game mode (a mode selector will set this later; for now '#jugadores=6' in the address tries the 5-6 extension)
 const GAME_MODE = { players: Math.min(6, Math.max(3, +((location.hash.match(/jugadores=(\d)/) || [])[1] || 4))) };
 // bots get a different name every game: some of a lifetime, some from programming and video games
-const BOT_POOL = ['Ana','Beto','Carla','Diego','Elena','Fabio','Ada','Linus','Grace','Alan','Guido','Dennis','Margaret','Ken','Bjarne','Hedy','Mario','Link','Samus','Kirby','Zelda','Lara','Pixel','Byte','Kernel','Sprite','Glitch','Debug','Cache','Ruby'];
+const BOT_POOL = ['Ana','Beto','Carla','Diego','Elena','Fabio','Ada','Linus','Grace','Alan','Guido','Dennis','Margaret','Ken','Bjarne','Hedy','Rosa','Tomás','Lupe','Nico','Inés','Ramón','Pixel','Byte','Kernel','Sprite','Glitch','Debug','Cache','Ruby'];
 const VILLAGE_NAMES = ['Villa Pixel','Puerto Kernel','Monte Respawn','Valle Debug','Bahía Byte','El Compilador','Pueblo Sprite','Checkpoint','Llano Lag','Aldea Commit','San Backend','Río Recursivo','Loma Algoritmo','Campo Polígono','Isla Bucle','Rancho Render','Paso Asíncrono','Villa Hitbox','Mina Merge','Torre Shader','Pradera Frame','Nido de Bits','Arroyo Array','Cumbre Caché','Valle Vóxel','La Consola','El Joystick','Monte Speedrun','Las Partidas','Vida Extra','Valle Hondo','Piedra Alta','Los Pinos','Arroyo Seco','San Telmo','Robledal','Cañada Verde','Tres Cruces','Monteluz','La Esperanza','Campo Dorado','Villa Trigal','Peñasco','Los Olivos','Río Claro','Cerro Rojo','Las Lomas','Altamira','El Mirador','Fuente Vieja','Buenavista','Laguna Azul','Santa Brígida','Encinar','Puerto Viento','Rocafría','Hierbabuena','La Colmena','Ojo de Agua','Barranco','Molino Viejo','El Roble','Valdeoro','Cumbres','Salinas','Lucero'];
 const S = 1, SQ3 = Math.sqrt(3);
 const pips = n => n ? 6 - Math.abs(7 - n) : 0;
@@ -2145,7 +2145,7 @@ function updateTrophies(){
   const hb = $('#hexbar'); if (!hb || !G) return;
   let el = TROPHY.el; if (!el){ el = TROPHY.el = document.createElement('div'); el.id = 'trophies'; hb.appendChild(el);
     ['army', 'road'].forEach(k => { const d = document.createElement('div'); d.className = 'troph ' + k; d.innerHTML = '<canvas></canvas>'; el.appendChild(d);
-      d.addEventListener('pointerenter', () => sysNote(k === 'army' ? `<b>Ejército más grande</b> · +2 puntos<br><span class="muted">Lo conservas mientras nadie juegue más caballeros que tú.</span>` : `<b>Camino más largo</b> · +2 puntos<br><span class="muted">Lo conservas mientras nadie tenga un camino seguido más largo.</span>`, { ms: 2600 }));
+      d.addEventListener('pointerenter', () => sysNote(k === 'army' ? `<b>Guardia más poderosa</b> · +2 puntos<br><span class="muted">La conservas mientras nadie juegue más guardias que tú.</span>` : `<b>Camino más largo</b> · +2 puntos<br><span class="muted">Lo conservas mientras nadie tenga un camino seguido más largo.</span>`, { ms: 2600 }));
       if (miniInit()){ const o = trophyModel(k); const v = miniView(d.querySelector('canvas'), { w: 70, h: 84, res: 1, fov: 28, fps: 4, tick: () => {} }); v.sc.add(o); o.rotation.y = -.35; v.cam.position.set(0, 1.1, 2.75); v.cam.lookAt(0, .45, 0); TROPHY.views[k] = v; } }); }
   el.querySelector('.army').classList.toggle('on', G.army === 0); el.querySelector('.road').classList.toggle('on', G.longest === 0);
 }
@@ -3165,8 +3165,8 @@ function pollen(sc, anims){
 }
 
 // ---- people
-const NAMES_M = ['Linus','Alan','Guido','Dennis','Ken','Bjarne','Mario','Luigi','Link','Pixel','Byte','Kernel','Glitch','Chuy','Toño','Beto','Pancho','Ramiro','Memo','Nacho','Rigo','Quique','Lalo','Mateo','Julián','Andrés','Rubén','Hugo','Saúl','Tomás','Goyo'];
-const NAMES_F = ['Ada','Grace','Margaret','Hedy','Zelda','Samus','Lara','Ruby','Lua','Cache','Rosa','Lupita','Marisol','Juanita','Elena','Sofía','Carmen','Paty','Chela','Tere','Lucía','Valeria','Inés','Rocío','Maru','Pilar','Nati','Cuca'];
+const NAMES_M = ['Linus','Alan','Guido','Dennis','Ken','Bjarne','Rafa','Beny','Lino','Pixel','Byte','Kernel','Glitch','Chuy','Toño','Beto','Pancho','Ramiro','Memo','Nacho','Rigo','Quique','Lalo','Mateo','Julián','Andrés','Rubén','Hugo','Saúl','Tomás','Goyo'];
+const NAMES_F = ['Ada','Grace','Margaret','Hedy','Dulce','Mina','Lola','Ruby','Lua','Cache','Rosa','Lupita','Marisol','Juanita','Elena','Sofía','Carmen','Paty','Chela','Tere','Lucía','Valeria','Inés','Rocío','Maru','Pilar','Nati','Cuca'];
 const ROLE_LABEL = {
   campesino: ['campesino','campesina'], leñador: ['leñador','leñadora'], minero: ['minero','minera'], pastor: ['pastor','pastora'],
   alfarero: ['ladrillero','ladrillera'], pescador: ['pescador','pescadora'], herrero: ['herrero','herrera'], panadero: ['panadero','panadera'],
@@ -4579,7 +4579,7 @@ function actionSpec(html, color){
   const S = { p, items, victim, txt, act: 'globo', model: null, cap: '' };
   const am = AMK.find(k => txt.toLowerCase().includes(AMULETS[k].name.toLowerCase()));
   if (/ganó la partida|Ganaste/.test(txt)){ S.act = 'trofeo'; S.cap = '¡Ganó la partida!'; S.items = {}; }
-  else if (/Ejército más grande/.test(txt)){ S.model = 'trofeo:army'; S.cap = 'Ejército más grande'; }
+  else if (/Guardia más poderosa/.test(txt)){ S.model = 'trofeo:army'; S.cap = 'Guardia más poderosa'; }
   else if (/Camino más largo/.test(txt)){ S.model = 'trofeo:road'; S.cap = 'Camino más largo'; }
   else if (/demol/i.test(txt)){ S.act = 'bomba'; S.cap = 'demolió un camino'; if (/sus caminos|tus caminos/.test(txt)) S.victim = -1; }
   else if (am && /lanz|bloque|robó|robaste|pluma|escudo/i.test(txt)){ S.act = 'amuleto'; S.amulet = am; S.cap = AMULETS[am].name; if (/escudo de roble/i.test(txt)){ S.cap = 'Escudo de roble'; S.amulet = 'escudo'; } }
@@ -4966,7 +4966,7 @@ function updatePlates(force){
     [pts, tot, dev].forEach((n, k) => { if (force || pl.last['n' + k] !== n){ pl.last['n' + k] = n; const m = pl.tags[k].material; m.map = burntTex(String(n), 22, 16, 13, { num: true }); m.needsUpdate = true; } });
     pl.el.querySelector('.think').style.display = act && P.bot ? 'flex' : 'none';
     if (pl.last.act !== act){ pl.last.act = act; pl.sign.traverse(o => { if (o.isMesh && (o.material === ironMat() || o.material === ironMat(true))) o.material = ironMat(act); }); }
-    pl.el.title = (pl.i === 0 ? 'Toca para cambiar tu avatar · ' : 'Toca para proponer un trueque · ') + `${P.name}: ${pts} puntos, ${tot} recursos, ${dev} de desarrollo${G.army === pl.i ? ' · Ejército más grande' : ''}${G.longest === pl.i ? ' · Camino más largo' : ''}`;
+    pl.el.title = (pl.i === 0 ? 'Toca para cambiar tu avatar · ' : 'Toca para proponer un trueque · ') + `${P.name}: ${pts} puntos, ${tot} recursos, ${dev} de desarrollo${G.army === pl.i ? ' · Guardia más poderosa' : ''}${G.longest === pl.i ? ' · Camino más largo' : ''}`;
   });
 }
 
@@ -6805,11 +6805,11 @@ function stepDice(dt){
 
 // ================= DEVELOPMENT CARDS =================
 const CARD_DEFS = {
-  caballero:  { name: 'Caballero', n: 14, kind: 'Acción', col: '#a8322a', desc: 'Mueve al ladrón a otro terreno y roba 1 carta a un rival que tenga pueblo ahí. Con 3 caballeros o más ganas el Ejército más grande (+2 PV). Se puede jugar antes de tirar los dados.' },
-  punto:      { name: 'Punto de victoria', n: 5, kind: 'Punto', col: '#c9962a', desc: 'Vale 1 punto de victoria. Se suma solo, no hace falta jugarla.' },
-  caminos:    { name: 'Construcción de caminos', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Construye 2 caminos gratis donde puedas.' },
-  abundancia: { name: 'Año de abundancia', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Toma del comercio 2 recursos, los que quieras.' },
-  monopolio:  { name: 'Monopolio', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Elige un recurso: todos los rivales te entregan todo lo que tengan de él.' },
+  caballero:  { name: 'Guardia', n: 14, kind: 'Acción', col: '#a8322a', desc: 'Mueve al ladrón a otro terreno y roba 1 carta a un rival que tenga pueblo ahí. Con 3 guardias o más ganas la Guardia más poderosa (+2 PV). Se puede jugar antes de tirar los dados.' },
+  punto:      { name: 'Punto de desarrollo', n: 5, kind: 'Punto', col: '#c9962a', desc: 'Vale 1 punto de victoria. Se suma solo, no hace falta jugarla.' },
+  caminos:    { name: 'Rutas y senderos', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Construye 2 caminos gratis donde puedas.' },
+  abundancia: { name: 'Fortuna de temporada', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Toma del comercio 2 recursos, los que quieras.' },
+  monopolio:  { name: 'Avaricia', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Elige un recurso: todos los rivales te entregan todo lo que tengan de él.' },
   mercader:   { name: 'Mercader', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Durante este turno todos tus cambios en el comercio son 2:1, con cualquier recurso.' },
   espia:      { name: 'Espía', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Elige un recurso y roba 1 al rival que más tenga de él.' },
   cosecha:    { name: 'Gran cosecha', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Cada uno de tus pueblos produce 1 recurso de su mejor terreno (las ciudades 2).' },
@@ -6992,7 +6992,7 @@ function cardStatus(p, c){
   if (c.turn === G.turnId) return ['La compraste este turno: podrás jugarla en el siguiente', false];
   if (G.playedTurn === G.turnId) return ['Ya jugaste una carta este turno', false];
   if (G.phase === 'rolling' || G.phase === 'robber' || G.over) return ['Ahora no se puede', false];
-  if (G.phase === 'roll' && c.t !== 'caballero') return ['Primero tira los dados (solo el Caballero se juega antes)', false];
+  if (G.phase === 'roll' && c.t !== 'caballero') return ['Primero tira los dados (solo la Guardia se juega antes)', false];
   return ['Haz clic para jugarla', true];
 }
 function renderFan(newIdx = -1){
@@ -7020,8 +7020,8 @@ function clickCard(i){
   if (!ok){ notify(st, G.players[0].color, 'sys'); return; }
   const d = CARD_DEFS[c.t];
   const go = choice => { playCard(0, i, choice); renderFan(); };
-  if (c.t === 'abundancia') pickRes('Año de abundancia', 'Elige el primer recurso', r1 => pickRes('Año de abundancia', 'Elige el segundo recurso', r2 => go([r1, r2])));
-  else if (c.t === 'monopolio') pickRes('Monopolio', 'Todos te darán este recurso', r => go(r));
+  if (c.t === 'abundancia') pickRes('Fortuna de temporada', 'Elige el primer recurso', r1 => pickRes('Fortuna de temporada', 'Elige el segundo recurso', r2 => go([r1, r2])));
+  else if (c.t === 'monopolio') pickRes('Avaricia', 'Todos te darán este recurso', r => go(r));
   else if (c.t === 'espia') pickRes('Espía', 'Robarás 1 al rival que más tenga', r => go(r));
   else go(null);
 }
@@ -7065,7 +7065,7 @@ function playCard(p, i, choice){
 }
 function updateArmy(p){
   const P = G.players[p], cur = G.army ?? -1;
-  if ((P.knights || 0) >= 3 && (cur === -1 || (P.knights > (G.players[cur].knights || 0) && cur !== p))){ G.army = p; notify(`🛡️ ${p === 0 ? 'Tienes' : P.name + ' tiene'} el <b>Ejército más grande</b> (+2 PV)`, P.color); SFX.win?.(); checkWin(p); }
+  if ((P.knights || 0) >= 3 && (cur === -1 || (P.knights > (G.players[cur].knights || 0) && cur !== p))){ G.army = p; notify(`🛡️ ${p === 0 ? 'Tienes' : P.name + ' tiene'} la <b>Guardia más poderosa</b> (+2 PV)`, P.color); SFX.win?.(); checkWin(p); }
 }
 function longestRoadOf(p){
   const es = G.edges.filter(e => e.road === p); if (!es.length) return 0;
@@ -9015,7 +9015,7 @@ function netPersp(h, A){
     [/Tenías más de 7 cartas: descartaste/g, `${A} tenía más de 7 cartas y descartó`], [/\bSacaste\b/g, `${A} sacó`], [/\bMoviste\b/g, `${A} movió`], [/\bLe robaste\b/g, `${A} le robó`], [/\ble robaste\b/g, 'le robó'],
     [/\bJugaste\b/g, `${A} jugó`], [/\bCompraste\b/g, `${A} compró`], [/\bFundaste\b/g, `${A} fundó`], [/\bConstruiste\b/g, `${A} construyó`], [/\bColocaste tu\b/g, `${A} colocó su`], [/\bCambiaste\b/g, `${A} cambió`], [/en tu puerto/g, 'en su puerto'],
     [/\bLanzaste\b/g, `${A} lanzó`], [/Demoliste uno de tus caminos y recuperaste/g, `${A} demolió uno de sus caminos y recuperó`], [/\bDemoliste\b/g, `${A} demolió`], [/\brecuperaste\b/g, 'se quedó con'],
-    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`],
+    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`], [/\bTienes la\b/g, `${A} tiene la`],
     [/Propusiste un trueque: das/g, `${A} propuso un trueque: da`], [/Rechazaste el trueque de/g, `${A} rechazó el trueque de`], [/Nadie aceptó tu trueque/g, `Nadie aceptó el trueque de ${A}`],
     [/aceptó tu trueque/g, `aceptó el trueque de ${A}`], [/rechazó tu carta de trueque/g, `rechazó la carta de trueque de ${A}`], [/rechazó tu trueque/g, `rechazó el trueque de ${A}`],
     [/hizo un trueque contigo: te dio/g, `hizo un trueque con ${A}: le dio`], [/\bte cambió\b/g, `le cambió a ${A}`], [/Trueque con ([^:]+): diste (.+?) y recibiste/g, `${A} hizo un trueque con $1: dio $2 y recibió`],

@@ -77,7 +77,7 @@ function updatePlates(force){
     [pts, tot, dev].forEach((n, k) => { if (force || pl.last['n' + k] !== n){ pl.last['n' + k] = n; const m = pl.tags[k].material; m.map = burntTex(String(n), 22, 16, 13, { num: true }); m.needsUpdate = true; } });
     pl.el.querySelector('.think').style.display = act && P.bot ? 'flex' : 'none';
     if (pl.last.act !== act){ pl.last.act = act; pl.sign.traverse(o => { if (o.isMesh && (o.material === ironMat() || o.material === ironMat(true))) o.material = ironMat(act); }); }
-    pl.el.title = (pl.i === 0 ? 'Toca para cambiar tu avatar · ' : 'Toca para proponer un trueque · ') + `${P.name}: ${pts} puntos, ${tot} recursos, ${dev} de desarrollo${G.army === pl.i ? ' · Ejército más grande' : ''}${G.longest === pl.i ? ' · Camino más largo' : ''}`;
+    pl.el.title = (pl.i === 0 ? 'Toca para cambiar tu avatar · ' : 'Toca para proponer un trueque · ') + `${P.name}: ${pts} puntos, ${tot} recursos, ${dev} de desarrollo${G.army === pl.i ? ' · Guardia más poderosa' : ''}${G.longest === pl.i ? ' · Camino más largo' : ''}`;
   });
 }
 

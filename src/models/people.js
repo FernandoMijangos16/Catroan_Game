@@ -1,5 +1,5 @@
-const NAMES_M = ['Linus','Alan','Guido','Dennis','Ken','Bjarne','Mario','Luigi','Link','Pixel','Byte','Kernel','Glitch','Chuy','Toño','Beto','Pancho','Ramiro','Memo','Nacho','Rigo','Quique','Lalo','Mateo','Julián','Andrés','Rubén','Hugo','Saúl','Tomás','Goyo'];
-const NAMES_F = ['Ada','Grace','Margaret','Hedy','Zelda','Samus','Lara','Ruby','Lua','Cache','Rosa','Lupita','Marisol','Juanita','Elena','Sofía','Carmen','Paty','Chela','Tere','Lucía','Valeria','Inés','Rocío','Maru','Pilar','Nati','Cuca'];
+const NAMES_M = ['Linus','Alan','Guido','Dennis','Ken','Bjarne','Rafa','Beny','Lino','Pixel','Byte','Kernel','Glitch','Chuy','Toño','Beto','Pancho','Ramiro','Memo','Nacho','Rigo','Quique','Lalo','Mateo','Julián','Andrés','Rubén','Hugo','Saúl','Tomás','Goyo'];
+const NAMES_F = ['Ada','Grace','Margaret','Hedy','Dulce','Mina','Lola','Ruby','Lua','Cache','Rosa','Lupita','Marisol','Juanita','Elena','Sofía','Carmen','Paty','Chela','Tere','Lucía','Valeria','Inés','Rocío','Maru','Pilar','Nati','Cuca'];
 const ROLE_LABEL = {
   campesino: ['campesino','campesina'], leñador: ['leñador','leñadora'], minero: ['minero','minera'], pastor: ['pastor','pastora'],
   alfarero: ['ladrillero','ladrillera'], pescador: ['pescador','pescadora'], herrero: ['herrero','herrera'], panadero: ['panadero','panadera'],

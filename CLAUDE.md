@@ -92,6 +92,8 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
    producen toque (0 a 3), y el jugador los reparte como quiera entre esos tipos (`startAllowance`/`startPick`). Los
    bots eligen lo que menos producen.
 8. **Objetos y flores** salen en cantidades según el objeto (`SPECIAL[k].drop`).
+   - Nombres propios, no de Catan: cartas Guardia, Punto de desarrollo, Rutas y senderos, Fortuna de temporada y
+     Avaricia; trofeo Guardia más poderosa. Sin nombres de personajes con marca (Nintendo, etc.) en bots ni aldeanos.
 9. **Nombre y título.** El juego se llama **SwapHolm** en todo lo visible (el modo con misiones también). Los
    identificadores internos siguen diciendo `catroan` (modo `'catroan'`, salas, `catroan-tok`, `catroanDesk`, carpeta
    de datos de Electron) para no romper partidas ni preferencias.
@@ -218,7 +220,7 @@ Antes de cada uno, comparte tus dudas con Fernando.
      - las misiones, el brujo, los amuletos y los objetos y flores;
      - el pueblo en primera persona;
      - los eventos;
-     - el camino más largo y el ejército más grande;
+     - el camino más largo y la guardia más poderosa;
      - ganar.
    - Lo guía un aldeano.
    - Depende del azar con semilla.
