@@ -1868,7 +1868,7 @@ function botTrade(p){
   if (!give) return false;
   const get = need[0], k = tradeRate(p, give);
   P.res[give] -= k; P.res[get] += 1; if (P.buffs) P.buffs.halfTrade = false;
-  notify(`${P.name} cambió ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en su puerto' : 'con el banco'}`, P.color);
+  notify(`${P.name} cambió ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en su puerto' : 'en el comercio'}`, P.color);
   return true;
 }
 function botAct(p, st){
@@ -1919,8 +1919,8 @@ function endTurn(){
   exitBuild(); hidePopup(); if (G.amuletPick) amuletCancel(); tickFx(G.current);
   { const ord = G.order || [...G.players.keys()]; G.current = ord[(ord.indexOf(G.current) + 1) % ord.length]; } G.turnId++; G.phase = 'roll';
   const P = G.players[G.current];
-  if (NG.on){ G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } }); const lack = humanSeats().filter(h => !(G.quests || []).some(q => q.p === h && q.state !== 'done')); if (gameRound() > 4 && lack.length) assignQuest(pick(lack)); else if (Math.random() < .3) assignQuest(); }
-  else if (gameRound() > 4 && !(G.quests || []).some(q => q.p === 0)) assignQuest(0); else if (Math.random() < .3) assignQuest();
+  if (NG.on) G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } });
+  villageQuests();   // each town posts missions on its own timer (core/missions.js)
   if (P.buffs){
     if (P.buffs.randomItem){ P.buffs.randomItem = false; if (Math.random() < .5){ const r = pick(RES); P.res[r]++; notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: 1 ${resImg(r)}`, P.color); } else { const k = pick(SPK); giveSpecial(G.current, k); notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: ${specImg(k)} ${SPECIAL[k].name}`, P.color); } }
     if (P.buffs.extraRes){ P.buffs.extraRes = false; P.extraTurn = G.turnId; }
@@ -4546,7 +4546,7 @@ function actionSpec(html, color){
     const parts = html.split(/ por | y recibiste /);
     if (parts.length >= 2){ const a = document.createElement('div'), b = document.createElement('div'); const head = parts[0], first = head.search(/<img|<span class="m3"/), colon = (first >= 0 ? head.slice(0, first) : head).lastIndexOf(':'); a.innerHTML = colon >= 0 ? head.slice(colon + 1) : head; b.innerHTML = parts.slice(1).join(' por ');   // after the last ':' of the words (images carry ':' in their data)
       const give = itemsIn(a), want = itemsIn(b);
-      if (Object.keys(give).length && Object.keys(want).length){ S.trade = { give, want, place: /pirata/.test(txt) ? 'Pirata' : /puerto/.test(txt) ? 'Puerto' : /banco/.test(txt) ? 'Banco' : null }; if (S.trade.place) S.victim = -1; if (/Propusiste/.test(txt)) S.victim = -1; } } }
+      if (Object.keys(give).length && Object.keys(want).length){ S.trade = { give, want, place: /pirata/.test(txt) ? 'Pirata' : /puerto/.test(txt) ? 'Puerto' : /comercio/.test(txt) ? 'Comercio' : null }; if (S.trade.place) S.victim = -1; if (/Propusiste/.test(txt)) S.victim = -1; } } }
   else if (/sacó|Sacaste/.test(txt)){ const n = (txt.match(/sac(?:ó|aste) (\d+)/) || [])[1]; S.act = 'dado'; S.cap = n ? 'sacó ' + n : 'tiró'; if (/7/.test(n || '') && /ladrón/.test(txt)) S.cap = 'sacó 7: ¡ladrón!'; }
   else if (/compró una carta|Compraste una carta/.test(txt)){ S.model = 'carta'; S.cap = 'compró carta'; }
   else if (/jugó|usó|Jugaste|Usaste/.test(txt)){ S.model = 'carta'; S.cap = 'jugó carta'; }
@@ -4578,7 +4578,7 @@ function nextScroll(){
   const late = S.act === 'amuleto' ? 'late' : '', what = S.piece ? `<div class="aitems"><span class="ai"><span class="m3 pz" data-k="pz:${S.piece}:${S.p}"></span></span></div>` : hasItems ? `<div class="aitems ${late}">${itemsHTML(S.items, true)}</div>` : '';
   const res = what + (S.victim >= 0 ? `<span class="aarrow ${late}">${ic('flecha')}</span>${whoHTML(S.victim, 'victim ' + late)}` : '');
   el.style.setProperty('--pc', m.color);
-  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${iconImg(T.place === 'Banco' ? 'moneda' : 'ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
+  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${iconImg(T.place === 'Comercio' ? 'moneda' : 'ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
     el.innerHTML = `${whoHTML(S.p)}<div class="aitems">${itemsHTML(T.give, true)}</div><div class="aact"><canvas></canvas><small>trueque</small></div><div class="aitems">${itemsHTML(T.want, true)}</div>${to}`; }
   else el.innerHTML = `${whoHTML(S.p)}<div class="aact"><canvas></canvas><small>${S.cap}</small></div>${res}`;
   el.classList.toggle('left', CORNER_SIDE === 'l');
@@ -4978,7 +4978,7 @@ function buildMarket(kind, opts){
   // hands (player's from the front, npc's from behind)
   const myHand = handModel(G.players[0].color); myHand.visible = false; sc.add(myHand);
   const npcHand = handModel(hoodC); npcHand.rotation.y = Math.PI; npcHand.visible = false; sc.add(npcHand);
-  const ctx = { sc, kind, npc, myHand, npcHand, TOP, items: [], anims: [], t: 0, sel: { give: null, want: null }, busy: false, opts: opts || {}, hover: null };
+  const ctx = { sc, kind, npc, myHand, npcHand, TOP, items: [], anims: [], t: 0, sel: { give: {}, want: {} }, busy: false, opts: opts || {}, hover: null };
   {
     const bell = bellModel(); bell.position.set(0, TOP, .38); bell.scale.setScalar(1.6); sc.add(bell); bell.traverse(o => { if (o.isMesh) o.userData.mk = { type: 'bell' }; }); ctx.bell = bell; ctx.items.push({ obj: bell, type: 'bell' });
     const sl = signMesh('Das', 60, 16, 11, { light: true }); sl.scale.set(.5, .14, .04); sl.position.set(-1.05, TOP - .06, .82); sc.add(sl);
@@ -5731,7 +5731,7 @@ function pierTray(C){
   C.tray.visible = true; C.items = C.items.filter(i => i.type !== 'pay');
   (C.trayObjs || []).forEach(o => C.sc.remove(o)); C.trayObjs = [];
   RES.forEach((r, k) => { const x = -.58 + k*.29, it = makeResourceItem(r); it.scale.setScalar(.2); it.position.set(x, C.TOP, -5.95); it.rotation.y = .5; C.sc.add(it); it.traverse(o => { if (o.isMesh) o.userData.mk = { type: 'pay', r }; });
-    const ok = G.players[0].res[r] >= C.rate && (C.port === '3:1' || C.port === r);
+    const ok = C.port === '3:1' ? G.players[0].res[r] > 0 : G.players[0].res[r] >= C.rate && C.port === r;   // 3:1 takes mixed cards
     const tag = new THREE.Mesh(sg(new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: engraveTex(String(G.players[0].res[r]), 24, 14, 10, { light: true, num: true }), transparent: true, opacity: ok ? 1 : .45 })); tag.scale.set(.1, .06, 1); tag.position.set(x + .09, C.TOP + .04, -5.8); tag.lookAt(C.camP); C.sc.add(tag);
     C.trayObjs.push(it, tag); C.items.push({ obj: it, type: 'pay', r, tag, ok }); });
 }
@@ -5745,17 +5745,19 @@ function pierClick(it){
   if (C.ph === 'want' && it.type === 'goods'){
     if (C.port !== '3:1' && it.r === C.port){ pierSay(C, `No te cambio ${RES_NAME[it.r].toLowerCase()} por ${RES_NAME[it.r].toLowerCase()}.`); return; }
     C.wantR = it.r; C.goods.forEach(g => { g.obj.userData.base = g.obj.userData.base || g.obj.scale.x; g.obj.scale.setScalar(g.obj.userData.base*(g === it ? 1.4 : .75)); }); SFX.click?.();
-    C.ph = 'pay'; C.paid = 0; C.giveR = C.port === '3:1' ? null : C.port;
-    pierSay(C, C.port === '3:1' ? `Echa ${C.rate} iguales de lo que quieras.` : `Echa ${C.rate} de ${RES_NAME[C.port].toLowerCase()} al barco.`);
+    C.ph = 'pay'; C.paid = 0; C.paidRes = {}; C.giveR = C.port === '3:1' ? null : C.port;
+    pierSay(C, C.port === '3:1' ? `Echa ${C.rate} cartas de lo que quieras, pueden ser distintas.` : `Echa ${C.rate} de ${RES_NAME[C.port].toLowerCase()} al barco.`);
     $('#mk-ui .mk-need').innerHTML = `Faltan <b>${C.rate}</b>`; return; }
   if ((C.ph === 'pay' && it.type === 'pay' && tradeBlocked(0, it.r)) || (C.ph === 'want' && it.type === 'goods' && tradeBlocked(0, it.r))){ pierSay(C, ''); SFX.click?.(); return; }
   if (C.ph === 'pay' && it.type === 'pay'){
     const r = it.r;
-    if (C.giveR && r !== C.giveR){ pierSay(C, `Dije ${RES_NAME[C.giveR].toLowerCase()}, alcalde.`); SFX.click?.(); return; }
+    const mixed = C.port === '3:1';
+    if (!mixed && r !== C.port){ pierSay(C, `Dije ${RES_NAME[C.port].toLowerCase()}, alcalde.`); SFX.click?.(); return; }
     if (r === C.wantR){ pierSay(C, 'Eso es lo que te voy a dar…'); return; }
-    if (!C.giveR && P.res[r] < C.rate){ pierSay(C, `No te alcanza: necesito ${C.rate}.`); SFX.click?.(); return; }
+    const spare = mixed ? RES.filter(x => x !== C.wantR).reduce((a, x) => a + P.res[x], 0) : P.res[r];
+    if (!C.paid && spare < C.rate){ pierSay(C, `No te alcanza: necesito ${C.rate}.`); SFX.click?.(); return; }
     if (P.res[r] <= 0) return;
-    C.giveR = r; drawBubble(C); bubbleModels(C); P.res[r]--; C.paid++; refresh(); SFX.click?.();
+    C.giveR = r; C.paidRes = C.paidRes || {}; C.paidRes[r] = (C.paidRes[r] || 0) + 1; drawBubble(C); bubbleModels(C); P.res[r]--; C.paid++; refresh(); SFX.click?.();
     it.tag.material.map = engraveTex(String(P.res[r]), 24, 14, 10, { light: true, num: true }); it.tag.material.needsUpdate = true;
     const c = makeResourceItem(r); c.scale.setScalar(.2); c.position.copy(it.obj.position); C.sc.add(c);
     const to = C.pirate.elbowL.localToWorld(new THREE.Vector3(0, -.36, .06));
@@ -5787,7 +5789,7 @@ function updatePier(C, dt, t){
   const holdOut = () => { pr.armL.rotation.x += (-1.2 - pr.armL.rotation.x)*Math.min(1, dt*5); pr.elbowL.rotation.x += (-.3 - pr.elbowL.rotation.x)*Math.min(1, dt*5); };
   switch (C.ph){
     case 'walk': if (C.pt > 2.4){ C.ph = 'greet'; C.pt = 0; } break;
-    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? 'Acepto 3 iguales y te doy 1. ¿Qué quieres?' : `Solo ${RES_NAME[C.port].toLowerCase()}: 2 por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
+    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? 'Dame 3 cartas, aunque sean distintas, y te doy 1. ¿Qué quieres?' : `Solo ${RES_NAME[C.port].toLowerCase()}: 2 por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
     case 'want': case 'pay': holdOut(); break;
     case 'catch': holdOut(); if (C.pt > .7 && C.thrown.every(p => p.t >= 1)){ C.ph = 'throwback'; C.pt = 0; C.throwing = true; pierSay(C, pick(['Trato justo. ¡Ahí va!', 'Un placer, alcalde. ¡Atrapa!', 'Palabra de marino. ¡Ahí te va!'])); } break;
     case 'throwback': {
@@ -5795,9 +5797,9 @@ function updatePier(C, dt, t){
       if (C.pt > .3 && !C.ball){ const b = makeResourceItem(C.wantR); b.scale.setScalar(.3); C.sc.updateMatrixWorld(true); const from = pr.elbowR.localToWorld(new THREE.Vector3(0, -.36, .06)); b.position.copy(from); C.sc.add(b); C.ball = { b, from, to: new THREE.Vector3(.1, 1.95, -5.6), t: 0 }; }
       if (C.ball){ const B = C.ball; B.t = Math.min(1, B.t + dt/.8); B.b.position.lerpVectors(B.from, B.to, B.t); B.b.position.y += Math.sin(Math.PI*B.t)*1.1; B.b.rotation.y += dt*8; B.b.rotation.x += dt*5;
         if (B.t >= 1 && !C.got){ C.got = true; const P = G.players[0]; P.res[C.wantR]++; if (P.buffs && P.buffs.halfTrade){} const tok = invExpect(C.wantR, 1); const [sx, sy] = toScreen(B.b.position); B.b.visible = false; flyToInventory(tok, sx, sy, 0); refresh(); SFX.trade?.();
-          notify(`Cambiaste ${C.rate} ${resImg(C.giveR)} por 1 ${resImg(C.wantR)} con el pirata del puerto`, G.players[0].color); } }
+          notify(`Cambiaste ${resList(C.paidRes || { [C.giveR]: C.rate })} por 1 ${resImg(C.wantR)} con el pirata del puerto`, G.players[0].color); } }
       if (C.pt > 1.6){ C.throwing = false; C.sc.remove(C.ball.b); C.ball = null; C.got = false; C.thrown = [];
-        const P = G.players[0], can = RES.some(r => P.res[r] >= C.rate && (C.port === '3:1' || C.port === r));
+        const P = G.players[0], can = C.port === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) >= C.rate : P.res[C.port] >= C.rate;
         if (can){ C.ph = 'want'; C.pt = 0; C.wantR = null; C.giveR = C.port === '3:1' ? null : C.port; pierSay(C, '¿Algo más, alcalde?'); pierGoods(C); pierTray(C); C.ready = true; C.busy = false; $('#mk-ui .mk-need').innerHTML = ''; }
         else { C.ph = 'bye'; C.pt = 0; pierSay(C, 'Vuelve cuando tengas más carga. ¡Buen viento!'); } }
       break; }
@@ -5810,7 +5812,7 @@ function pierScene(pi){
   if (!mine){ notify(`Para comerciar en este puerto (${pt.type === '3:1' ? '3:1' : '2:1 ' + RES_NAME[pt.type]}) necesitas un pueblo junto a él.`, P.color, 'sys'); return; }
   if (G.current !== 0 || G.phase !== 'main'){ notify('Puedes comerciar en el puerto durante tu turno, después de tirar los dados.', P.color, 'sys'); return; }
   const rate = pt.type === '3:1' ? 3 : 2;
-  if (!RES.some(r => P.res[r] >= rate && (pt.type === '3:1' || pt.type === r))){ notify(pt.type === '3:1' ? 'El pirata acepta 3 iguales: aún no tienes suficientes.' : `El pirata solo acepta 2 de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
+  if (pt.type === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) < rate : P.res[pt.type] < rate){ notify(pt.type === '3:1' ? 'El pirata acepta 3 cartas, aunque sean distintas: aún no tienes suficientes.' : `El pirata solo acepta 2 de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
   if (!scenesOn()){ openTrade('banco'); return; }
   enterMarket('pier', { port: pi });
 }
@@ -5869,29 +5871,45 @@ function marketClick(e){
   if (it.type === 'bell'){ ringBell(); return; }
   const P = G.players[0];
   if ((it.type === 'give' || it.type === 'want') && tradeBlocked(0, it.r)){ mkSay(`Hay ${AMULETS[G.players[0].fx.plague.k].name.toLowerCase()} en tus tierras: hoy no puedo cambiar ${RES_NAME[it.r].toLowerCase()}.`); return; }
-  if (it.type === 'give'){ if (P.res[it.r] < tradeRate(0, it.r)){ mkSay(`Necesitas <b>${tradeRate(0, it.r)}</b> ${resImg(it.r)} para eso.`); SFX.click?.(); return; } C.sel.give = C.sel.give === it ? null : it; if (C.sel.want && C.sel.want.r === it.r) C.sel.want = null; }
-  else { C.sel.want = C.sel.want === it ? null : it; if (C.sel.give && C.sel.give.r === it.r) C.sel.give = null; }
+  // several at once: each tap on your side adds one lot of that resource, each tap on the trader's side asks for one more;
+  // going past what you can afford (or past the lots you give) wraps back to none
+  const S = C.sel, r = it.r;
+  if (it.type === 'give'){ const k = tradeRate(0, r), n = (S.give[r] || 0) + 1;
+    if (!S.give[r] && P.res[r] < k){ mkSay(`Necesitas <b>${k}</b> ${resImg(r)} para eso.`); SFX.click?.(); return; }
+    if (n*k > P.res[r]) delete S.give[r]; else { S.give[r] = n; delete S.want[r]; } }
+  else { const lots = mkLots(S.give), others = mkCount(S.want) - (S.want[r] || 0), n = (S.want[r] || 0) + 1;
+    if (others + n > Math.max(1, lots)) delete S.want[r]; else { S.want[r] = n; delete S.give[r]; } }
   SFX.click?.(); markSel();
 }
+const mkCount = o => Object.values(o).reduce((a, n) => a + n, 0), mkLots = mkCount;
+const mkGiveCards = give => Object.fromEntries(Object.entries(give).map(([r, n]) => [r, n*tradeRate(0, r)]));
+const mkIsSel = (C, i) => (i.type === 'give' && C.sel.give[i.r] > 0) || (i.type === 'want' && C.sel.want[i.r] > 0);
 function markSel(){
   const C = marketCtx; C.items.forEach(i => { if (i.glow){ i.glow.forEach(g => g.parent && g.parent.remove(g)); i.glow = null; } });
-  [['give', 0xf0c050], ['want', 0x7ad07a]].forEach(([k, col]) => { const i = C.sel[k]; if (!i) return; const M = contourMats(col); i.glow = []; i.obj.traverse(o => { if (o.isMesh && !o.userData.outline){ const h = new THREE.Mesh(o.geometry, M.glow); h.userData.outline = true; h.raycast = () => {}; o.add(h); i.glow.push(h); } }); });
-  if (C.sel.give && C.sel.want) mkSay(`Das <b>${tradeRate(0, C.sel.give.r)}</b> ${resImg(C.sel.give.r)} y recibes <b>1</b> ${resImg(C.sel.want.r)}. <b>Toca la campana.</b>`);
+  C.items.filter(i => mkIsSel(C, i)).forEach(i => { const M = contourMats(i.type === 'give' ? 0xf0c050 : 0x7ad07a); i.glow = []; i.obj.traverse(o => { if (o.isMesh && !o.userData.outline){ const h = new THREE.Mesh(o.geometry, M.glow); h.userData.outline = true; h.raycast = () => {}; o.add(h); i.glow.push(h); } }); });
+  const lots = mkLots(C.sel.give), wants = mkCount(C.sel.want);
+  if (lots && wants) mkSay(lots === wants ? `Das ${resList(mkGiveCards(C.sel.give))} y recibes ${resList(C.sel.want)}. <b>Toca la campana.</b>`
+    : `Das para <b>${lots}</b> y pides <b>${wants}</b>: ${lots > wants ? 'pide más de mi lado (derecha)' : 'agrega más de tu lado (izquierda)'}.`);
+  else if (lots) mkSay(`Das ${resList(mkGiveCards(C.sel.give))}. Ahora elige <b>${lots}</b> de mi lado. <small>Toca varias veces para más.</small>`);
 }
 function ringBell(){
   const C = marketCtx, P = G.players[0]; SFX.bell?.(); C.bellT = 0;
-  if (!C.sel.give || !C.sel.want){ mkSay('Primero elige qué das <b>(izquierda)</b> y qué quieres <b>(derecha)</b>.'); return; }
-  const give = C.sel.give.r, want = C.sel.want.r, k = tradeRate(0, give);
-  if (P.res[give] < k){ mkSay('No te alcanza para ese trato.'); return; }
+  const lots = mkLots(C.sel.give), wants = mkCount(C.sel.want);
+  if (!lots || !wants){ mkSay('Primero elige qué das <b>(izquierda)</b> y qué quieres <b>(derecha)</b>.'); return; }
+  if (lots !== wants){ markSel(); return; }
+  const cards = mkGiveCards(C.sel.give);
+  if (Object.entries(cards).some(([r, n]) => P.res[r] < n)){ mkSay('No te alcanza para ese trato.'); return; }
   C.busy = true;
   if (P.buffs && P.buffs.halfTrade){ P.buffs.halfTrade = false; notify('Usaste tu descuento: mitad de precio en el mercado', P.color, 'sys'); }
-  P.res[give] -= k; P.res[want] += 1; const tok = invExpect(want, 1); refresh();
-  const y = C.TOP, copies = [];
-  for (let j=0;j<k;j++){ const c = makeResourceItem(give); c.scale.setScalar(.36); c.position.set(-.5 + j*.17 - k*.085, y, .75); c.rotation.y = .3; C.sc.add(c); copies.push(c); }
-  const got = makeResourceItem(want); got.scale.setScalar(.42); got.position.set(.4, y, -.75); C.sc.add(got);
+  Object.entries(cards).forEach(([r, n]) => P.res[r] -= n); Object.entries(C.sel.want).forEach(([r, n]) => P.res[r] += n);
+  const toks = Object.entries(C.sel.want).flatMap(([r, n]) => Array.from({ length: n }, () => ({ r, tok: invExpect(r, 1) }))); refresh();
+  // the cards slide over as one heap (a few per kind are enough to read it), the goods come back side by side
+  const y = C.TOP, copies = [], shown = Object.entries(cards).flatMap(([r, n]) => Array(Math.min(n, 4)).fill(r)), k = shown.length, gap = k > 8 ? .11 : .17;
+  shown.forEach((r, j) => { const c = makeResourceItem(r); c.scale.setScalar(.36); c.position.set(-.5 + j*gap - k*gap/2, y, .75); c.rotation.y = .3; C.sc.add(c); copies.push(c); });
+  const gots = toks.map((o, j) => { const g = makeResourceItem(o.r); g.scale.setScalar(.42); g.userData.dx = (j - (toks.length - 1)/2)*.24; g.position.set(.4 + g.userData.dx, y, -.75); C.sc.add(g); return g; });
   const H = C.myHand, N = C.npcHand; H.visible = true; N.visible = true;
-  C.anim = { t: 0, copies, got, tok, give, want, k };
-  C.sel = { give: null, want: null }; markSel();
+  C.anim = { t: 0, copies, gots, toks, k, gap };
+  C.sel = { give: {}, want: {} }; markSel();
   mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.']));
 }
 function updateMarket(dt, t){
@@ -5903,19 +5921,19 @@ function updateMarket(dt, t){
   // npc idle
   C.npc.head.rotation.y = Math.sin(t*.6)*.15; C.npc.head.rotation.x = -.08 + Math.sin(t*.9)*.03; C.npc.g.position.y = Math.sin(t*1.6)*.01;
   // hovered item lifts a bit, selected ones float
-  C.items.forEach(i => { if (i.type === 'bell') return; const sel = C.sel.give === i || C.sel.want === i, hov = C.hover === i; const ty = C.TOP + (sel ? .12 + Math.sin(t*3)*.02 : hov ? .05 : 0); i.obj.position.y += (ty - i.obj.position.y)*Math.min(1, dt*10); i.obj.rotation.y = sel ? i.obj.rotation.y + dt*1.5 : i.rot; i.obj.rotation.z = sel ? .3 : 0; });
+  C.items.forEach(i => { if (i.type === 'bell') return; const sel = mkIsSel(C, i), hov = C.hover === i; const ty = C.TOP + (sel ? .12 + Math.sin(t*3)*.02 : hov ? .05 : 0); i.obj.position.y += (ty - i.obj.position.y)*Math.min(1, dt*10); i.obj.rotation.y = sel ? i.obj.rotation.y + dt*1.5 : i.rot; i.obj.rotation.z = sel ? .3 : 0; });
   if (C.bell && C.bellT !== undefined){ C.bellT += dt; C.bell.userData.bell.rotation.z = Math.sin(C.bellT*28)*.35*Math.max(0, 1 - C.bellT/.8); }
   // trade: my hand slides the copies over, the npc slides the wanted item back
   const A = C.anim;
   if (A){
     A.t += dt; const T = A.t, y = C.TOP, ez = k => k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
     const k1 = ez(clamp((T - .2)/1.1, 0, 1)), k2 = ez(clamp((T - 1.0)/1.1, 0, 1)), k3 = ez(clamp((T - 2.2)/.6, 0, 1)), kr = ez(clamp((T - 1.4)/.5, 0, 1));
-    A.copies.forEach((c, j) => { c.position.z = .75 - k1*1.25 - k3*.9; c.position.x = -.5 + j*.17 - A.k*.085; c.position.y = y; c.visible = k3 < .98; });
+    A.copies.forEach((c, j) => { c.position.z = .75 - k1*1.25 - k3*.9; c.position.x = -.5 + j*A.gap - A.k*A.gap/2; c.position.y = y; c.visible = k3 < .98; });
     C.myHand.position.set(-.5, y + .06, .98 - k1*1.25 + kr*1.6); C.myHand.visible = T < 2.2;
-    A.got.position.set(.4, y, -.75 + k2*1.35); C.npcHand.position.set(.4, y + .06, -.98 + k2*1.35 - k3*1.6); C.npcHand.rotation.set(0, Math.PI, 0);
+    A.gots.forEach(g => g.position.set(.4 + g.userData.dx, y, -.75 + k2*1.35)); C.npcHand.position.set(.4, y + .06, -.98 + k2*1.35 - k3*1.6); C.npcHand.rotation.set(0, Math.PI, 0);
     if (T > 2.2 && T < 2.8){ C.npcHand.position.set(-.5, y + .06, -.72 - k3*.9); }
-    if (T > 2.9 && !A.flown){ A.flown = true; const [sx, sy] = toScreen(A.got.position.clone().setY(y + .1)); A.got.visible = false; C.npcHand.visible = false; flyToInventory(A.tok, sx, sy, 0); A.copies.forEach(c => C.sc.remove(c)); }
-    if (T > 3.2){ C.sc.remove(A.got); C.anim = null; C.busy = false; C.items.filter(i => i.type === 'give').forEach(i => { i.tag.material[2].map = engraveTex(tradeRate(0, i.r) + ':1', 24, 14, 10, { light: true }); i.tag.material[2].needsUpdate = true; }); mkSay('¿Algo más, viajero? Si no, puedes <b>salir</b>.'); }
+    if (T > 2.9 && !A.flown){ A.flown = true; A.gots.forEach((g, j) => { const [sx, sy] = toScreen(g.position.clone().setY(y + .1)); g.visible = false; flyToInventory(A.toks[j].tok, sx, sy, j*.08); }); C.npcHand.visible = false; A.copies.forEach(c => C.sc.remove(c)); }
+    if (T > 3.2){ A.gots.forEach(g => C.sc.remove(g)); C.anim = null; C.busy = false; C.items.filter(i => i.type === 'give').forEach(i => { i.tag.material[2].map = engraveTex(tradeRate(0, i.r) + ':1', 24, 14, 10, { light: true }); i.tag.material[2].needsUpdate = true; }); mkSay('¿Algo más, viajero? Si no, puedes <b>salir</b>.'); }
   }
 }
 
@@ -6031,14 +6049,28 @@ function rewardText(r){
   return '';
 }
 function assignQuestFor0(){ const keep = G.players.map((P, i) => i); assignQuest(0); }
-function assignQuest(force){
+// ---------- every town makes its own missions: a random timer per town, 3 to 5 an hour of play ----------
+// G.playT: seconds of play (advanced by whoever is acting); G.qAt: { vid: playT when that town posts its next one }.
+// A town with a mission still open posts nothing new, so they never pile up in one place.
+const QUEST_GAP = () => 720 + Math.random()*480;   // 12-20 minutes
+function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register' && netAuth()) G.playT = (G.playT || 0) + dt; }
+function villageQuests(){
+  if (!G || G.over || G.setup || isClassic()) return;
+  const now = G.playT || 0; G.qAt ||= {};
+  G.verts.forEach(v => { if (!v.building) return;
+    if (G.qAt[v.id] === undefined){ G.qAt[v.id] = now + 300 + Math.random()*900; return; }   // a new town: its first one in 5-20 min
+    if (now < G.qAt[v.id] || gameRound() <= 4) return;
+    G.qAt[v.id] = now + QUEST_GAP();
+    if (!(G.quests || []).some(q => q.vid === v.id && q.state !== 'done')) assignQuest(v.building.p, v.id); });
+}
+function assignQuest(force, vid){
   if (!G || G.over || G.setup || gameRound() <= 4 || isClassic()) return;
-  const cands = G.players.map((P, i) => i).filter(i => G.verts.some(v => v.building && v.building.p === i) && (G.quests || []).filter(q => q.p === i && q.state !== 'done').length < 2);
+  const cands = G.players.map((P, i) => i).filter(i => G.verts.some(v => v.building && v.building.p === i) && (vid !== undefined || (G.quests || []).filter(q => q.p === i && q.state !== 'done').length < 2));
   if (!cands.length) return;
-  const p = force !== undefined && cands.includes(force) ? force : pick(cands), vs = G.verts.filter(v => v.building && v.building.p === p), v = pick(vs);
+  const p = force !== undefined && cands.includes(force) ? force : pick(cands), vs = G.verts.filter(v => v.building && v.building.p === p), v = vid !== undefined && G.verts[vid] && G.verts[vid].building && G.verts[vid].building.p === p ? G.verts[vid] : pick(vs);
   const tileTypes = v.tiles.map(t => G.tiles[t].type);
   const poolOf = kind => { const all = SPK.filter(k => SPECIAL[k].kind === kind), loc = all.filter(k => !SPECIAL[k].biome || tileTypes.includes(SPECIAL[k].biome) || Math.random() < .25); return loc.length ? loc : all; };
-  const brujo = Math.random() < .22, hard = !brujo && Math.random() < .25, kind = Math.random() < .5 ? 'flor' : 'objeto', items = {};
+  const brujo = Math.random() < .3, hard = !brujo && Math.random() < .25, kind = Math.random() < .5 ? 'flor' : 'objeto', items = {};
   let qkind = kind;
   if (brujo){ qkind = 'brujo'; const nt = 2 + (Math.random() < .5 ? 1 : 0); for (let k=0;k<nt;k++){ const it = pick(poolOf(k % 2 ? 'objeto' : 'flor')); items[it] = (items[it] || 0) + 1 + (Math.random() < .35 ? 1 : 0); } } else
   if (!hard){ const it = pick(poolOf(kind)); items[it] = SPECIAL[it].val >= 3 ? 1 : 1 + (Math.random() < .35 ? 1 : 0); }
@@ -6602,7 +6634,7 @@ const HB_INFO = {
   pueblo: ['Pueblo', '1 punto de victoria. Produce de los terrenos que toca.', COST.pueblo],
   ciudad: ['Ciudad', 'Mejora un pueblo: 2 puntos y produce el doble.', COST.ciudad],
   carta: ['Carta de desarrollo', 'Compra una carta al azar del mazo.', CARD_COST],
-  comercio: ['Comerciar', 'Cambia 4 iguales por 1 con el banco (mejor en tus puertos). Para cambiar con jugadores toca su letrero.', null],
+  comercio: ['Comerciar', 'Cambia 4 iguales por 1 en el comercio (mejor en tus puertos). Para cambiar con jugadores toca su letrero.', null],
 };
 function hbTip(t, e){
   const tip = $('#hb-tip');
@@ -6716,9 +6748,9 @@ const CARD_DEFS = {
   caballero:  { name: 'Caballero', n: 14, kind: 'Acción', col: '#a8322a', desc: 'Mueve al ladrón a otro terreno y roba 1 carta a un rival que tenga pueblo ahí. Con 3 caballeros o más ganas el Ejército más grande (+2 PV). Se puede jugar antes de tirar los dados.' },
   punto:      { name: 'Punto de victoria', n: 5, kind: 'Punto', col: '#c9962a', desc: 'Vale 1 punto de victoria. Se suma solo, no hace falta jugarla.' },
   caminos:    { name: 'Construcción de caminos', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Construye 2 caminos gratis donde puedas.' },
-  abundancia: { name: 'Año de abundancia', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Toma del banco 2 recursos, los que quieras.' },
+  abundancia: { name: 'Año de abundancia', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Toma del comercio 2 recursos, los que quieras.' },
   monopolio:  { name: 'Monopolio', n: 2, kind: 'Progreso', col: '#3a7a44', desc: 'Elige un recurso: todos los rivales te entregan todo lo que tengan de él.' },
-  mercader:   { name: 'Mercader', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Durante este turno todos tus cambios con el banco son 2:1, con cualquier recurso.' },
+  mercader:   { name: 'Mercader', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Durante este turno todos tus cambios en el comercio son 2:1, con cualquier recurso.' },
   espia:      { name: 'Espía', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Elige un recurso y roba 1 al rival que más tenga de él.' },
   cosecha:    { name: 'Gran cosecha', n: 2, kind: 'Especial', col: '#5a3e86', desc: 'Cada uno de tus pueblos produce 1 recurso de su mejor terreno (las ciudades 2).' },
 };
@@ -7124,6 +7156,22 @@ function doorKick(h, secs){ const d = h && h.g && h.g.userData.door; if (d) d.us
 function tickDoors(list, dt){ const now = doorNow(); for (const h of list){ const d = h.g && h.g.userData.door; if (!d) continue; const want = now < d.userData.until ? 1 : 0;
   if (d.userData.open === want) continue; d.userData.open = want > d.userData.open ? Math.min(1, d.userData.open + dt*2.4) : Math.max(0, d.userData.open - dt*1.8);
   const k = d.userData.open, e = k*k*(3 - 2*k); d.rotation.y = e*1.45; } }
+// ---------- your own townsfolk bring you flowers: more roads joined to the town, more often ----------
+function villageGifts(c, dt){
+  if (!c || isClassic() || !scenesOn() || !G || G.over) return; const v = G.verts[c.vid]; if (!v || !v.building || v.building.p !== 0) return;
+  c.giftT = (c.giftT === undefined ? 20 : c.giftT) - dt; if (c.giftT > 0) return; c.giftT = 40;
+  if (c.V.people.some(p => p.st.kind === 'gift') || Math.random() > Math.min(.6, .12 + .12*(v.conn || 0))) return;
+  const me = ctl.pos, p = c.V.people.filter(q => q.g.visible && !q.kid && !q.guard && !q.vendor && ['idle', 'walk', 'watch'].includes(q.st.kind) && Math.hypot(q.g.position.x - me.x, q.g.position.z - me.z) < 18).sort((a, b) => Math.hypot(a.g.position.x - me.x, a.g.position.z - me.z) - Math.hypot(b.g.position.x - me.x, b.g.position.z - me.z))[0];   // the nearest one
+  if (!p) return;
+  const types = v.tiles.map(t => G.tiles[t].type), local = SPK.filter(k => SPECIAL[k].kind === 'flor' && SPECIAL[k].biome && types.includes(SPECIAL[k].biome)), common = SPK.filter(k => SPECIAL[k].kind === 'flor' && !SPECIAL[k].biome);
+  const k = pick(local.length && Math.random() < .7 ? local : common.length ? common : local); if (!k) return;
+  p.st = { kind: 'gift', step: 0, t: 0, k };
+}
+function giveGiftFlower(p, k){
+  const P = G.players[0], v = G.verts[villageCtx.vid]; P.special = P.special || {}; P.special[k] = (P.special[k] || 0) + 1; SFX.pick?.();
+  notify(`${p.name || 'Un vecino'} de <b>${v.name}</b> te regaló ${specImg(k)}`, P.color);
+  if (NG.on && !netAuth()) netOp('gift', { k }); refresh();
+}
 function enterHouse(p, h, stay){ doorKick(h, 2.2); p.st = { kind: 'enter', t: 0, h, stay, fx: p.g.position.x, fz: p.g.position.z }; }
 function newMeet(V, x, z, members, topic){
   const m = { x, z, members, t: 0, done: false, kids: !!members[0].kid, topic: topic || pick(['la cosecha', 'el clima', 'los caminos nuevos', 'el mercado', 'los vecinos', 'el ladrón', 'la taberna', 'los animales', 'el precio del trigo']) };
@@ -7277,6 +7325,15 @@ function personTick(V, p, dt, t){
         const sh = st.h.shop; if (sh && p !== sh.vendor){ if (sh.carry != null){ setCarry(p, typeof sh.carry === 'string' ? (RES_EMOJI[sh.carry] || CARRY_COLORS[sh.carry] || 0xd9a050) : sh.carry); p.carryT = 35; } say3D(p, pick(['😊', '👍', sh.icon]), 1.5); p.after = Math.random() < .5 ? 'home' : 'plaza'; } }
       break; }
     case 'sit': st.t -= dt; p.spd = 0; if (st.icon && Math.random() < dt*.12) say3D(p, st.icon); if (!st.icon && Math.random() < dt*.03) say3D(p, pick(['😌','🎶','☀️'])); if (st.t <= 0 || (isNight() && hourNow() > 23)){ st.seat.occ = null; p.g.position.set(st.seat.front[0], p.g.position.y, st.seat.front[1]); idle(p, .5); } break;
+    case 'gift': {   // walks up to you, offers a flower of the town's land, and hands it over
+      const me = ctl.pos, d = Math.hypot(me.x - p.g.position.x, me.z - p.g.position.z); st.t += dt;
+      if (st.step === 0){ if (st.t > 30){ idle(p, 1); break; }   // you walked away: maybe next time
+        // stops at arm's length (your own space keeps them ~2 m away)
+        if (d > 2.3) stepToward(V, p, me.x, me.z, p.speed*1.15, dt); else { st.step = 1; st.t = 0; p.spd = 0; say3D(p, '🌻', 2.2); setCarry(p, 0xf2d24a); } break; }
+      p.spd = 0; faceTo(p, me.x, me.z, dt);
+      if (st.step === 1 && st.t > 1.3){ st.step = 2; setCarry(p, null); giveGiftFlower(p, st.k); }
+      if (st.step === 2 && st.t > 2.2){ say3D(p, '😊', 1.4); idle(p, 1.5); }
+      break; }
     case 'watch': st.t -= dt; p.spd = 0; if (Math.random() < dt*.1) say3D(p, pick(['👀','😮','🙂'])); if (st.t <= 0) idle(p, 1); break;
     case 'trade': {
       const s = st.stall; st.t -= dt; p.spd = 0; faceTo(p, s.back[0], s.back[1], dt);
@@ -7819,6 +7876,7 @@ function updateVillage(dt, t){
   camera.position.set(ctl.pos.x + Math.cos(ctl.bob*.5)*.03, ctl.y + 1.7 + Math.abs(Math.sin(ctl.bob))*.07, ctl.pos.z);
   camera.rotation.order = 'YXZ'; camera.rotation.set(ctl.pitch, ctl.yaw, Math.sin(ctl.bob*.5)*.006);
   c.anims.forEach(fn => fn(dt, t));
+  villageGifts(c, dt);
 }
 function openVillage(vid){
   disposeCtx();
@@ -7999,7 +8057,7 @@ let pulseT = 0;
 renderer.setAnimationLoop(() => {
   const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
   WIND.value = t; stepInventory(raw); stepMini(raw); stepHexbar(raw); stepHighlight(t);
-  advanceDay(dt); updateAudio(Math.min(raw, .1), t);
+  advanceDay(dt); updateAudio(Math.min(raw, .1), t); tickPlayTime(Math.min(raw, 1));
   if ((uiT += raw) > .5){ uiT = 0; const [ik, tx] = dayLabel(), bt = $('#b-time'); if (bt.dataset.ic !== ik){ bt.dataset.ic = ik; bt.innerHTML = ic(ik) + '<span></span>'; } bt.lastChild.textContent = ' ' + tx; }
   if (tween) stepTween();
   if (mode === 'board' || mode === 'anim'){
@@ -8435,8 +8493,8 @@ function openTrade(tab0, o = {}){
   const pg = {}, pw = {}; RES.forEach(r => { pg[r] = 0; pw[r] = 0; });
   const stp = (k, r, n, max) => `<span class="stp">${RES.includes(r) ? resImg(r) : specImg(r)}<button data-s="${k}|${r}|-" ${n <= 0 ? 'disabled' : ''}>−</button><b>${n}</b><button data-s="${k}|${r}|+" ${max !== undefined && n >= max ? 'disabled' : ''}>+</button></span>`;
   const draw = () => {
-    const tabs = fixed ? '' : `<div class="row tabs"><button data-tab="banco" class="${tab === 'banco' ? 'on' : ''}">🏦 Banco y puertos</button><button data-tab="jug" class="${tab === 'jug' ? 'on' : ''}">🤝 Trueque con jugadores</button></div>`;
-    if (tab === 'banco') modalBody.innerHTML = `<h3>Comerciar</h3>${tabs}<p class="muted">Con el banco das 4 iguales por 1. Si tienes un pueblo en un puerto: 3:1 con cualquier recurso o 2:1 con el recurso del puerto.</p>
+    const tabs = fixed ? '' : `<div class="row tabs"><button data-tab="banco" class="${tab === 'banco' ? 'on' : ''}">🏦 Comercio y puertos</button><button data-tab="jug" class="${tab === 'jug' ? 'on' : ''}">🤝 Trueque con jugadores</button></div>`;
+    if (tab === 'banco') modalBody.innerHTML = `<h3>Comerciar</h3>${tabs}<p class="muted">En el comercio das 4 iguales por 1. Si tienes un pueblo en un puerto: 3:1 con cualquier recurso o 2:1 con el recurso del puerto.</p>
     <div class="lbl">Das</div><div class="row">${RES.map(r => { const k = tradeRate(0, r); return `<button data-give="${r}" ${P.res[r] < k ? 'disabled' : ''} class="${give === r ? 'on' : ''}">${resImg(r)} ${P.res[r]}<small>${k}:1${k < 4 ? ' ⚓' : ''}</small></button>`; }).join('')}</div>
     <div class="lbl">Recibes 1 de</div><div class="row">${RES.map(r => `<button data-get="${r}" ${r === give ? 'disabled' : ''} class="${get === r ? 'on' : ''}">${resImg(r)} ${RES_NAME[r]}</button>`).join('')}</div>
     <div class="row end"><button data-x="1">Cancelar</button><button class="primary" data-ok="1" ${give && get ? '' : 'disabled'}>Cambiar</button></div>`;
@@ -8459,7 +8517,7 @@ function openTrade(tab0, o = {}){
     else if (b.dataset.t){ target = b.dataset.t === 'todos' ? 'todos' : +b.dataset.t; draw(); }
     else if (b.dataset.x) closeModal();
     else if (b.dataset.send){ closeModal(); proposeTrade(target, { ...pg }, { ...pw }); }
-    else if (b.dataset.ok){ const k = tradeRate(0, give); SFX.trade(); P.res[give] -= k; P.res[get] += 1; notify(`Cambiaste ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en tu puerto' : 'con el banco'}`, P.color); closeModal(); refresh(); }
+    else if (b.dataset.ok){ const k = tradeRate(0, give); SFX.trade(); P.res[give] -= k; P.res[get] += 1; notify(`Cambiaste ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en tu puerto' : 'en el comercio'}`, P.color); closeModal(); refresh(); }
   };
 }
 async function proposeTrade(target, give, want){
@@ -8821,7 +8879,7 @@ function netSnap(){
   const pl = [];
   G.players.forEach((P, l) => { const o = JSON.parse(JSON.stringify(P)); delete o.tok; if (o.fx) for (const k in o.fx) if (o.fx[k] && typeof o.fx[k].from === 'number') o.fx[k].from = gSeat(o.fx[k].from); pl[gSeat(l)] = o; });
   return { v: ++NG.ver, ph: G.phase, cur: gSeat(G.current), ord: G.order ? G.order.map(gSeat) : null, dice: G.dice, rob: G.robber, deck: G.deck, army: mapP(G.army, gSeat), lon: mapP(G.longest, gSeat),
-    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
+    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, pt2: G.playT || 0, qat: G.qAt || {}, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
     q: (G.quests || []).map(q => ({ ...q, p: gSeat(q.p), txt: packHtml(q.txt) })), gos: G.gossip, nm: G.names, pl,
     b: G.verts.filter(v => v.building).map(v => [v.id, gSeat(v.building.p), v.building.type === 'ciudad' ? 1 : 0, v.name]), r: G.edges.filter(e => e.road !== null).map(e => [e.id, gSeat(e.road)]) };
 }
@@ -8846,7 +8904,8 @@ function netApply(s, from){
       Object.keys(P).forEach(k => { if (!(k in o) && k !== 'tok') delete P[k]; }); Object.assign(P, o); });
     if (keep){ Object.assign(G.players[0], keep); regTaken(); }
     Object.assign(G, { phase: s.ph, current: lSeat(s.cur | 0), order: Array.isArray(s.ord) ? s.ord.map(lSeat) : null, dice: s.dice, deck: s.deck || [], army: mapP(s.army, lSeat), longest: mapP(s.lon, lSeat), merchant: s.mer, bag: Array.isArray(s.bag) ? s.bag.filter(v => v >= 11 && v <= 66) : null, playedTurn: s.pt, turnId: s.tid | 0,
-      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [],
+      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [], playT: +s.pt2 || 0,
+      qAt: s.qat && typeof s.qat === 'object' ? Object.fromEntries(Object.entries(s.qat).filter(([k, v]) => /^\d+$/.test(k) && typeof v === 'number')) : {},
       trades: s.tc && Array.isArray(s.tc.l) ? { t: s.tc.t | 0, l: s.tc.l.filter(x => Array.isArray(x)).map(([a, b, n]) => { const x = lSeat(a | 0), y = lSeat(b | 0); return [Math.min(x, y), Math.max(x, y), n | 0]; }) } : null });
     SETUP.k = s.sk | 0; SETUP.queue = (s.sq || []).map(lSeat);
     G.quests = (s.q || []).map(q => ({ ...q, p: lSeat(q.p | 0), txt: netHtml(q.txt) }));
@@ -8960,6 +9019,8 @@ function netOp(k, d){ if (!NG.on) return; if (netAuth()) refresh(); else netSend
 function netApplyOp(o, from){
   const l = lSeat(o.f | 0); if (from && from !== seatPeer(l)) return;
   if (o.k === 'start'){ const P = G.players[l], got = cleanItems(o.d && o.d.res), A = startAllowance(l); if (P && P.startPick && P.startPick === A.n && Object.keys(got).every(k => A.types.includes(k)) && Object.values(got).reduce((a, b) => a + b, 0) === A.n){ giveStart(l, got); refresh(); } return; }
+  if (o.k === 'gift'){ const P = G.players[l], k = String(o.d && o.d.k || ''), now = Date.now(); NG.giftAt ||= {};   // a flower from your own townsfolk, at most one every 30 s
+    if (P && SPECIAL[k] && SPECIAL[k].kind === 'flor' && now - (NG.giftAt[l] || 0) > 30000){ NG.giftAt[l] = now; P.special = P.special || {}; P.special[k] = (P.special[k] || 0) + 1; refresh(); } return; }
   if (o.k === 'qacc'){ const q = (G.quests || []).find(x => x.id === (o.d && o.d.id) && x.p === l); if (q && q.state === 'new'){ q.state = 'accepted'; refresh(); } }
 }
 // ---------- the host: seats, joins, leaves ----------

@@ -19,14 +19,28 @@ function rewardText(r){
   return '';
 }
 function assignQuestFor0(){ const keep = G.players.map((P, i) => i); assignQuest(0); }
-function assignQuest(force){
+// ---------- every town makes its own missions: a random timer per town, 3 to 5 an hour of play ----------
+// G.playT: seconds of play (advanced by whoever is acting); G.qAt: { vid: playT when that town posts its next one }.
+// A town with a mission still open posts nothing new, so they never pile up in one place.
+const QUEST_GAP = () => 720 + Math.random()*480;   // 12-20 minutes
+function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register' && netAuth()) G.playT = (G.playT || 0) + dt; }
+function villageQuests(){
+  if (!G || G.over || G.setup || isClassic()) return;
+  const now = G.playT || 0; G.qAt ||= {};
+  G.verts.forEach(v => { if (!v.building) return;
+    if (G.qAt[v.id] === undefined){ G.qAt[v.id] = now + 300 + Math.random()*900; return; }   // a new town: its first one in 5-20 min
+    if (now < G.qAt[v.id] || gameRound() <= 4) return;
+    G.qAt[v.id] = now + QUEST_GAP();
+    if (!(G.quests || []).some(q => q.vid === v.id && q.state !== 'done')) assignQuest(v.building.p, v.id); });
+}
+function assignQuest(force, vid){
   if (!G || G.over || G.setup || gameRound() <= 4 || isClassic()) return;
-  const cands = G.players.map((P, i) => i).filter(i => G.verts.some(v => v.building && v.building.p === i) && (G.quests || []).filter(q => q.p === i && q.state !== 'done').length < 2);
+  const cands = G.players.map((P, i) => i).filter(i => G.verts.some(v => v.building && v.building.p === i) && (vid !== undefined || (G.quests || []).filter(q => q.p === i && q.state !== 'done').length < 2));
   if (!cands.length) return;
-  const p = force !== undefined && cands.includes(force) ? force : pick(cands), vs = G.verts.filter(v => v.building && v.building.p === p), v = pick(vs);
+  const p = force !== undefined && cands.includes(force) ? force : pick(cands), vs = G.verts.filter(v => v.building && v.building.p === p), v = vid !== undefined && G.verts[vid] && G.verts[vid].building && G.verts[vid].building.p === p ? G.verts[vid] : pick(vs);
   const tileTypes = v.tiles.map(t => G.tiles[t].type);
   const poolOf = kind => { const all = SPK.filter(k => SPECIAL[k].kind === kind), loc = all.filter(k => !SPECIAL[k].biome || tileTypes.includes(SPECIAL[k].biome) || Math.random() < .25); return loc.length ? loc : all; };
-  const brujo = Math.random() < .22, hard = !brujo && Math.random() < .25, kind = Math.random() < .5 ? 'flor' : 'objeto', items = {};
+  const brujo = Math.random() < .3, hard = !brujo && Math.random() < .25, kind = Math.random() < .5 ? 'flor' : 'objeto', items = {};
   let qkind = kind;
   if (brujo){ qkind = 'brujo'; const nt = 2 + (Math.random() < .5 ? 1 : 0); for (let k=0;k<nt;k++){ const it = pick(poolOf(k % 2 ? 'objeto' : 'flor')); items[it] = (items[it] || 0) + 1 + (Math.random() < .35 ? 1 : 0); } } else
   if (!hard){ const it = pick(poolOf(kind)); items[it] = SPECIAL[it].val >= 3 ? 1 : 1 + (Math.random() < .35 ? 1 : 0); }

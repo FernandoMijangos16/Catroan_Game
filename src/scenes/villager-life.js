@@ -111,6 +111,22 @@ function doorKick(h, secs){ const d = h && h.g && h.g.userData.door; if (d) d.us
 function tickDoors(list, dt){ const now = doorNow(); for (const h of list){ const d = h.g && h.g.userData.door; if (!d) continue; const want = now < d.userData.until ? 1 : 0;
   if (d.userData.open === want) continue; d.userData.open = want > d.userData.open ? Math.min(1, d.userData.open + dt*2.4) : Math.max(0, d.userData.open - dt*1.8);
   const k = d.userData.open, e = k*k*(3 - 2*k); d.rotation.y = e*1.45; } }
+// ---------- your own townsfolk bring you flowers: more roads joined to the town, more often ----------
+function villageGifts(c, dt){
+  if (!c || isClassic() || !scenesOn() || !G || G.over) return; const v = G.verts[c.vid]; if (!v || !v.building || v.building.p !== 0) return;
+  c.giftT = (c.giftT === undefined ? 20 : c.giftT) - dt; if (c.giftT > 0) return; c.giftT = 40;
+  if (c.V.people.some(p => p.st.kind === 'gift') || Math.random() > Math.min(.6, .12 + .12*(v.conn || 0))) return;
+  const me = ctl.pos, p = c.V.people.filter(q => q.g.visible && !q.kid && !q.guard && !q.vendor && ['idle', 'walk', 'watch'].includes(q.st.kind) && Math.hypot(q.g.position.x - me.x, q.g.position.z - me.z) < 18).sort((a, b) => Math.hypot(a.g.position.x - me.x, a.g.position.z - me.z) - Math.hypot(b.g.position.x - me.x, b.g.position.z - me.z))[0];   // the nearest one
+  if (!p) return;
+  const types = v.tiles.map(t => G.tiles[t].type), local = SPK.filter(k => SPECIAL[k].kind === 'flor' && SPECIAL[k].biome && types.includes(SPECIAL[k].biome)), common = SPK.filter(k => SPECIAL[k].kind === 'flor' && !SPECIAL[k].biome);
+  const k = pick(local.length && Math.random() < .7 ? local : common.length ? common : local); if (!k) return;
+  p.st = { kind: 'gift', step: 0, t: 0, k };
+}
+function giveGiftFlower(p, k){
+  const P = G.players[0], v = G.verts[villageCtx.vid]; P.special = P.special || {}; P.special[k] = (P.special[k] || 0) + 1; SFX.pick?.();
+  notify(`${p.name || 'Un vecino'} de <b>${v.name}</b> te regaló ${specImg(k)}`, P.color);
+  if (NG.on && !netAuth()) netOp('gift', { k }); refresh();
+}
 function enterHouse(p, h, stay){ doorKick(h, 2.2); p.st = { kind: 'enter', t: 0, h, stay, fx: p.g.position.x, fz: p.g.position.z }; }
 function newMeet(V, x, z, members, topic){
   const m = { x, z, members, t: 0, done: false, kids: !!members[0].kid, topic: topic || pick(['la cosecha', 'el clima', 'los caminos nuevos', 'el mercado', 'los vecinos', 'el ladrón', 'la taberna', 'los animales', 'el precio del trigo']) };
@@ -264,6 +280,15 @@ function personTick(V, p, dt, t){
         const sh = st.h.shop; if (sh && p !== sh.vendor){ if (sh.carry != null){ setCarry(p, typeof sh.carry === 'string' ? (RES_EMOJI[sh.carry] || CARRY_COLORS[sh.carry] || 0xd9a050) : sh.carry); p.carryT = 35; } say3D(p, pick(['😊', '👍', sh.icon]), 1.5); p.after = Math.random() < .5 ? 'home' : 'plaza'; } }
       break; }
     case 'sit': st.t -= dt; p.spd = 0; if (st.icon && Math.random() < dt*.12) say3D(p, st.icon); if (!st.icon && Math.random() < dt*.03) say3D(p, pick(['😌','🎶','☀️'])); if (st.t <= 0 || (isNight() && hourNow() > 23)){ st.seat.occ = null; p.g.position.set(st.seat.front[0], p.g.position.y, st.seat.front[1]); idle(p, .5); } break;
+    case 'gift': {   // walks up to you, offers a flower of the town's land, and hands it over
+      const me = ctl.pos, d = Math.hypot(me.x - p.g.position.x, me.z - p.g.position.z); st.t += dt;
+      if (st.step === 0){ if (st.t > 30){ idle(p, 1); break; }   // you walked away: maybe next time
+        // stops at arm's length (your own space keeps them ~2 m away)
+        if (d > 2.3) stepToward(V, p, me.x, me.z, p.speed*1.15, dt); else { st.step = 1; st.t = 0; p.spd = 0; say3D(p, '🌻', 2.2); setCarry(p, 0xf2d24a); } break; }
+      p.spd = 0; faceTo(p, me.x, me.z, dt);
+      if (st.step === 1 && st.t > 1.3){ st.step = 2; setCarry(p, null); giveGiftFlower(p, st.k); }
+      if (st.step === 2 && st.t > 2.2){ say3D(p, '😊', 1.4); idle(p, 1.5); }
+      break; }
     case 'watch': st.t -= dt; p.spd = 0; if (Math.random() < dt*.1) say3D(p, pick(['👀','😮','🙂'])); if (st.t <= 0) idle(p, 1); break;
     case 'trade': {
       const s = st.stall; st.t -= dt; p.spd = 0; faceTo(p, s.back[0], s.back[1], dt);

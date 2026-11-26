@@ -55,7 +55,7 @@ function buildMarket(kind, opts){
   // hands (player's from the front, npc's from behind)
   const myHand = handModel(G.players[0].color); myHand.visible = false; sc.add(myHand);
   const npcHand = handModel(hoodC); npcHand.rotation.y = Math.PI; npcHand.visible = false; sc.add(npcHand);
-  const ctx = { sc, kind, npc, myHand, npcHand, TOP, items: [], anims: [], t: 0, sel: { give: null, want: null }, busy: false, opts: opts || {}, hover: null };
+  const ctx = { sc, kind, npc, myHand, npcHand, TOP, items: [], anims: [], t: 0, sel: { give: {}, want: {} }, busy: false, opts: opts || {}, hover: null };
   {
     const bell = bellModel(); bell.position.set(0, TOP, .38); bell.scale.setScalar(1.6); sc.add(bell); bell.traverse(o => { if (o.isMesh) o.userData.mk = { type: 'bell' }; }); ctx.bell = bell; ctx.items.push({ obj: bell, type: 'bell' });
     const sl = signMesh('Das', 60, 16, 11, { light: true }); sl.scale.set(.5, .14, .04); sl.position.set(-1.05, TOP - .06, .82); sc.add(sl);

@@ -139,7 +139,7 @@ const HB_INFO = {
   pueblo: ['Pueblo', '1 punto de victoria. Produce de los terrenos que toca.', COST.pueblo],
   ciudad: ['Ciudad', 'Mejora un pueblo: 2 puntos y produce el doble.', COST.ciudad],
   carta: ['Carta de desarrollo', 'Compra una carta al azar del mazo.', CARD_COST],
-  comercio: ['Comerciar', 'Cambia 4 iguales por 1 con el banco (mejor en tus puertos). Para cambiar con jugadores toca su letrero.', null],
+  comercio: ['Comerciar', 'Cambia 4 iguales por 1 en el comercio (mejor en tus puertos). Para cambiar con jugadores toca su letrero.', null],
 };
 function hbTip(t, e){
   const tip = $('#hb-tip');

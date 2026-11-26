@@ -30,7 +30,7 @@ function actionSpec(html, color){
     const parts = html.split(/ por | y recibiste /);
     if (parts.length >= 2){ const a = document.createElement('div'), b = document.createElement('div'); const head = parts[0], first = head.search(/<img|<span class="m3"/), colon = (first >= 0 ? head.slice(0, first) : head).lastIndexOf(':'); a.innerHTML = colon >= 0 ? head.slice(colon + 1) : head; b.innerHTML = parts.slice(1).join(' por ');   // after the last ':' of the words (images carry ':' in their data)
       const give = itemsIn(a), want = itemsIn(b);
-      if (Object.keys(give).length && Object.keys(want).length){ S.trade = { give, want, place: /pirata/.test(txt) ? 'Pirata' : /puerto/.test(txt) ? 'Puerto' : /banco/.test(txt) ? 'Banco' : null }; if (S.trade.place) S.victim = -1; if (/Propusiste/.test(txt)) S.victim = -1; } } }
+      if (Object.keys(give).length && Object.keys(want).length){ S.trade = { give, want, place: /pirata/.test(txt) ? 'Pirata' : /puerto/.test(txt) ? 'Puerto' : /comercio/.test(txt) ? 'Comercio' : null }; if (S.trade.place) S.victim = -1; if (/Propusiste/.test(txt)) S.victim = -1; } } }
   else if (/sacó|Sacaste/.test(txt)){ const n = (txt.match(/sac(?:ó|aste) (\d+)/) || [])[1]; S.act = 'dado'; S.cap = n ? 'sacó ' + n : 'tiró'; if (/7/.test(n || '') && /ladrón/.test(txt)) S.cap = 'sacó 7: ¡ladrón!'; }
   else if (/compró una carta|Compraste una carta/.test(txt)){ S.model = 'carta'; S.cap = 'compró carta'; }
   else if (/jugó|usó|Jugaste|Usaste/.test(txt)){ S.model = 'carta'; S.cap = 'jugó carta'; }
@@ -62,7 +62,7 @@ function nextScroll(){
   const late = S.act === 'amuleto' ? 'late' : '', what = S.piece ? `<div class="aitems"><span class="ai"><span class="m3 pz" data-k="pz:${S.piece}:${S.p}"></span></span></div>` : hasItems ? `<div class="aitems ${late}">${itemsHTML(S.items, true)}</div>` : '';
   const res = what + (S.victim >= 0 ? `<span class="aarrow ${late}">${ic('flecha')}</span>${whoHTML(S.victim, 'victim ' + late)}` : '');
   el.style.setProperty('--pc', m.color);
-  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${iconImg(T.place === 'Banco' ? 'moneda' : 'ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
+  if (S.trade){ const T = S.trade, to = S.victim >= 0 ? whoHTML(S.victim, 'victim') : T.place ? `<div class="aw place"><img src="${iconImg(T.place === 'Comercio' ? 'moneda' : 'ancla')}" style="--pc:#8a6a3a"><b>${T.place}</b></div>` : '';
     el.innerHTML = `${whoHTML(S.p)}<div class="aitems">${itemsHTML(T.give, true)}</div><div class="aact"><canvas></canvas><small>trueque</small></div><div class="aitems">${itemsHTML(T.want, true)}</div>${to}`; }
   else el.innerHTML = `${whoHTML(S.p)}<div class="aact"><canvas></canvas><small>${S.cap}</small></div>${res}`;
   el.classList.toggle('left', CORNER_SIDE === 'l');

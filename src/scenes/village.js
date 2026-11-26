@@ -450,6 +450,7 @@ function updateVillage(dt, t){
   camera.position.set(ctl.pos.x + Math.cos(ctl.bob*.5)*.03, ctl.y + 1.7 + Math.abs(Math.sin(ctl.bob))*.07, ctl.pos.z);
   camera.rotation.order = 'YXZ'; camera.rotation.set(ctl.pitch, ctl.yaw, Math.sin(ctl.bob*.5)*.006);
   c.anims.forEach(fn => fn(dt, t));
+  villageGifts(c, dt);
 }
 function openVillage(vid){
   disposeCtx();

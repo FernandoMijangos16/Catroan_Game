@@ -81,7 +81,7 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
    - Los recursos y objetos van con `resImg`/`specImg`/`resList`.
    - Los nombres en notas de la barra inferior van con `nameTag(nombre, color)`.
 4. **Avisos de acción** (cuadro de arriba): quién · acción (modelo 3D) · con qué · → a quién. Los trueques van así:
-   quién propone · lo que da (con cantidad) · ⇄ · lo que pide · a quién (jugador, Banco, Puerto o Pirata). Una sola
+   quién propone · lo que da (con cantidad) · ⇄ · lo que pide · a quién (jugador, Comercio, Puerto o Pirata). En los textos se dice siempre "comercio", nunca "banco". Una sola
    flecha, nunca dos.
 5. **Modos.** `isClassic()` = solo Catan base: nada de misiones, brujo, amuletos, objetos, flores ni eventos.
    `scenesOn()` = escenas en primera persona; sin ellas, todo se resuelve con paneles simples. Todo lo nuevo debe

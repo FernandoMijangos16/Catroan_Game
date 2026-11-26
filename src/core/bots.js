@@ -28,7 +28,7 @@ function botTrade(p){
   if (!give) return false;
   const get = need[0], k = tradeRate(p, give);
   P.res[give] -= k; P.res[get] += 1; if (P.buffs) P.buffs.halfTrade = false;
-  notify(`${P.name} cambió ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en su puerto' : 'con el banco'}`, P.color);
+  notify(`${P.name} cambió ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en su puerto' : 'en el comercio'}`, P.color);
   return true;
 }
 function botAct(p, st){
@@ -79,8 +79,8 @@ function endTurn(){
   exitBuild(); hidePopup(); if (G.amuletPick) amuletCancel(); tickFx(G.current);
   { const ord = G.order || [...G.players.keys()]; G.current = ord[(ord.indexOf(G.current) + 1) % ord.length]; } G.turnId++; G.phase = 'roll';
   const P = G.players[G.current];
-  if (NG.on){ G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } }); const lack = humanSeats().filter(h => !(G.quests || []).some(q => q.p === h && q.state !== 'done')); if (gameRound() > 4 && lack.length) assignQuest(pick(lack)); else if (Math.random() < .3) assignQuest(); }
-  else if (gameRound() > 4 && !(G.quests || []).some(q => q.p === 0)) assignQuest(0); else if (Math.random() < .3) assignQuest();
+  if (NG.on) G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } });
+  villageQuests();   // each town posts missions on its own timer (core/missions.js)
   if (P.buffs){
     if (P.buffs.randomItem){ P.buffs.randomItem = false; if (Math.random() < .5){ const r = pick(RES); P.res[r]++; notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: 1 ${resImg(r)}`, P.color); } else { const k = pick(SPK); giveSpecial(G.current, k); notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: ${specImg(k)} ${SPECIAL[k].name}`, P.color); } }
     if (P.buffs.extraRes){ P.buffs.extraRes = false; P.extraTurn = G.turnId; }

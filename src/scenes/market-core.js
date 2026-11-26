@@ -52,29 +52,45 @@ function marketClick(e){
   if (it.type === 'bell'){ ringBell(); return; }
   const P = G.players[0];
   if ((it.type === 'give' || it.type === 'want') && tradeBlocked(0, it.r)){ mkSay(`Hay ${AMULETS[G.players[0].fx.plague.k].name.toLowerCase()} en tus tierras: hoy no puedo cambiar ${RES_NAME[it.r].toLowerCase()}.`); return; }
-  if (it.type === 'give'){ if (P.res[it.r] < tradeRate(0, it.r)){ mkSay(`Necesitas <b>${tradeRate(0, it.r)}</b> ${resImg(it.r)} para eso.`); SFX.click?.(); return; } C.sel.give = C.sel.give === it ? null : it; if (C.sel.want && C.sel.want.r === it.r) C.sel.want = null; }
-  else { C.sel.want = C.sel.want === it ? null : it; if (C.sel.give && C.sel.give.r === it.r) C.sel.give = null; }
+  // several at once: each tap on your side adds one lot of that resource, each tap on the trader's side asks for one more;
+  // going past what you can afford (or past the lots you give) wraps back to none
+  const S = C.sel, r = it.r;
+  if (it.type === 'give'){ const k = tradeRate(0, r), n = (S.give[r] || 0) + 1;
+    if (!S.give[r] && P.res[r] < k){ mkSay(`Necesitas <b>${k}</b> ${resImg(r)} para eso.`); SFX.click?.(); return; }
+    if (n*k > P.res[r]) delete S.give[r]; else { S.give[r] = n; delete S.want[r]; } }
+  else { const lots = mkLots(S.give), others = mkCount(S.want) - (S.want[r] || 0), n = (S.want[r] || 0) + 1;
+    if (others + n > Math.max(1, lots)) delete S.want[r]; else { S.want[r] = n; delete S.give[r]; } }
   SFX.click?.(); markSel();
 }
+const mkCount = o => Object.values(o).reduce((a, n) => a + n, 0), mkLots = mkCount;
+const mkGiveCards = give => Object.fromEntries(Object.entries(give).map(([r, n]) => [r, n*tradeRate(0, r)]));
+const mkIsSel = (C, i) => (i.type === 'give' && C.sel.give[i.r] > 0) || (i.type === 'want' && C.sel.want[i.r] > 0);
 function markSel(){
   const C = marketCtx; C.items.forEach(i => { if (i.glow){ i.glow.forEach(g => g.parent && g.parent.remove(g)); i.glow = null; } });
-  [['give', 0xf0c050], ['want', 0x7ad07a]].forEach(([k, col]) => { const i = C.sel[k]; if (!i) return; const M = contourMats(col); i.glow = []; i.obj.traverse(o => { if (o.isMesh && !o.userData.outline){ const h = new THREE.Mesh(o.geometry, M.glow); h.userData.outline = true; h.raycast = () => {}; o.add(h); i.glow.push(h); } }); });
-  if (C.sel.give && C.sel.want) mkSay(`Das <b>${tradeRate(0, C.sel.give.r)}</b> ${resImg(C.sel.give.r)} y recibes <b>1</b> ${resImg(C.sel.want.r)}. <b>Toca la campana.</b>`);
+  C.items.filter(i => mkIsSel(C, i)).forEach(i => { const M = contourMats(i.type === 'give' ? 0xf0c050 : 0x7ad07a); i.glow = []; i.obj.traverse(o => { if (o.isMesh && !o.userData.outline){ const h = new THREE.Mesh(o.geometry, M.glow); h.userData.outline = true; h.raycast = () => {}; o.add(h); i.glow.push(h); } }); });
+  const lots = mkLots(C.sel.give), wants = mkCount(C.sel.want);
+  if (lots && wants) mkSay(lots === wants ? `Das ${resList(mkGiveCards(C.sel.give))} y recibes ${resList(C.sel.want)}. <b>Toca la campana.</b>`
+    : `Das para <b>${lots}</b> y pides <b>${wants}</b>: ${lots > wants ? 'pide más de mi lado (derecha)' : 'agrega más de tu lado (izquierda)'}.`);
+  else if (lots) mkSay(`Das ${resList(mkGiveCards(C.sel.give))}. Ahora elige <b>${lots}</b> de mi lado. <small>Toca varias veces para más.</small>`);
 }
 function ringBell(){
   const C = marketCtx, P = G.players[0]; SFX.bell?.(); C.bellT = 0;
-  if (!C.sel.give || !C.sel.want){ mkSay('Primero elige qué das <b>(izquierda)</b> y qué quieres <b>(derecha)</b>.'); return; }
-  const give = C.sel.give.r, want = C.sel.want.r, k = tradeRate(0, give);
-  if (P.res[give] < k){ mkSay('No te alcanza para ese trato.'); return; }
+  const lots = mkLots(C.sel.give), wants = mkCount(C.sel.want);
+  if (!lots || !wants){ mkSay('Primero elige qué das <b>(izquierda)</b> y qué quieres <b>(derecha)</b>.'); return; }
+  if (lots !== wants){ markSel(); return; }
+  const cards = mkGiveCards(C.sel.give);
+  if (Object.entries(cards).some(([r, n]) => P.res[r] < n)){ mkSay('No te alcanza para ese trato.'); return; }
   C.busy = true;
   if (P.buffs && P.buffs.halfTrade){ P.buffs.halfTrade = false; notify('Usaste tu descuento: mitad de precio en el mercado', P.color, 'sys'); }
-  P.res[give] -= k; P.res[want] += 1; const tok = invExpect(want, 1); refresh();
-  const y = C.TOP, copies = [];
-  for (let j=0;j<k;j++){ const c = makeResourceItem(give); c.scale.setScalar(.36); c.position.set(-.5 + j*.17 - k*.085, y, .75); c.rotation.y = .3; C.sc.add(c); copies.push(c); }
-  const got = makeResourceItem(want); got.scale.setScalar(.42); got.position.set(.4, y, -.75); C.sc.add(got);
+  Object.entries(cards).forEach(([r, n]) => P.res[r] -= n); Object.entries(C.sel.want).forEach(([r, n]) => P.res[r] += n);
+  const toks = Object.entries(C.sel.want).flatMap(([r, n]) => Array.from({ length: n }, () => ({ r, tok: invExpect(r, 1) }))); refresh();
+  // the cards slide over as one heap (a few per kind are enough to read it), the goods come back side by side
+  const y = C.TOP, copies = [], shown = Object.entries(cards).flatMap(([r, n]) => Array(Math.min(n, 4)).fill(r)), k = shown.length, gap = k > 8 ? .11 : .17;
+  shown.forEach((r, j) => { const c = makeResourceItem(r); c.scale.setScalar(.36); c.position.set(-.5 + j*gap - k*gap/2, y, .75); c.rotation.y = .3; C.sc.add(c); copies.push(c); });
+  const gots = toks.map((o, j) => { const g = makeResourceItem(o.r); g.scale.setScalar(.42); g.userData.dx = (j - (toks.length - 1)/2)*.24; g.position.set(.4 + g.userData.dx, y, -.75); C.sc.add(g); return g; });
   const H = C.myHand, N = C.npcHand; H.visible = true; N.visible = true;
-  C.anim = { t: 0, copies, got, tok, give, want, k };
-  C.sel = { give: null, want: null }; markSel();
+  C.anim = { t: 0, copies, gots, toks, k, gap };
+  C.sel = { give: {}, want: {} }; markSel();
   mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.']));
 }
 function updateMarket(dt, t){
@@ -86,19 +102,19 @@ function updateMarket(dt, t){
   // npc idle
   C.npc.head.rotation.y = Math.sin(t*.6)*.15; C.npc.head.rotation.x = -.08 + Math.sin(t*.9)*.03; C.npc.g.position.y = Math.sin(t*1.6)*.01;
   // hovered item lifts a bit, selected ones float
-  C.items.forEach(i => { if (i.type === 'bell') return; const sel = C.sel.give === i || C.sel.want === i, hov = C.hover === i; const ty = C.TOP + (sel ? .12 + Math.sin(t*3)*.02 : hov ? .05 : 0); i.obj.position.y += (ty - i.obj.position.y)*Math.min(1, dt*10); i.obj.rotation.y = sel ? i.obj.rotation.y + dt*1.5 : i.rot; i.obj.rotation.z = sel ? .3 : 0; });
+  C.items.forEach(i => { if (i.type === 'bell') return; const sel = mkIsSel(C, i), hov = C.hover === i; const ty = C.TOP + (sel ? .12 + Math.sin(t*3)*.02 : hov ? .05 : 0); i.obj.position.y += (ty - i.obj.position.y)*Math.min(1, dt*10); i.obj.rotation.y = sel ? i.obj.rotation.y + dt*1.5 : i.rot; i.obj.rotation.z = sel ? .3 : 0; });
   if (C.bell && C.bellT !== undefined){ C.bellT += dt; C.bell.userData.bell.rotation.z = Math.sin(C.bellT*28)*.35*Math.max(0, 1 - C.bellT/.8); }
   // trade: my hand slides the copies over, the npc slides the wanted item back
   const A = C.anim;
   if (A){
     A.t += dt; const T = A.t, y = C.TOP, ez = k => k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
     const k1 = ez(clamp((T - .2)/1.1, 0, 1)), k2 = ez(clamp((T - 1.0)/1.1, 0, 1)), k3 = ez(clamp((T - 2.2)/.6, 0, 1)), kr = ez(clamp((T - 1.4)/.5, 0, 1));
-    A.copies.forEach((c, j) => { c.position.z = .75 - k1*1.25 - k3*.9; c.position.x = -.5 + j*.17 - A.k*.085; c.position.y = y; c.visible = k3 < .98; });
+    A.copies.forEach((c, j) => { c.position.z = .75 - k1*1.25 - k3*.9; c.position.x = -.5 + j*A.gap - A.k*A.gap/2; c.position.y = y; c.visible = k3 < .98; });
     C.myHand.position.set(-.5, y + .06, .98 - k1*1.25 + kr*1.6); C.myHand.visible = T < 2.2;
-    A.got.position.set(.4, y, -.75 + k2*1.35); C.npcHand.position.set(.4, y + .06, -.98 + k2*1.35 - k3*1.6); C.npcHand.rotation.set(0, Math.PI, 0);
+    A.gots.forEach(g => g.position.set(.4 + g.userData.dx, y, -.75 + k2*1.35)); C.npcHand.position.set(.4, y + .06, -.98 + k2*1.35 - k3*1.6); C.npcHand.rotation.set(0, Math.PI, 0);
     if (T > 2.2 && T < 2.8){ C.npcHand.position.set(-.5, y + .06, -.72 - k3*.9); }
-    if (T > 2.9 && !A.flown){ A.flown = true; const [sx, sy] = toScreen(A.got.position.clone().setY(y + .1)); A.got.visible = false; C.npcHand.visible = false; flyToInventory(A.tok, sx, sy, 0); A.copies.forEach(c => C.sc.remove(c)); }
-    if (T > 3.2){ C.sc.remove(A.got); C.anim = null; C.busy = false; C.items.filter(i => i.type === 'give').forEach(i => { i.tag.material[2].map = engraveTex(tradeRate(0, i.r) + ':1', 24, 14, 10, { light: true }); i.tag.material[2].needsUpdate = true; }); mkSay('¿Algo más, viajero? Si no, puedes <b>salir</b>.'); }
+    if (T > 2.9 && !A.flown){ A.flown = true; A.gots.forEach((g, j) => { const [sx, sy] = toScreen(g.position.clone().setY(y + .1)); g.visible = false; flyToInventory(A.toks[j].tok, sx, sy, j*.08); }); C.npcHand.visible = false; A.copies.forEach(c => C.sc.remove(c)); }
+    if (T > 3.2){ A.gots.forEach(g => C.sc.remove(g)); C.anim = null; C.busy = false; C.items.filter(i => i.type === 'give').forEach(i => { i.tag.material[2].map = engraveTex(tradeRate(0, i.r) + ':1', 24, 14, 10, { light: true }); i.tag.material[2].needsUpdate = true; }); mkSay('¿Algo más, viajero? Si no, puedes <b>salir</b>.'); }
   }
 }
 

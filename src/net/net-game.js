@@ -64,7 +64,7 @@ function netSnap(){
   const pl = [];
   G.players.forEach((P, l) => { const o = JSON.parse(JSON.stringify(P)); delete o.tok; if (o.fx) for (const k in o.fx) if (o.fx[k] && typeof o.fx[k].from === 'number') o.fx[k].from = gSeat(o.fx[k].from); pl[gSeat(l)] = o; });
   return { v: ++NG.ver, ph: G.phase, cur: gSeat(G.current), ord: G.order ? G.order.map(gSeat) : null, dice: G.dice, rob: G.robber, deck: G.deck, army: mapP(G.army, gSeat), lon: mapP(G.longest, gSeat),
-    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
+    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, pt2: G.playT || 0, qat: G.qAt || {}, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
     q: (G.quests || []).map(q => ({ ...q, p: gSeat(q.p), txt: packHtml(q.txt) })), gos: G.gossip, nm: G.names, pl,
     b: G.verts.filter(v => v.building).map(v => [v.id, gSeat(v.building.p), v.building.type === 'ciudad' ? 1 : 0, v.name]), r: G.edges.filter(e => e.road !== null).map(e => [e.id, gSeat(e.road)]) };
 }
@@ -89,7 +89,8 @@ function netApply(s, from){
       Object.keys(P).forEach(k => { if (!(k in o) && k !== 'tok') delete P[k]; }); Object.assign(P, o); });
     if (keep){ Object.assign(G.players[0], keep); regTaken(); }
     Object.assign(G, { phase: s.ph, current: lSeat(s.cur | 0), order: Array.isArray(s.ord) ? s.ord.map(lSeat) : null, dice: s.dice, deck: s.deck || [], army: mapP(s.army, lSeat), longest: mapP(s.lon, lSeat), merchant: s.mer, bag: Array.isArray(s.bag) ? s.bag.filter(v => v >= 11 && v <= 66) : null, playedTurn: s.pt, turnId: s.tid | 0,
-      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [],
+      over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [], playT: +s.pt2 || 0,
+      qAt: s.qat && typeof s.qat === 'object' ? Object.fromEntries(Object.entries(s.qat).filter(([k, v]) => /^\d+$/.test(k) && typeof v === 'number')) : {},
       trades: s.tc && Array.isArray(s.tc.l) ? { t: s.tc.t | 0, l: s.tc.l.filter(x => Array.isArray(x)).map(([a, b, n]) => { const x = lSeat(a | 0), y = lSeat(b | 0); return [Math.min(x, y), Math.max(x, y), n | 0]; }) } : null });
     SETUP.k = s.sk | 0; SETUP.queue = (s.sq || []).map(lSeat);
     G.quests = (s.q || []).map(q => ({ ...q, p: lSeat(q.p | 0), txt: netHtml(q.txt) }));
@@ -203,6 +204,8 @@ function netOp(k, d){ if (!NG.on) return; if (netAuth()) refresh(); else netSend
 function netApplyOp(o, from){
   const l = lSeat(o.f | 0); if (from && from !== seatPeer(l)) return;
   if (o.k === 'start'){ const P = G.players[l], got = cleanItems(o.d && o.d.res), A = startAllowance(l); if (P && P.startPick && P.startPick === A.n && Object.keys(got).every(k => A.types.includes(k)) && Object.values(got).reduce((a, b) => a + b, 0) === A.n){ giveStart(l, got); refresh(); } return; }
+  if (o.k === 'gift'){ const P = G.players[l], k = String(o.d && o.d.k || ''), now = Date.now(); NG.giftAt ||= {};   // a flower from your own townsfolk, at most one every 30 s
+    if (P && SPECIAL[k] && SPECIAL[k].kind === 'flor' && now - (NG.giftAt[l] || 0) > 30000){ NG.giftAt[l] = now; P.special = P.special || {}; P.special[k] = (P.special[k] || 0) + 1; refresh(); } return; }
   if (o.k === 'qacc'){ const q = (G.quests || []).find(x => x.id === (o.d && o.d.id) && x.p === l); if (q && q.state === 'new'){ q.state = 'accepted'; refresh(); } }
 }
 // ---------- the host: seats, joins, leaves ----------

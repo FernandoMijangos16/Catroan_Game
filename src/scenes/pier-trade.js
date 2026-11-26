@@ -74,7 +74,7 @@ function pierTray(C){
   C.tray.visible = true; C.items = C.items.filter(i => i.type !== 'pay');
   (C.trayObjs || []).forEach(o => C.sc.remove(o)); C.trayObjs = [];
   RES.forEach((r, k) => { const x = -.58 + k*.29, it = makeResourceItem(r); it.scale.setScalar(.2); it.position.set(x, C.TOP, -5.95); it.rotation.y = .5; C.sc.add(it); it.traverse(o => { if (o.isMesh) o.userData.mk = { type: 'pay', r }; });
-    const ok = G.players[0].res[r] >= C.rate && (C.port === '3:1' || C.port === r);
+    const ok = C.port === '3:1' ? G.players[0].res[r] > 0 : G.players[0].res[r] >= C.rate && C.port === r;   // 3:1 takes mixed cards
     const tag = new THREE.Mesh(sg(new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: engraveTex(String(G.players[0].res[r]), 24, 14, 10, { light: true, num: true }), transparent: true, opacity: ok ? 1 : .45 })); tag.scale.set(.1, .06, 1); tag.position.set(x + .09, C.TOP + .04, -5.8); tag.lookAt(C.camP); C.sc.add(tag);
     C.trayObjs.push(it, tag); C.items.push({ obj: it, type: 'pay', r, tag, ok }); });
 }
@@ -88,17 +88,19 @@ function pierClick(it){
   if (C.ph === 'want' && it.type === 'goods'){
     if (C.port !== '3:1' && it.r === C.port){ pierSay(C, `No te cambio ${RES_NAME[it.r].toLowerCase()} por ${RES_NAME[it.r].toLowerCase()}.`); return; }
     C.wantR = it.r; C.goods.forEach(g => { g.obj.userData.base = g.obj.userData.base || g.obj.scale.x; g.obj.scale.setScalar(g.obj.userData.base*(g === it ? 1.4 : .75)); }); SFX.click?.();
-    C.ph = 'pay'; C.paid = 0; C.giveR = C.port === '3:1' ? null : C.port;
-    pierSay(C, C.port === '3:1' ? `Echa ${C.rate} iguales de lo que quieras.` : `Echa ${C.rate} de ${RES_NAME[C.port].toLowerCase()} al barco.`);
+    C.ph = 'pay'; C.paid = 0; C.paidRes = {}; C.giveR = C.port === '3:1' ? null : C.port;
+    pierSay(C, C.port === '3:1' ? `Echa ${C.rate} cartas de lo que quieras, pueden ser distintas.` : `Echa ${C.rate} de ${RES_NAME[C.port].toLowerCase()} al barco.`);
     $('#mk-ui .mk-need').innerHTML = `Faltan <b>${C.rate}</b>`; return; }
   if ((C.ph === 'pay' && it.type === 'pay' && tradeBlocked(0, it.r)) || (C.ph === 'want' && it.type === 'goods' && tradeBlocked(0, it.r))){ pierSay(C, ''); SFX.click?.(); return; }
   if (C.ph === 'pay' && it.type === 'pay'){
     const r = it.r;
-    if (C.giveR && r !== C.giveR){ pierSay(C, `Dije ${RES_NAME[C.giveR].toLowerCase()}, alcalde.`); SFX.click?.(); return; }
+    const mixed = C.port === '3:1';
+    if (!mixed && r !== C.port){ pierSay(C, `Dije ${RES_NAME[C.port].toLowerCase()}, alcalde.`); SFX.click?.(); return; }
     if (r === C.wantR){ pierSay(C, 'Eso es lo que te voy a dar…'); return; }
-    if (!C.giveR && P.res[r] < C.rate){ pierSay(C, `No te alcanza: necesito ${C.rate}.`); SFX.click?.(); return; }
+    const spare = mixed ? RES.filter(x => x !== C.wantR).reduce((a, x) => a + P.res[x], 0) : P.res[r];
+    if (!C.paid && spare < C.rate){ pierSay(C, `No te alcanza: necesito ${C.rate}.`); SFX.click?.(); return; }
     if (P.res[r] <= 0) return;
-    C.giveR = r; drawBubble(C); bubbleModels(C); P.res[r]--; C.paid++; refresh(); SFX.click?.();
+    C.giveR = r; C.paidRes = C.paidRes || {}; C.paidRes[r] = (C.paidRes[r] || 0) + 1; drawBubble(C); bubbleModels(C); P.res[r]--; C.paid++; refresh(); SFX.click?.();
     it.tag.material.map = engraveTex(String(P.res[r]), 24, 14, 10, { light: true, num: true }); it.tag.material.needsUpdate = true;
     const c = makeResourceItem(r); c.scale.setScalar(.2); c.position.copy(it.obj.position); C.sc.add(c);
     const to = C.pirate.elbowL.localToWorld(new THREE.Vector3(0, -.36, .06));
@@ -130,7 +132,7 @@ function updatePier(C, dt, t){
   const holdOut = () => { pr.armL.rotation.x += (-1.2 - pr.armL.rotation.x)*Math.min(1, dt*5); pr.elbowL.rotation.x += (-.3 - pr.elbowL.rotation.x)*Math.min(1, dt*5); };
   switch (C.ph){
     case 'walk': if (C.pt > 2.4){ C.ph = 'greet'; C.pt = 0; } break;
-    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? 'Acepto 3 iguales y te doy 1. ¿Qué quieres?' : `Solo ${RES_NAME[C.port].toLowerCase()}: 2 por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
+    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? 'Dame 3 cartas, aunque sean distintas, y te doy 1. ¿Qué quieres?' : `Solo ${RES_NAME[C.port].toLowerCase()}: 2 por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
     case 'want': case 'pay': holdOut(); break;
     case 'catch': holdOut(); if (C.pt > .7 && C.thrown.every(p => p.t >= 1)){ C.ph = 'throwback'; C.pt = 0; C.throwing = true; pierSay(C, pick(['Trato justo. ¡Ahí va!', 'Un placer, alcalde. ¡Atrapa!', 'Palabra de marino. ¡Ahí te va!'])); } break;
     case 'throwback': {
@@ -138,9 +140,9 @@ function updatePier(C, dt, t){
       if (C.pt > .3 && !C.ball){ const b = makeResourceItem(C.wantR); b.scale.setScalar(.3); C.sc.updateMatrixWorld(true); const from = pr.elbowR.localToWorld(new THREE.Vector3(0, -.36, .06)); b.position.copy(from); C.sc.add(b); C.ball = { b, from, to: new THREE.Vector3(.1, 1.95, -5.6), t: 0 }; }
       if (C.ball){ const B = C.ball; B.t = Math.min(1, B.t + dt/.8); B.b.position.lerpVectors(B.from, B.to, B.t); B.b.position.y += Math.sin(Math.PI*B.t)*1.1; B.b.rotation.y += dt*8; B.b.rotation.x += dt*5;
         if (B.t >= 1 && !C.got){ C.got = true; const P = G.players[0]; P.res[C.wantR]++; if (P.buffs && P.buffs.halfTrade){} const tok = invExpect(C.wantR, 1); const [sx, sy] = toScreen(B.b.position); B.b.visible = false; flyToInventory(tok, sx, sy, 0); refresh(); SFX.trade?.();
-          notify(`Cambiaste ${C.rate} ${resImg(C.giveR)} por 1 ${resImg(C.wantR)} con el pirata del puerto`, G.players[0].color); } }
+          notify(`Cambiaste ${resList(C.paidRes || { [C.giveR]: C.rate })} por 1 ${resImg(C.wantR)} con el pirata del puerto`, G.players[0].color); } }
       if (C.pt > 1.6){ C.throwing = false; C.sc.remove(C.ball.b); C.ball = null; C.got = false; C.thrown = [];
-        const P = G.players[0], can = RES.some(r => P.res[r] >= C.rate && (C.port === '3:1' || C.port === r));
+        const P = G.players[0], can = C.port === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) >= C.rate : P.res[C.port] >= C.rate;
         if (can){ C.ph = 'want'; C.pt = 0; C.wantR = null; C.giveR = C.port === '3:1' ? null : C.port; pierSay(C, '¿Algo más, alcalde?'); pierGoods(C); pierTray(C); C.ready = true; C.busy = false; $('#mk-ui .mk-need').innerHTML = ''; }
         else { C.ph = 'bye'; C.pt = 0; pierSay(C, 'Vuelve cuando tengas más carga. ¡Buen viento!'); } }
       break; }
@@ -153,7 +155,7 @@ function pierScene(pi){
   if (!mine){ notify(`Para comerciar en este puerto (${pt.type === '3:1' ? '3:1' : '2:1 ' + RES_NAME[pt.type]}) necesitas un pueblo junto a él.`, P.color, 'sys'); return; }
   if (G.current !== 0 || G.phase !== 'main'){ notify('Puedes comerciar en el puerto durante tu turno, después de tirar los dados.', P.color, 'sys'); return; }
   const rate = pt.type === '3:1' ? 3 : 2;
-  if (!RES.some(r => P.res[r] >= rate && (pt.type === '3:1' || pt.type === r))){ notify(pt.type === '3:1' ? 'El pirata acepta 3 iguales: aún no tienes suficientes.' : `El pirata solo acepta 2 de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
+  if (pt.type === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) < rate : P.res[pt.type] < rate){ notify(pt.type === '3:1' ? 'El pirata acepta 3 cartas, aunque sean distintas: aún no tienes suficientes.' : `El pirata solo acepta 2 de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
   if (!scenesOn()){ openTrade('banco'); return; }
   enterMarket('pier', { port: pi });
 }

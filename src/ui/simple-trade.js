@@ -4,8 +4,8 @@ function openTrade(tab0, o = {}){
   const pg = {}, pw = {}; RES.forEach(r => { pg[r] = 0; pw[r] = 0; });
   const stp = (k, r, n, max) => `<span class="stp">${RES.includes(r) ? resImg(r) : specImg(r)}<button data-s="${k}|${r}|-" ${n <= 0 ? 'disabled' : ''}>−</button><b>${n}</b><button data-s="${k}|${r}|+" ${max !== undefined && n >= max ? 'disabled' : ''}>+</button></span>`;
   const draw = () => {
-    const tabs = fixed ? '' : `<div class="row tabs"><button data-tab="banco" class="${tab === 'banco' ? 'on' : ''}">🏦 Banco y puertos</button><button data-tab="jug" class="${tab === 'jug' ? 'on' : ''}">🤝 Trueque con jugadores</button></div>`;
-    if (tab === 'banco') modalBody.innerHTML = `<h3>Comerciar</h3>${tabs}<p class="muted">Con el banco das 4 iguales por 1. Si tienes un pueblo en un puerto: 3:1 con cualquier recurso o 2:1 con el recurso del puerto.</p>
+    const tabs = fixed ? '' : `<div class="row tabs"><button data-tab="banco" class="${tab === 'banco' ? 'on' : ''}">🏦 Comercio y puertos</button><button data-tab="jug" class="${tab === 'jug' ? 'on' : ''}">🤝 Trueque con jugadores</button></div>`;
+    if (tab === 'banco') modalBody.innerHTML = `<h3>Comerciar</h3>${tabs}<p class="muted">En el comercio das 4 iguales por 1. Si tienes un pueblo en un puerto: 3:1 con cualquier recurso o 2:1 con el recurso del puerto.</p>
     <div class="lbl">Das</div><div class="row">${RES.map(r => { const k = tradeRate(0, r); return `<button data-give="${r}" ${P.res[r] < k ? 'disabled' : ''} class="${give === r ? 'on' : ''}">${resImg(r)} ${P.res[r]}<small>${k}:1${k < 4 ? ' ⚓' : ''}</small></button>`; }).join('')}</div>
     <div class="lbl">Recibes 1 de</div><div class="row">${RES.map(r => `<button data-get="${r}" ${r === give ? 'disabled' : ''} class="${get === r ? 'on' : ''}">${resImg(r)} ${RES_NAME[r]}</button>`).join('')}</div>
     <div class="row end"><button data-x="1">Cancelar</button><button class="primary" data-ok="1" ${give && get ? '' : 'disabled'}>Cambiar</button></div>`;
@@ -28,7 +28,7 @@ function openTrade(tab0, o = {}){
     else if (b.dataset.t){ target = b.dataset.t === 'todos' ? 'todos' : +b.dataset.t; draw(); }
     else if (b.dataset.x) closeModal();
     else if (b.dataset.send){ closeModal(); proposeTrade(target, { ...pg }, { ...pw }); }
-    else if (b.dataset.ok){ const k = tradeRate(0, give); SFX.trade(); P.res[give] -= k; P.res[get] += 1; notify(`Cambiaste ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en tu puerto' : 'con el banco'}`, P.color); closeModal(); refresh(); }
+    else if (b.dataset.ok){ const k = tradeRate(0, give); SFX.trade(); P.res[give] -= k; P.res[get] += 1; notify(`Cambiaste ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en tu puerto' : 'en el comercio'}`, P.color); closeModal(); refresh(); }
   };
 }
 async function proposeTrade(target, give, want){
