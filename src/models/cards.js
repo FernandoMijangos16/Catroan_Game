@@ -139,7 +139,7 @@ function cardBackCanvas(color){
   c.fillStyle = mineralTone(gold, .6); c.fillRect(5, 5, W - 10, 1); c.fillRect(5, H - 6, W - 10, 1); c.fillRect(5, 5, 1, H - 10); c.fillRect(W - 6, 5, 1, H - 10);
   const hex = (r, col) => { c.fillStyle = col; c.beginPath(); for (let k=0;k<6;k++){ const a = (60*k - 30)*Math.PI/180; c.lineTo(30 + Math.cos(a)*r, 42 + Math.sin(a)*r); } c.fill(); };
   hex(14, '#0b0705'); hex(12.5, mineralTone(gold, .75)); hex(10.5, mineralTone(gold, 1)); hex(8, '#' + velvetBase(color).getHexString());
-  c.fillStyle = mineralTone(gold, 1.1); c.font = 'bold 11px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('C', 30, 43);
+  c.fillStyle = mineralTone(gold, 1.1); c.font = "700 11px 'Pixelify Sans', monospace"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('S', 30, 43);
   mineralCorners(c, W, H, gold, 9, 5);
   c.fillStyle = 'rgba(28,18,10,.1)'; c.fillRect(0, 0, W, H);
   roundCard(c, W, H);

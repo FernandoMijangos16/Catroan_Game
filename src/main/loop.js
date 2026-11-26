@@ -12,9 +12,9 @@ renderer.setAnimationLoop(() => {
   if (mode === 'board' || mode === 'anim'){
     if (mode === 'board') controls.update();
     pulseT += dt; markerMat.opacity = .45 + .35*Math.sin(pulseT*4);
-    stepBoardFx(dt); stepFly(dt, t); stepDice(dt);
+    for (let r = skipping() ? 8 : 1; r > 0; r--){ stepBoardFx(dt); stepFly(dt, t); stepDice(dt); }   // double click: same steps, more per frame
     if (boardScene){ boardScene.userData.water.userData.update(t); draw(boardScene); }
   } else if (mode === 'village' && villageCtx){ updateVillage(dt, t); stepFireworks(dt); draw(villageCtx.sc); }
-  else if (mode === 'market' && marketCtx){ updateMarket(dt, t); draw(marketCtx.sc); }
+  else if (mode === 'market' && marketCtx){ for (let r = skipping() ? 8 : 1; r > 0 && marketCtx; r--) updateMarket(dt, t); if (marketCtx) draw(marketCtx.sc); }
 });
 

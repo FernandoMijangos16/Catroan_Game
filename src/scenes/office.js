@@ -44,7 +44,7 @@ function drawLetter(C){
   const ink = '#140a04';
   c.fillStyle = ink; c.textBaseline = 'alphabetic';
   const T = (txt, x, y, sz = 11, w = 500, al = 'left', col = ink) => { c.font = `${w} ${sz}px 'Pixelify Sans', monospace`; c.textAlign = al; c.fillStyle = col; c.fillText(txt, x, y); };
-  T(`Catroan · turno ${G.turnId || 1}`, W - 12, 15, 9, 600, 'right', '#3a2210');
+  T(`SwapHolm · turno ${G.turnId || 1}`, W - 12, 15, 9, 600, 'right', '#3a2210');
   T(`Estimad${L.toF ? 'a' : 'o'} ${L.to}:`, 14, 38, 13, 700);
   T('Le ofrezco:', 14, 60, 12, 700);
   T('A cambio de:', 14, 134, 12, 700);

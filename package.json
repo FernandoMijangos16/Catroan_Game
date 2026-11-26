@@ -1,7 +1,7 @@
 {
   "name": "catroan",
   "version": "0.1.0",
-  "description": "Catroan: juego de construcción de pueblos en una isla de hexágonos, low poly 3D en el navegador",
+  "description": "SwapHolm: juego de construcción de pueblos en una isla de hexágonos, low poly 3D en el navegador",
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --dev",
@@ -25,8 +25,8 @@
   "main": "electron/main.js",
   "author": "Fernando Mijangos",
   "build": {
-    "appId": "mx.fernando.catroan",
-    "productName": "Catroan",
+    "appId": "mx.fernando.swapholm",
+    "productName": "SwapHolm",
     "directories": {
       "output": "release",
       "buildResources": "electron"
@@ -48,10 +48,10 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "Catroan-Setup-${version}.${ext}"
+      "artifactName": "SwapHolm-Setup-${version}.${ext}"
     },
     "portable": {
-      "artifactName": "Catroan-Portable-${version}.${ext}"
+      "artifactName": "SwapHolm-Portable-${version}.${ext}"
     },
     "linux": {
       "icon": "electron/icon.png",
@@ -59,11 +59,11 @@
         "AppImage"
       ],
       "category": "Game",
-      "artifactName": "Catroan-${version}.${ext}",
+      "artifactName": "SwapHolm-${version}.${ext}",
       "syncDesktopName": true
     }
   },
-  "desktopName": "catroan.desktop",
+  "desktopName": "swapholm.desktop",
   "dependencies": {
     "ws": "^8.23.0"
   }

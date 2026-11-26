@@ -1,4 +1,4 @@
-// Catroan desktop: an Electron window that loads the offline build (dist/desktop/) through a private app:// scheme.
+// SwapHolm desktop: an Electron window that loads the offline build (dist/desktop/) through a private app:// scheme.
 // A real scheme (instead of file://) lets the page load its ES modules and keeps a stable origin for localStorage.
 import { app, BrowserWindow, protocol, net, Menu } from 'electron';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -8,6 +8,8 @@ import { setupLan } from './lan.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..', 'dist', 'desktop');
 let win = null;
+// the game was called Catroan: keep its data folder so saved preferences survive the new name
+app.setPath('userData', path.join(app.getPath('appData'), 'catroan'));
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
@@ -16,7 +18,7 @@ protocol.registerSchemesAsPrivileged([
 function createWindow() {
   win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 960, minHeight: 600,
-    show: false, backgroundColor: '#0d1114', title: 'Catroan',
+    show: false, backgroundColor: '#0d1114', title: 'SwapHolm',
     icon: path.join(HERE, 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload: path.join(HERE, 'preload.cjs') },

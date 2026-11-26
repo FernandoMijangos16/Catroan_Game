@@ -48,7 +48,7 @@ function actModelObj(S){
   if (S.act === 'amuleto') return amuletModel(S.amulet);
   return iconModel(S.act);
 }
-const whoHTML = (p, cls = '') => { const P = p >= 0 ? G.players[p] : null; return `<div class="aw ${cls}"><img src="${P ? avatarImg(P.avatar) : iconImg('pergamino')}" style="--pc:${P ? P.color : '#8a6a3a'}"><b>${P ? P.name : 'Catroan'}</b></div>`; };
+const whoHTML = (p, cls = '') => { const P = p >= 0 ? G.players[p] : null; return `<div class="aw ${cls}"><img src="${P ? avatarImg(P.avatar) : iconImg('pergamino')}" style="--pc:${P ? P.color : '#8a6a3a'}"><b>${P ? P.name : 'SwapHolm'}</b></div>`; };
 const itemsHTML = (items, live) => Object.entries(items).slice(0, 4).map(([k, n]) => `<span class="ai">${live ? `<span class="m3" data-k="${k}"></span>` : (RES.includes(k) ? resImg(k) : specImg(k))}${n > 1 ? `<em>×${n}</em>` : ''}</span>`).join('');
 const ACT = { el: null, views: [] };
 function nextScroll(){
@@ -69,6 +69,7 @@ function nextScroll(){
   if (miniInit()){ const o = spinner(actModelObj(S), 1.15); const v = miniView(el.querySelector('.aact canvas'), { w: 58, h: 58, res: 1, fov: 30, fps: 30, tick: dt => { o.userData.inner.rotation.y += dt*1.5; } }); v.sc.add(o); v.cam.position.set(0, .35, 2.5); v.cam.lookAt(0, 0, 0); ACT.views.push(v); }
   el.classList.remove('out'); el.classList.add('in'); SFX.scroll?.();
   if (el.querySelector('.late')) setTimeout(() => el.querySelectorAll('.late').forEach(n => n.classList.add('show')), 1100);
-  const hold = ((SCR.q.length > 2 ? 1700 : 3200) + (el.querySelector('.late') ? 1000 : 0))*(window.__slowAct || 1);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.classList.remove('in'); setTimeout(nextScroll, 80); }, 320); }, hold);
+  const hold = skipping() ? 250 : ((SCR.q.length > 2 ? 1700 : 3200) + (el.querySelector('.late') ? 1000 : 0))*(window.__slowAct || 1);
+  const out = () => { SCR.hurry = null; el.classList.add('out'); setTimeout(() => { el.classList.remove('in'); setTimeout(nextScroll, 80); }, 320); };
+  const id = setTimeout(out, hold); SCR.hurry = () => { clearTimeout(id); out(); };
 }

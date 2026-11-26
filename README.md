@@ -1,4 +1,6 @@
-# Catroan
+# SwapHolm
+
+(antes Catroan)
 
 Juego de construcción de pueblos sobre una isla de hexágonos, en 3D low poly con texturas
 pixeladas, hecho con three.js. Todo corre en un solo archivo HTML.

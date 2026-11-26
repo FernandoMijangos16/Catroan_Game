@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Catroan</title>
+<title>SwapHolm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -589,7 +589,7 @@ body.inmenu #hud-top,body.inmenu #hexbar,body.inmenu #b-endturn,body.inmenu .fwi
 #menu .mview{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;zoom:var(--ui,1)}
 #menu .mview.on{display:flex;animation:ofade .35s}
 #menu [data-v=main]{justify-content:flex-start;padding-top:1vh}
-#menu .mtitle canvas{width:720px;height:380px;image-rendering:pixelated;pointer-events:auto;cursor:grab;touch-action:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,.8))}
+#menu .mtitle canvas{width:860px;height:250px;max-width:96vw;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,.8))}
 #menu .mopts{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px}
 #menu .mopts a{font:700 30px 'Pixelify Sans',monospace;letter-spacing:3px;text-transform:uppercase;color:#e8e2d4;cursor:pointer;text-shadow:0 3px 0 #000,0 0 14px rgba(0,0,0,.9);transition:color .12s,letter-spacing .15s}
 #menu .mopts a:hover{color:#ffd890;letter-spacing:5px}
@@ -784,7 +784,18 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 const NG = { on: false };   // online match state (filled in net/net-game.js); declared first so every hook can read it
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
-const wait = ms => new Promise(r => setTimeout(r, ms));
+// double click skips animations: pending waits end now, new ones are near-instant for a moment, scenes run faster.
+// Nothing is decided for the player — only the waiting is cut.
+const SKIP = { until: 0, timers: new Set() };
+const skipping = () => performance.now() < SKIP.until;
+const wait = ms => new Promise(r => { if (skipping()) ms = Math.min(ms, 40); const t = { r }; t.id = setTimeout(() => { SKIP.timers.delete(t); r(); }, ms); SKIP.timers.add(t); });
+function skipAnims(){
+  SKIP.until = performance.now() + 1200;
+  SKIP.timers.forEach(t => { clearTimeout(t.id); t.r(); }); SKIP.timers.clear();
+  if (typeof tween !== 'undefined' && tween) tween.start -= 1e6;
+  if (typeof SCR !== 'undefined' && SCR.hurry) SCR.hurry();
+}
+addEventListener('dblclick', e => { if (e.target.closest && e.target.closest('input,textarea,.edtag,#chat')) return; skipAnims(); });
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 function shuffle(arr, rng=Math.random){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 const pick = (arr, rng=Math.random) => arr[Math.floor(rng()*arr.length)];
@@ -4602,7 +4613,7 @@ function actModelObj(S){
   if (S.act === 'amuleto') return amuletModel(S.amulet);
   return iconModel(S.act);
 }
-const whoHTML = (p, cls = '') => { const P = p >= 0 ? G.players[p] : null; return `<div class="aw ${cls}"><img src="${P ? avatarImg(P.avatar) : iconImg('pergamino')}" style="--pc:${P ? P.color : '#8a6a3a'}"><b>${P ? P.name : 'Catroan'}</b></div>`; };
+const whoHTML = (p, cls = '') => { const P = p >= 0 ? G.players[p] : null; return `<div class="aw ${cls}"><img src="${P ? avatarImg(P.avatar) : iconImg('pergamino')}" style="--pc:${P ? P.color : '#8a6a3a'}"><b>${P ? P.name : 'SwapHolm'}</b></div>`; };
 const itemsHTML = (items, live) => Object.entries(items).slice(0, 4).map(([k, n]) => `<span class="ai">${live ? `<span class="m3" data-k="${k}"></span>` : (RES.includes(k) ? resImg(k) : specImg(k))}${n > 1 ? `<em>×${n}</em>` : ''}</span>`).join('');
 const ACT = { el: null, views: [] };
 function nextScroll(){
@@ -4623,8 +4634,9 @@ function nextScroll(){
   if (miniInit()){ const o = spinner(actModelObj(S), 1.15); const v = miniView(el.querySelector('.aact canvas'), { w: 58, h: 58, res: 1, fov: 30, fps: 30, tick: dt => { o.userData.inner.rotation.y += dt*1.5; } }); v.sc.add(o); v.cam.position.set(0, .35, 2.5); v.cam.lookAt(0, 0, 0); ACT.views.push(v); }
   el.classList.remove('out'); el.classList.add('in'); SFX.scroll?.();
   if (el.querySelector('.late')) setTimeout(() => el.querySelectorAll('.late').forEach(n => n.classList.add('show')), 1100);
-  const hold = ((SCR.q.length > 2 ? 1700 : 3200) + (el.querySelector('.late') ? 1000 : 0))*(window.__slowAct || 1);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.classList.remove('in'); setTimeout(nextScroll, 80); }, 320); }, hold);
+  const hold = skipping() ? 250 : ((SCR.q.length > 2 ? 1700 : 3200) + (el.querySelector('.late') ? 1000 : 0))*(window.__slowAct || 1);
+  const out = () => { SCR.hurry = null; el.classList.add('out'); setTimeout(() => { el.classList.remove('in'); setTimeout(nextScroll, 80); }, 320); };
+  const id = setTimeout(out, hold); SCR.hurry = () => { clearTimeout(id); out(); };
 }
 // ================= 3D TRADE OFFER: parchment, quill, spinning items, ink choices and a wax stamp =================
 // a rival's offer: the letter lies in front of you with two stamps beside it; the room behind dims (no office scene)
@@ -5397,7 +5409,7 @@ function drawLetter(C){
   const ink = '#140a04';
   c.fillStyle = ink; c.textBaseline = 'alphabetic';
   const T = (txt, x, y, sz = 11, w = 500, al = 'left', col = ink) => { c.font = `${w} ${sz}px 'Pixelify Sans', monospace`; c.textAlign = al; c.fillStyle = col; c.fillText(txt, x, y); };
-  T(`Catroan · turno ${G.turnId || 1}`, W - 12, 15, 9, 600, 'right', '#3a2210');
+  T(`SwapHolm · turno ${G.turnId || 1}`, W - 12, 15, 9, 600, 'right', '#3a2210');
   T(`Estimad${L.toF ? 'a' : 'o'} ${L.to}:`, 14, 38, 13, 700);
   T('Le ofrezco:', 14, 60, 12, 700);
   T('A cambio de:', 14, 134, 12, 700);
@@ -6948,7 +6960,7 @@ function cardBackCanvas(color){
   c.fillStyle = mineralTone(gold, .6); c.fillRect(5, 5, W - 10, 1); c.fillRect(5, H - 6, W - 10, 1); c.fillRect(5, 5, 1, H - 10); c.fillRect(W - 6, 5, 1, H - 10);
   const hex = (r, col) => { c.fillStyle = col; c.beginPath(); for (let k=0;k<6;k++){ const a = (60*k - 30)*Math.PI/180; c.lineTo(30 + Math.cos(a)*r, 42 + Math.sin(a)*r); } c.fill(); };
   hex(14, '#0b0705'); hex(12.5, mineralTone(gold, .75)); hex(10.5, mineralTone(gold, 1)); hex(8, '#' + velvetBase(color).getHexString());
-  c.fillStyle = mineralTone(gold, 1.1); c.font = 'bold 11px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('C', 30, 43);
+  c.fillStyle = mineralTone(gold, 1.1); c.font = "700 11px 'Pixelify Sans', monospace"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('S', 30, 43);
   mineralCorners(c, W, H, gold, 9, 5);
   c.fillStyle = 'rgba(28,18,10,.1)'; c.fillRect(0, 0, W, H);
   roundCard(c, W, H);
@@ -7983,7 +7995,7 @@ function villageClick(e){
 
 // ================= TRANSITIONS =================
 let tween = null;
-function tweenCam(pos, target, ms){ return new Promise(res => { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms, res }; }); }
+function tweenCam(pos, target, ms){ if (skipping()) ms = Math.min(ms, 60); return new Promise(res => { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms, res }; }); }
 function stepTween(){
   const k = Math.min(1, (performance.now() - tween.start)/tween.ms), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
   camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e); camera.lookAt(controls.target);
@@ -8112,10 +8124,10 @@ renderer.setAnimationLoop(() => {
   if (mode === 'board' || mode === 'anim'){
     if (mode === 'board') controls.update();
     pulseT += dt; markerMat.opacity = .45 + .35*Math.sin(pulseT*4);
-    stepBoardFx(dt); stepFly(dt, t); stepDice(dt);
+    for (let r = skipping() ? 8 : 1; r > 0; r--){ stepBoardFx(dt); stepFly(dt, t); stepDice(dt); }   // double click: same steps, more per frame
     if (boardScene){ boardScene.userData.water.userData.update(t); draw(boardScene); }
   } else if (mode === 'village' && villageCtx){ updateVillage(dt, t); stepFireworks(dt); draw(villageCtx.sc); }
-  else if (mode === 'market' && marketCtx){ updateMarket(dt, t); draw(marketCtx.sc); }
+  else if (mode === 'market' && marketCtx){ for (let r = skipping() ? 8 : 1; r > 0 && marketCtx; r--) updateMarket(dt, t); if (marketCtx) draw(marketCtx.sc); }
 });
 
 // ================= GAME START: registration on the player's sign, dice for turn order, manual first placement =================
@@ -9248,7 +9260,42 @@ const GLYPHS = {
   R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
   O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
   N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
+  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
+  W: ['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '##.##', '#...#'],
+  P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'],
+  H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
 };
+// ---------- the SwapHolm wordmark: block letters of brass and wood; the O is a little tile of one of the board's biomes ----------
+const LOGO_BIOMES = ['bosque', 'pradera', 'cerro', 'campo', 'montana'];
+function logoHex(biome, rnd = mulberry32(Math.floor(Math.random()*1e6)), town = false){
+  const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => tileHeight(t, x, z);
+  g.add(hexTileMesh(t));
+  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = -.06; g.add(rim);
+  const trees = new TreeBatch(.012), spot = (r0, r1) => { const a = rnd()*6.28, d = r0 + rnd()*(r1 - r0); return [Math.cos(a)*d, Math.sin(a)*d]; };
+  const nTrees = { bosque: 12, pradera: 3, cerro: 3, campo: 2, montana: 4 }[biome];
+  for (let k=0;k<nTrees;k++){ const [x, z] = spot(town ? .45 : .25, .78); trees.add(treeKindFor(biome, rnd), x, Y(x, z) - .004, z, .045 + rnd()*.02, rnd()*6.28, treeTint(biome === 'montana' || biome === 'cerro' ? 'pino' : 'roble', rnd)); }
+  trees.build(g);
+  if (biome === 'pradera') for (let k=0;k<3;k++){ const [x, z] = spot(.2, .6), a = makeAnimal('oveja', rnd).g; a.scale.setScalar(.11); a.position.set(x, Y(x, z), z); a.rotation.y = rnd()*6.28; g.add(a); }
+  if (biome === 'cerro') for (let k=0;k<4;k++){ const [x, z] = spot(.15, .7), m = mesh(pick(GEO.rocks, rnd), pick([0xb8643a, 0x9c5a3a], rnd), x, Y(x, z), z, .09, .06, .08); m.rotation.y = rnd()*6; g.add(m); }
+  if (town){ const h = boardHouse('#e0473b', true); h.scale.setScalar(2.1); h.position.set(.05, Y(.05, .05), .05); g.add(h); }
+  return g;
+}
+function buildWordmark(biome){
+  const word = 'SWAPHOLM', cells = [], cs = .1, gap = 6, letters = [];
+  [...word].forEach((ch, i) => { if (ch === 'O') return; GLYPHS[ch].forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') cells.push({ i, x: i*gap + x, y }); })); });
+  const W = (word.length*gap - 1)*cs, g = new THREE.Group();
+  const brass = pxTex(8, 8, c => { for (let y=0;y<8;y++) for (let x=0;x<8;x++){ const k = .86 + hash2(x, y, 9)*.22 - (y > 5 ? .1 : 0); c.fillStyle = '#' + new THREE.Color(0xd8a840).multiplyScalar(k).getHexString(); c.fillRect(x, y, 1, 1); } });
+  const face = keepMat(new THREE.MeshStandardMaterial({ map: brass, color: 0xffffff, metalness: .55, roughness: .45, flatShading: true })), wood = keepMat(new THREE.MeshStandardMaterial({ color: 0x4a2c16, roughness: .9, flatShading: true }));
+  [...word].forEach((ch, i) => { const L = new THREE.Group(); L.position.x = -W/2 + (i*gap + 2)*cs + cs/2; g.add(L); letters.push(L); });
+  // each lit pixel: a brass cube with a dark wooden backing, a little worn so every block reads on its own
+  cells.forEach(({ i, x, y }) => { const L = letters[i], lx = (x - i*gap - 2)*cs, ly = (3 - y)*cs, j = (hash2(x, y, 4) - .5)*.012;
+    const f = new THREE.Mesh(GEO.box, face); f.scale.set(cs*.98, cs*.98, cs*.5); f.position.set(lx, ly - cs*.47 + j, cs*.12); f.castShadow = true; L.add(f);
+    const b = new THREE.Mesh(GEO.box, wood); b.scale.set(cs, cs, cs*.5); b.position.set(lx, ly - cs*.5, -cs*.3); L.add(b); });
+  const O = letters[word.indexOf('O')], hex = spinner(logoHex(biome), cs*8.6); hex.rotation.x = .66; hex.position.y = -cs*.3; O.add(hex);   // tilted toward you, turning on its own axis
+  return { g, letters, hex, biome };
+}
 function titleMask(text){
   const cells = []; let x0 = 0;
   for (const ch of text){ const g = GLYPHS[ch]; if (g) g.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') cells.push([x0 + x, y]); })); x0 += 6; }
@@ -9422,9 +9469,9 @@ function openMainMenu(){
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
       <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
-      <div class="mview" data-v="exit"><h2>¿Salir de Catroan?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
-      <div class="mview" data-v="bye"><h2>Gracias por jugar Catroan</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
-      <button class="mdaynight"></button><div class="mver">Catroan · v0.2</div>`;
+      <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
+      <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
+      <button class="mdaynight"></button><div class="mver">SwapHolm · v0.2</div>`;
     el.addEventListener('click', menuClick);
     el.querySelector('.mdaynight').onclick = e => { e.stopPropagation(); SFX.click?.(); menuSetNight(!MENU.night); };
     el.querySelector('.mname').addEventListener('input', () => { MENU.match = el.querySelector('.mname').value.trim() || 'Partida'; drawMatchCards(); });
@@ -9451,14 +9498,11 @@ const myName = () => { try { return localStorage.getItem('hexterra-name') || 'Al
 function buildMenuTitle(){
   const cv = MENU.el.querySelector('.mtitle canvas'); if (!miniInit()) return;
   if (MENU.title) MENU.title.alive = false;
-  // the letters only line up from this view: drag to turn the hexagon and see them scatter; let go and it settles back
-  const D = { rx: 0, ry: 0, drag: null }, T = randomTitleHex();
-  const v = miniView(cv, { w: TITLE_CAM.w, h: TITLE_CAM.h, res: .8, fov: TITLE_CAM.fov, fps: 30, tick: dt => { if (!D.drag){ const k = Math.min(1, dt*4); D.rx -= D.rx*k; D.ry -= D.ry*k; } T.g.rotation.set(D.rx, D.ry, 0); } });
-  v.cam.position.set(...TITLE_CAM.pos); v.cam.lookAt(...TITLE_CAM.look); v.sc.add(T.g); MENU.title = v;
-  cv.onpointerdown = e => { D.drag = { x: e.clientX, y: e.clientY, rx: D.rx, ry: D.ry }; cv.setPointerCapture(e.pointerId); cv.classList.add('grab'); };
-  cv.onpointermove = e => { if (!D.drag) return; D.ry = D.drag.ry + (e.clientX - D.drag.x)*.012; D.rx = Math.max(-1.3, Math.min(1.3, D.drag.rx + (e.clientY - D.drag.y)*.012)); };
-  cv.onpointerup = cv.onpointercancel = () => { D.drag = null; cv.classList.remove('grab'); };
-  MENU.el.querySelector('.mtitle').dataset.biome = T.biome + ' · ' + T.variant;
+  // the SwapHolm wordmark: block letters bob gently; the O is a tile of a different biome every time the menu opens
+  const T = buildWordmark(pick(LOGO_BIOMES));
+  const v = miniView(cv, { w: 860, h: 250, res: .8, fov: 26, fps: 30, tick: (dt, t) => { T.letters.forEach((L, i) => { L.position.y = Math.sin(t*1.6 - i*.55)*.012; }); T.hex.userData.inner.rotation.y += dt*.45; } });
+  v.cam.position.set(0, .34, 3.35); v.cam.lookAt(0, -.02, 0); v.sc.add(T.g); MENU.title = v;
+  MENU.el.querySelector('.mtitle').dataset.biome = T.biome;
 }
 // ---------- Jugar: each mode is a little board (seven tiles of the real board), tilted, with its models spinning in place around it ----------
 const MINI_LAYOUT = [[0, 0], ...[0, 1, 2, 3, 4, 5].map(k => [Math.cos(k*Math.PI/3)*TILE_IN*2, Math.sin(k*Math.PI/3)*TILE_IN*2])];
@@ -9484,7 +9528,7 @@ function modeHexModel(kind){
 }
 function buildModeHexes(){
   const box = MENU.el.querySelector('.mmodes'); MENU.modeViews.forEach(v => v.alive = false); MENU.modeViews = [];
-  box.innerHTML = [['clasico', 'Clásico', 'Solo el juego base'], ['catroan', 'Catroan', 'Misiones, brujo, amuletos, objetos y más']].map(([k, n, d]) => `<div class="mmode ${MENU.sel === k ? 'sel' : ''}" data-mode="${k}"><canvas></canvas><b>${n}</b><span>${d}</span></div>`).join('');
+  box.innerHTML = [['clasico', 'Clásico', 'Solo el juego base'], ['catroan', 'SwapHolm', 'Misiones, brujo, amuletos, objetos y más']].map(([k, n, d]) => `<div class="mmode ${MENU.sel === k ? 'sel' : ''}" data-mode="${k}"><canvas></canvas><b>${n}</b><span>${d}</span></div>`).join('');
   if (miniInit()) box.querySelectorAll('.mmode').forEach(d => { const g = modeHexModel(d.dataset.mode);
     const v = miniView(d.querySelector('canvas'), { w: 300, h: 240, res: .8, fov: 30, fps: 30, tick: (dt, t) => { g.userData.spin.forEach((sp, i) => { sp.userData.inner.rotation.y += dt*(.8 + (i % 3)*.25); sp.position.y += Math.sin(t*1.4 + i)*.0012; }); } });
     v.cam.position.set(0, 4.6, 9.6); v.cam.lookAt(0, -.2, .2); g.rotation.set(.12, -.35, 0); v.sc.add(g); MENU.modeViews.push(v); });
@@ -9508,7 +9552,7 @@ const menuNewKey = () => { const ip = deskLanIP(); if (NET.lan === undefined) NE
 function netErrText(code){
   return { port_busy: 'El puerto del juego (47213) está ocupado: ¿hay otra partida abierta en esta computadora?',
     lan_unreachable: 'No se encontró al anfitrión en tu red. Revisen que estén en la misma WiFi.',
-    lan_only: 'Esa clave es de una partida en red local: entra desde Catroan de escritorio, en la misma WiFi.',
+    lan_only: 'Esa clave es de una partida en red local: entra desde SwapHolm de escritorio, en la misma WiFi.',
     no_room: 'No hay ninguna partida abierta con esa clave.',
     offline: 'No hay conexión a internet (o el servidor de partidas no responde).',
     key_taken: 'Esa clave ya está en uso: vuelve y crea otra partida.',
@@ -9521,7 +9565,7 @@ function matchCardCanvas(){
   c.fillStyle = mineralTone(gold, .6); c.fillRect(8, 8, W - 16, 1); c.fillRect(8, H - 9, W - 16, 1); c.fillRect(8, 8, 1, H - 16); c.fillRect(W - 9, 8, 1, H - 16);
   mineralCorners(c, W, H, gold, 18, 4);
   const txt = (t, y, f, col) => { c.font = f; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText(t, W/2, y + 1); c.fillStyle = col; c.fillText(t, W/2, y); };
-  txt('CATROAN', 30, "700 15px 'Pixelify Sans', monospace", mineralTone(gold, 1.1));
+  txt('SWAPHOLM', 30, "700 15px 'Pixelify Sans', monospace", mineralTone(gold, 1.1));
   txt('PARTIDA', 74, "600 10px 'Pixelify Sans', monospace", '#b8a888');
   let name = MENU.match || 'Partida', fs = 15; c.font = `700 ${fs}px 'Pixelify Sans', monospace`; while (c.measureText(name).width > W - 30 && fs > 8){ fs--; c.font = `700 ${fs}px 'Pixelify Sans', monospace`; }
   txt(name, 94, `700 ${fs}px 'Pixelify Sans', monospace`, '#f2e2c0');
@@ -9529,7 +9573,7 @@ function matchCardCanvas(){
   c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(24, 150, W - 48, 30); c.fillStyle = mineralTone(gold, .55); c.fillRect(24, 150, W - 48, 1); c.fillRect(24, 179, W - 48, 1);
   txt(MENU.key || '———', 166, "900 20px 'Pixelify Sans', monospace", mineralTone(gold, 1.25));
   const hx = (r, col) => { c.fillStyle = col; c.beginPath(); for (let k=0;k<6;k++){ const a = (60*k - 30)*Math.PI/180; c.lineTo(W/2 + Math.cos(a)*r, 214 + Math.sin(a)*r); } c.fill(); };
-  hx(15, '#0b0705'); hx(13, mineralTone(gold, .8)); hx(10, '#151515'); txt('C', 215, 'bold 12px Georgia, serif', mineralTone(gold, 1.1));
+  hx(15, '#0b0705'); hx(13, mineralTone(gold, .8)); hx(10, '#151515'); txt('S', 215, "700 12px 'Pixelify Sans', monospace", mineralTone(gold, 1.1));
   roundCard(c, W, H); return cv;
 }
 function drawMatchCards(){

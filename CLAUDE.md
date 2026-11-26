@@ -1,6 +1,6 @@
-# Catroan — guía para Claude Code
+# SwapHolm — guía para Claude Code
 
-Catroan es un juego tipo Catan en 3D low poly para navegador, hecho con three.js. Lo creó Fernando junto con Claude
+SwapHolm (antes Catroan) es un juego tipo Catan en 3D low poly para navegador, hecho con three.js. Lo creó Fernando junto con Claude
 (claude.ai). Esta guía cuenta cómo está hecho, qué **no** se toca y qué falta. Léela completa antes de cambiar algo.
 
 ## Cómo trabajar con Fernando
@@ -92,11 +92,13 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
    producen toque (0 a 3), y el jugador los reparte como quiera entre esos tipos (`startAllowance`/`startPick`). Los
    bots eligen lo que menos producen.
 8. **Objetos y flores** salen en cantidades según el objeto (`SPECIAL[k].drop`).
-9. **Título del menú: anamorfosis.** Cada píxel de "CATROAN" se proyecta desde la cámara fija `TITLE_CAM` sobre el
-   terreno y sobre postes, tocones, rocas y ovejas a distintas alturas.
-   - Solo desde esa cámara se lee; al arrastrar el hexágono se ve desordenado y al soltarlo regresa.
-   - Si cambias `TITLE_CAM`, las letras se recalculan solas. No muevas la cámara por otro lado.
-   - Hay 5 biomas con sus variantes, uno al azar cada vez que se abre el menú.
+9. **Nombre y título.** El juego se llama **SwapHolm** en todo lo visible (el modo con misiones también). Los
+   identificadores internos siguen diciendo `catroan` (modo `'catroan'`, salas, `catroan-tok`, `catroanDesk`, carpeta
+   de datos de Electron) para no romper partidas ni preferencias.
+   - Título del menú (`buildWordmark` en `ui/menu-title.js`): letras 3D de bloques de latón con respaldo de madera; la
+     O es un hexágono de bioma (`logoHex`) que gira sobre su eje y cambia al azar entre `LOGO_BIOMES` cada vez que se
+     abre el menú. El ícono de la app es ese hexágono (bosque, con ciudad) inclinado.
+   - (La anamorfosis anterior, `titleHex`/`TITLE_CAM`, ya no se usa.)
 10. **Todo modelo 3D que se muestre en la interfaz gira sobre su propio eje** (`spinner` + `userData.inner`). La
     única excepción son los modelos que caen en el menú: no giran, cada uno conserva su inclinación.
 11. **Las claves de `localStorage` empiezan con `hexterra-`** a propósito, para no perder las preferencias guardadas.
@@ -131,6 +133,8 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
 - **No agregues:** diseño plano moderno, efectos de vidrio, degradados llamativos, texturas realistas en alta
   resolución, sombreado suave, modelos de otro estilo, íconos de librerías ni texto en inglés.
 - Las animaciones son suaves (con aceleración y frenado) y los avisos se mantienen cortos.
+- **Doble clic omite animaciones** (`skipAnims` en `core/util.js`): usa `wait()` para esperar (se puede interrumpir) y
+  las escenas avanzan con `dt` en el bucle; así todo lo nuevo también se puede omitir.
 
 ## Lo que no se mueve (salvo que Fernando lo pida)
 
@@ -138,7 +142,7 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
   - Fondo del pueblo en primera persona con capa oscura al 70 %, día o noche según la hora y un botón para
     cambiarlo.
   - Lluvia de modelos oscuros e inclinados, sobre todo a los costados y algunos por el centro.
-  - El hexágono del título arriba.
+  - El título SwapHolm arriba (con la O de bioma).
   - Las opciones Jugar, Multijugador, Cómo jugar y Salir.
 - **Jugar:**
   - Dos mini tableros inclinados (Clásico y Catroan) con modelos girando en su eje.

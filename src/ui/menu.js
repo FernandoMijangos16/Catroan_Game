@@ -42,9 +42,9 @@ function openMainMenu(){
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
       <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
-      <div class="mview" data-v="exit"><h2>¿Salir de Catroan?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
-      <div class="mview" data-v="bye"><h2>Gracias por jugar Catroan</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
-      <button class="mdaynight"></button><div class="mver">Catroan · v0.2</div>`;
+      <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
+      <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
+      <button class="mdaynight"></button><div class="mver">SwapHolm · v0.2</div>`;
     el.addEventListener('click', menuClick);
     el.querySelector('.mdaynight').onclick = e => { e.stopPropagation(); SFX.click?.(); menuSetNight(!MENU.night); };
     el.querySelector('.mname').addEventListener('input', () => { MENU.match = el.querySelector('.mname').value.trim() || 'Partida'; drawMatchCards(); });
@@ -71,14 +71,11 @@ const myName = () => { try { return localStorage.getItem('hexterra-name') || 'Al
 function buildMenuTitle(){
   const cv = MENU.el.querySelector('.mtitle canvas'); if (!miniInit()) return;
   if (MENU.title) MENU.title.alive = false;
-  // the letters only line up from this view: drag to turn the hexagon and see them scatter; let go and it settles back
-  const D = { rx: 0, ry: 0, drag: null }, T = randomTitleHex();
-  const v = miniView(cv, { w: TITLE_CAM.w, h: TITLE_CAM.h, res: .8, fov: TITLE_CAM.fov, fps: 30, tick: dt => { if (!D.drag){ const k = Math.min(1, dt*4); D.rx -= D.rx*k; D.ry -= D.ry*k; } T.g.rotation.set(D.rx, D.ry, 0); } });
-  v.cam.position.set(...TITLE_CAM.pos); v.cam.lookAt(...TITLE_CAM.look); v.sc.add(T.g); MENU.title = v;
-  cv.onpointerdown = e => { D.drag = { x: e.clientX, y: e.clientY, rx: D.rx, ry: D.ry }; cv.setPointerCapture(e.pointerId); cv.classList.add('grab'); };
-  cv.onpointermove = e => { if (!D.drag) return; D.ry = D.drag.ry + (e.clientX - D.drag.x)*.012; D.rx = Math.max(-1.3, Math.min(1.3, D.drag.rx + (e.clientY - D.drag.y)*.012)); };
-  cv.onpointerup = cv.onpointercancel = () => { D.drag = null; cv.classList.remove('grab'); };
-  MENU.el.querySelector('.mtitle').dataset.biome = T.biome + ' · ' + T.variant;
+  // the SwapHolm wordmark: block letters bob gently; the O is a tile of a different biome every time the menu opens
+  const T = buildWordmark(pick(LOGO_BIOMES));
+  const v = miniView(cv, { w: 860, h: 250, res: .8, fov: 26, fps: 30, tick: (dt, t) => { T.letters.forEach((L, i) => { L.position.y = Math.sin(t*1.6 - i*.55)*.012; }); T.hex.userData.inner.rotation.y += dt*.45; } });
+  v.cam.position.set(0, .34, 3.35); v.cam.lookAt(0, -.02, 0); v.sc.add(T.g); MENU.title = v;
+  MENU.el.querySelector('.mtitle').dataset.biome = T.biome;
 }
 // ---------- Jugar: each mode is a little board (seven tiles of the real board), tilted, with its models spinning in place around it ----------
 const MINI_LAYOUT = [[0, 0], ...[0, 1, 2, 3, 4, 5].map(k => [Math.cos(k*Math.PI/3)*TILE_IN*2, Math.sin(k*Math.PI/3)*TILE_IN*2])];
@@ -104,7 +101,7 @@ function modeHexModel(kind){
 }
 function buildModeHexes(){
   const box = MENU.el.querySelector('.mmodes'); MENU.modeViews.forEach(v => v.alive = false); MENU.modeViews = [];
-  box.innerHTML = [['clasico', 'Clásico', 'Solo el juego base'], ['catroan', 'Catroan', 'Misiones, brujo, amuletos, objetos y más']].map(([k, n, d]) => `<div class="mmode ${MENU.sel === k ? 'sel' : ''}" data-mode="${k}"><canvas></canvas><b>${n}</b><span>${d}</span></div>`).join('');
+  box.innerHTML = [['clasico', 'Clásico', 'Solo el juego base'], ['catroan', 'SwapHolm', 'Misiones, brujo, amuletos, objetos y más']].map(([k, n, d]) => `<div class="mmode ${MENU.sel === k ? 'sel' : ''}" data-mode="${k}"><canvas></canvas><b>${n}</b><span>${d}</span></div>`).join('');
   if (miniInit()) box.querySelectorAll('.mmode').forEach(d => { const g = modeHexModel(d.dataset.mode);
     const v = miniView(d.querySelector('canvas'), { w: 300, h: 240, res: .8, fov: 30, fps: 30, tick: (dt, t) => { g.userData.spin.forEach((sp, i) => { sp.userData.inner.rotation.y += dt*(.8 + (i % 3)*.25); sp.position.y += Math.sin(t*1.4 + i)*.0012; }); } });
     v.cam.position.set(0, 4.6, 9.6); v.cam.lookAt(0, -.2, .2); g.rotation.set(.12, -.35, 0); v.sc.add(g); MENU.modeViews.push(v); });
@@ -128,7 +125,7 @@ const menuNewKey = () => { const ip = deskLanIP(); if (NET.lan === undefined) NE
 function netErrText(code){
   return { port_busy: 'El puerto del juego (47213) está ocupado: ¿hay otra partida abierta en esta computadora?',
     lan_unreachable: 'No se encontró al anfitrión en tu red. Revisen que estén en la misma WiFi.',
-    lan_only: 'Esa clave es de una partida en red local: entra desde Catroan de escritorio, en la misma WiFi.',
+    lan_only: 'Esa clave es de una partida en red local: entra desde SwapHolm de escritorio, en la misma WiFi.',
     no_room: 'No hay ninguna partida abierta con esa clave.',
     offline: 'No hay conexión a internet (o el servidor de partidas no responde).',
     key_taken: 'Esa clave ya está en uso: vuelve y crea otra partida.',
@@ -141,7 +138,7 @@ function matchCardCanvas(){
   c.fillStyle = mineralTone(gold, .6); c.fillRect(8, 8, W - 16, 1); c.fillRect(8, H - 9, W - 16, 1); c.fillRect(8, 8, 1, H - 16); c.fillRect(W - 9, 8, 1, H - 16);
   mineralCorners(c, W, H, gold, 18, 4);
   const txt = (t, y, f, col) => { c.font = f; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText(t, W/2, y + 1); c.fillStyle = col; c.fillText(t, W/2, y); };
-  txt('CATROAN', 30, "700 15px 'Pixelify Sans', monospace", mineralTone(gold, 1.1));
+  txt('SWAPHOLM', 30, "700 15px 'Pixelify Sans', monospace", mineralTone(gold, 1.1));
   txt('PARTIDA', 74, "600 10px 'Pixelify Sans', monospace", '#b8a888');
   let name = MENU.match || 'Partida', fs = 15; c.font = `700 ${fs}px 'Pixelify Sans', monospace`; while (c.measureText(name).width > W - 30 && fs > 8){ fs--; c.font = `700 ${fs}px 'Pixelify Sans', monospace`; }
   txt(name, 94, `700 ${fs}px 'Pixelify Sans', monospace`, '#f2e2c0');
@@ -149,7 +146,7 @@ function matchCardCanvas(){
   c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(24, 150, W - 48, 30); c.fillStyle = mineralTone(gold, .55); c.fillRect(24, 150, W - 48, 1); c.fillRect(24, 179, W - 48, 1);
   txt(MENU.key || '———', 166, "900 20px 'Pixelify Sans', monospace", mineralTone(gold, 1.25));
   const hx = (r, col) => { c.fillStyle = col; c.beginPath(); for (let k=0;k<6;k++){ const a = (60*k - 30)*Math.PI/180; c.lineTo(W/2 + Math.cos(a)*r, 214 + Math.sin(a)*r); } c.fill(); };
-  hx(15, '#0b0705'); hx(13, mineralTone(gold, .8)); hx(10, '#151515'); txt('C', 215, 'bold 12px Georgia, serif', mineralTone(gold, 1.1));
+  hx(15, '#0b0705'); hx(13, mineralTone(gold, .8)); hx(10, '#151515'); txt('S', 215, "700 12px 'Pixelify Sans', monospace", mineralTone(gold, 1.1));
   roundCard(c, W, H); return cv;
 }
 function drawMatchCards(){

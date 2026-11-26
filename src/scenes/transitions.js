@@ -1,6 +1,6 @@
 // ================= TRANSITIONS =================
 let tween = null;
-function tweenCam(pos, target, ms){ return new Promise(res => { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms, res }; }); }
+function tweenCam(pos, target, ms){ if (skipping()) ms = Math.min(ms, 60); return new Promise(res => { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms, res }; }); }
 function stepTween(){
   const k = Math.min(1, (performance.now() - tween.start)/tween.ms), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
   camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e); camera.lookAt(controls.target);

@@ -6,7 +6,42 @@ const GLYPHS = {
   R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
   O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
   N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
+  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
+  W: ['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '##.##', '#...#'],
+  P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'],
+  H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
 };
+// ---------- the SwapHolm wordmark: block letters of brass and wood; the O is a little tile of one of the board's biomes ----------
+const LOGO_BIOMES = ['bosque', 'pradera', 'cerro', 'campo', 'montana'];
+function logoHex(biome, rnd = mulberry32(Math.floor(Math.random()*1e6)), town = false){
+  const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => tileHeight(t, x, z);
+  g.add(hexTileMesh(t));
+  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = -.06; g.add(rim);
+  const trees = new TreeBatch(.012), spot = (r0, r1) => { const a = rnd()*6.28, d = r0 + rnd()*(r1 - r0); return [Math.cos(a)*d, Math.sin(a)*d]; };
+  const nTrees = { bosque: 12, pradera: 3, cerro: 3, campo: 2, montana: 4 }[biome];
+  for (let k=0;k<nTrees;k++){ const [x, z] = spot(town ? .45 : .25, .78); trees.add(treeKindFor(biome, rnd), x, Y(x, z) - .004, z, .045 + rnd()*.02, rnd()*6.28, treeTint(biome === 'montana' || biome === 'cerro' ? 'pino' : 'roble', rnd)); }
+  trees.build(g);
+  if (biome === 'pradera') for (let k=0;k<3;k++){ const [x, z] = spot(.2, .6), a = makeAnimal('oveja', rnd).g; a.scale.setScalar(.11); a.position.set(x, Y(x, z), z); a.rotation.y = rnd()*6.28; g.add(a); }
+  if (biome === 'cerro') for (let k=0;k<4;k++){ const [x, z] = spot(.15, .7), m = mesh(pick(GEO.rocks, rnd), pick([0xb8643a, 0x9c5a3a], rnd), x, Y(x, z), z, .09, .06, .08); m.rotation.y = rnd()*6; g.add(m); }
+  if (town){ const h = boardHouse('#e0473b', true); h.scale.setScalar(2.1); h.position.set(.05, Y(.05, .05), .05); g.add(h); }
+  return g;
+}
+function buildWordmark(biome){
+  const word = 'SWAPHOLM', cells = [], cs = .1, gap = 6, letters = [];
+  [...word].forEach((ch, i) => { if (ch === 'O') return; GLYPHS[ch].forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') cells.push({ i, x: i*gap + x, y }); })); });
+  const W = (word.length*gap - 1)*cs, g = new THREE.Group();
+  const brass = pxTex(8, 8, c => { for (let y=0;y<8;y++) for (let x=0;x<8;x++){ const k = .86 + hash2(x, y, 9)*.22 - (y > 5 ? .1 : 0); c.fillStyle = '#' + new THREE.Color(0xd8a840).multiplyScalar(k).getHexString(); c.fillRect(x, y, 1, 1); } });
+  const face = keepMat(new THREE.MeshStandardMaterial({ map: brass, color: 0xffffff, metalness: .55, roughness: .45, flatShading: true })), wood = keepMat(new THREE.MeshStandardMaterial({ color: 0x4a2c16, roughness: .9, flatShading: true }));
+  [...word].forEach((ch, i) => { const L = new THREE.Group(); L.position.x = -W/2 + (i*gap + 2)*cs + cs/2; g.add(L); letters.push(L); });
+  // each lit pixel: a brass cube with a dark wooden backing, a little worn so every block reads on its own
+  cells.forEach(({ i, x, y }) => { const L = letters[i], lx = (x - i*gap - 2)*cs, ly = (3 - y)*cs, j = (hash2(x, y, 4) - .5)*.012;
+    const f = new THREE.Mesh(GEO.box, face); f.scale.set(cs*.98, cs*.98, cs*.5); f.position.set(lx, ly - cs*.47 + j, cs*.12); f.castShadow = true; L.add(f);
+    const b = new THREE.Mesh(GEO.box, wood); b.scale.set(cs, cs, cs*.5); b.position.set(lx, ly - cs*.5, -cs*.3); L.add(b); });
+  const O = letters[word.indexOf('O')], hex = spinner(logoHex(biome), cs*8.6); hex.rotation.x = .66; hex.position.y = -cs*.3; O.add(hex);   // tilted toward you, turning on its own axis
+  return { g, letters, hex, biome };
+}
 function titleMask(text){
   const cells = []; let x0 = 0;
   for (const ch of text){ const g = GLYPHS[ch]; if (g) g.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') cells.push([x0 + x, y]); })); x0 += 6; }
