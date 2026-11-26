@@ -7,6 +7,8 @@
 - `lan.js` + `preload.cjs`: multijugador en red local. El anfitrión abre un servidor WebSocket (puerto 47213);
   la página solo ve `window.catroanDesk` (enviar/recibir texto), nada más de Node.
 - `build-win.sh`: genera los .exe dentro de Docker (`electronuserland/builder:wine`), sin Wine local.
+- `archive-release.sh`: antes de cada `npm run dist*` mueve los ejecutables anteriores a
+  `release/versiones-antiguas/<fecha>_<hora>/`, así nunca se pierde una versión.
 
 ## Comandos
 

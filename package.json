@@ -8,9 +8,9 @@
     "export-glb": "python3 tools/export-glb.py",
     "lint": "node tools/lint.mjs",
     "start": "node build.mjs && electron .",
-    "dist:win": "bash electron/build-win.sh",
-    "dist:linux": "node build.mjs && electron-builder --linux AppImage",
-    "dist": "bash electron/build-win.sh && electron-builder --linux AppImage"
+    "dist:win": "bash electron/archive-release.sh win && bash electron/build-win.sh",
+    "dist:linux": "bash electron/archive-release.sh linux && node build.mjs && electron-builder --linux AppImage",
+    "dist": "bash electron/archive-release.sh && bash electron/build-win.sh && electron-builder --linux AppImage"
   },
   "devDependencies": {
     "electron": "^45.5.0",
