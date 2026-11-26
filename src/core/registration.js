@@ -159,7 +159,7 @@ function regSummary(onGo){
 const SETUP = { queue: [], k: 0, v: null, prev: null };
 function startSetup(){
   const o = G.order || [...G.players.keys()];
-  SETUP.queue = [...o, ...[...o].reverse()]; SETUP.k = 0;
+  SETUP.queue = [...o, ...[...o].reverse()]; SETUP.k = 0; SETUP.busy = null;
   G.setup = true; G.phase = 'setup';
   nextSetup();
 }
@@ -171,6 +171,10 @@ async function nextSetup(){
   NG.setupSeen = SETUP.k + ':' + p;
   G.current = p; refresh();
   if (p !== 0 || window.__autoSetup){
+    // never twice for the same turn: a repeated call (e.g. a late online state) while this one runs, or after it placed
+    const key = SETUP.k + ':' + p; if (SETUP.busy === key) return;
+    if (G.verts.filter(x => x.building && x.building.p === p).length >= round){ SETUP.k++; nextSetup(); return; }
+    SETUP.busy = key;
     setupTip(`<i style="--c:${P.color}"></i><b>${P.name}</b> está colocando su ${round === 1 ? 'primer' : 'segundo'} pueblo…`);
     await wait(900);
     const cands = G.verts.filter(distanceOK).map(v => ({ v, s: vscore(v) + Math.random()*1.6 })).sort((a, b) => b.s - a.s), v = cands[0].v;
@@ -178,7 +182,7 @@ async function nextSetup(){
     const e = v.edges.map(id => G.edges[id]).map(e => { const o = G.verts[e.a === v.id ? e.b : e.a]; return { e, s: Math.max(0, ...o.adj.filter(x => x !== v.id).map(x => distanceOK(G.verts[x]) ? vscore(G.verts[x]) : 0)) + Math.random() }; }).sort((a, b) => b.s - a.s)[0].e;
     buildRoad(p, e.id, true); SFX.build?.();
     histPush(`${P.name} colocó su ${round === 1 ? 'primer' : 'segundo'} pueblo en <b>${v.name}</b>`, P.color);
-    await wait(600); SETUP.k++; nextSetup(); return;
+    await wait(600); SETUP.busy = null; SETUP.k++; nextSetup(); return;
   }
   // the human chooses
   SETUP.round = round; G.phase = 'setupV';
@@ -187,12 +191,12 @@ async function nextSetup(){
   refresh();
 }
 // ---------- starting resources (the original rule, adjusted) ----------
-// your second village gives as many resources as producing tiles it touches (0 to 3), like in the board game,
-// but you share them out as you like among the kinds of those tiles (two of one and one of another, all three of one…)
+// your second village always gives 3 resources if it touches any producing tile (a coastal one touches fewer tiles,
+// but it is not punished for it), shared out as you like among the kinds of those tiles (2+1, 3 of one…)
 function startAllowance(p){
   const v = G.verts[G.players[p].v2]; if (!v) return { n: 0, types: [] };
   const rs = v.tiles.map(ti => TERRAIN[G.tiles[ti].type].res).filter(Boolean);
-  return { n: Math.min(3, rs.length), types: [...new Set(rs)] };
+  return { n: rs.length ? 3 : 0, types: [...new Set(rs)] };
 }
 // a bot takes what its land produces least of, among what it is allowed and what a village and a road cost
 function botStartPick(p){

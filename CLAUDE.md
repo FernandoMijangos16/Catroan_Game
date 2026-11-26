@@ -88,9 +88,9 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
    respetar las dos opciones.
 6. **Dados.** Salen de una bolsa con las 36 combinaciones de dos dados; se rellena cuando quedan 5 (`drawDice`, el
    estado está en `G.bag`). No se cambia.
-7. **Recursos iniciales.** Regla original de Catan con un ajuste: el 2° pueblo da tantos recursos como terrenos que
-   producen toque (0 a 3), y el jugador los reparte como quiera entre esos tipos (`startAllowance`/`startPick`). Los
-   bots eligen lo que menos producen.
+7. **Recursos iniciales.** El 2° pueblo da **siempre 3 recursos** si toca al menos un terreno que produce (también en
+   la costa, aunque toque menos terrenos), y el jugador los reparte como quiera entre esos tipos
+   (`startAllowance`/`startPick`). Los bots eligen lo que menos producen.
 8. **Objetos y flores** salen en cantidades según el objeto (`SPECIAL[k].drop`).
    - Nombres propios, no de Catan: cartas Guardia, Punto de desarrollo, Rutas y senderos, Temporada de abundancia y
      Avaricia; trofeo Guardia más poderosa. Sin nombres de personajes con marca (Nintendo, etc.) en bots ni aldeanos.
