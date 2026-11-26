@@ -687,7 +687,6 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 #reg .rext.pick .rcell.on .rminus{display:block}
 #reg .rext.pick .rcount{font:700 14px 'Pixelify Sans',monospace;margin-right:10px;color:#3a2414}
 #reg .rext.pick .rgo:disabled{opacity:.45;cursor:not-allowed}
-#menu .mtitle canvas.grab{cursor:grabbing}
 
 /* ---------- the shared edit frame (players, actions, resources, buildings, items) ---------- */
 .edfr{--edc:#d6a84a}

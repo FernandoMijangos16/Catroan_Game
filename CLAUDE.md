@@ -98,7 +98,6 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
    - Título del menú (`buildWordmark` en `ui/menu-title.js`): letras 3D de bloques de latón con respaldo de madera; la
      O es un hexágono de bioma (`logoHex`) que gira sobre su eje y cambia al azar entre `LOGO_BIOMES` cada vez que se
      abre el menú. El ícono de la app es ese hexágono (bosque, con ciudad) inclinado.
-   - (La anamorfosis anterior, `titleHex`/`TITLE_CAM`, ya no se usa.)
 10. **Todo modelo 3D que se muestre en la interfaz gira sobre su propio eje** (`spinner` + `userData.inner`). La
     única excepción son los modelos que caen en el menú: no giran, cada uno conserva su inclinación.
 11. **Las claves de `localStorage` empiezan con `hexterra-`** a propósito, para no perder las preferencias guardadas.
