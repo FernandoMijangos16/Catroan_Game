@@ -21,7 +21,7 @@ function rewardText(r){
 function assignQuestFor0(){ const keep = G.players.map((P, i) => i); assignQuest(0); }
 // ---------- every town makes its own missions: a random timer per town, 3 to 5 an hour of play ----------
 // G.playT: seconds of play (advanced by whoever is acting); G.qAt: { vid: playT when that town posts its next one }.
-// A town with a mission still open posts nothing new, so they never pile up in one place.
+// A town keeps posting on its timer even while earlier ones are still open.
 const QUEST_GAP = () => 720 + Math.random()*480;   // 12-20 minutes
 function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register' && netAuth()) G.playT = (G.playT || 0) + dt; }
 function villageQuests(){
@@ -31,7 +31,7 @@ function villageQuests(){
     if (G.qAt[v.id] === undefined){ G.qAt[v.id] = now + 300 + Math.random()*900; return; }   // a new town: its first one in 5-20 min
     if (now < G.qAt[v.id] || gameRound() <= 4) return;
     G.qAt[v.id] = now + QUEST_GAP();
-    if (!(G.quests || []).some(q => q.vid === v.id && q.state !== 'done')) assignQuest(v.building.p, v.id); });
+    assignQuest(v.building.p, v.id); });
 }
 function assignQuest(force, vid){
   if (!G || G.over || G.setup || gameRound() <= 4 || isClassic()) return;

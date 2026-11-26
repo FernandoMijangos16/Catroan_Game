@@ -1,14 +1,16 @@
 // ================= SIMPLE PANELS (used when the first-person view is off): trade window and the thief's discard =================
 function openTrade(tab0, o = {}){
   const P = G.players[0], fixed = o.target !== undefined; let tab = G.current !== 0 || fixed ? 'jug' : (typeof tab0 === 'string' ? tab0 : 'banco'), give = null, get = null, target = fixed ? o.target : G.current !== 0 ? G.current : 'todos';
-  const pg = {}, pw = {}; RES.forEach(r => { pg[r] = 0; pw[r] = 0; });
+  const pg = {}, pw = {}, bl = {}, bw = {}; RES.forEach(r => { pg[r] = 0; pw[r] = 0; bl[r] = 0; bw[r] = 0; });   // bl/bw: lots you give / pieces you get in the comercio
+  const sum = o => Object.values(o).reduce((a, n) => a + n, 0);
   const stp = (k, r, n, max) => `<span class="stp">${RES.includes(r) ? resImg(r) : specImg(r)}<button data-s="${k}|${r}|-" ${n <= 0 ? 'disabled' : ''}>−</button><b>${n}</b><button data-s="${k}|${r}|+" ${max !== undefined && n >= max ? 'disabled' : ''}>+</button></span>`;
   const draw = () => {
     const tabs = fixed ? '' : `<div class="row tabs"><button data-tab="banco" class="${tab === 'banco' ? 'on' : ''}">🏦 Comercio y puertos</button><button data-tab="jug" class="${tab === 'jug' ? 'on' : ''}">🤝 Trueque con jugadores</button></div>`;
     if (tab === 'banco') modalBody.innerHTML = `<h3>Comerciar</h3>${tabs}<p class="muted">En el comercio das 4 iguales por 1. Si tienes un pueblo en un puerto: 3:1 con cualquier recurso o 2:1 con el recurso del puerto.</p>
-    <div class="lbl">Das</div><div class="row">${RES.map(r => { const k = tradeRate(0, r); return `<button data-give="${r}" ${P.res[r] < k ? 'disabled' : ''} class="${give === r ? 'on' : ''}">${resImg(r)} ${P.res[r]}<small>${k}:1${k < 4 ? ' ⚓' : ''}</small></button>`; }).join('')}</div>
-    <div class="lbl">Recibes 1 de</div><div class="row">${RES.map(r => `<button data-get="${r}" ${r === give ? 'disabled' : ''} class="${get === r ? 'on' : ''}">${resImg(r)} ${RES_NAME[r]}</button>`).join('')}</div>
-    <div class="row end"><button data-x="1">Cancelar</button><button class="primary" data-ok="1" ${give && get ? '' : 'disabled'}>Cambiar</button></div>`;
+    <div class="lbl">Das <small class="muted">(cada + es un lote)</small></div><div class="row">${RES.map(r => { const k = tradeRate(0, r); return `<span class="stp">${resImg(r)}<button data-s="bl|${r}|-" ${bl[r] <= 0 ? 'disabled' : ''}>−</button><b>${bl[r]*k}</b><button data-s="bl|${r}|+" ${(bl[r] + 1)*k > P.res[r] ? 'disabled' : ''}>+</button><small>${k}:1${k < 4 ? ' ⚓' : ''}</small></span>`; }).join('')}</div>
+    <div class="lbl">Recibes</div><div class="row">${RES.map(r => `<span class="stp">${resImg(r)}<button data-s="bw|${r}|-" ${bw[r] <= 0 ? 'disabled' : ''}>−</button><b>${bw[r]}</b><button data-s="bw|${r}|+" ${sum(bw) >= Math.max(1, sum(bl)) ? 'disabled' : ''}>+</button></span>`).join('')}</div>
+    <p class="muted">${sum(bl) && sum(bl) !== sum(bw) ? `Das para <b>${sum(bl)}</b> y pides <b>${sum(bw)}</b>: iguala las cantidades.` : sum(bl) ? `Das ${resList(Object.fromEntries(RES.map(r => [r, bl[r]*tradeRate(0, r)])))} y recibes ${resList(bw)}.` : 'Puedes cambiar varios recursos a la vez.'}</p>
+    <div class="row end"><button data-x="1">Cancelar</button><button class="primary" data-ok="1" ${sum(bl) && sum(bl) === sum(bw) ? '' : 'disabled'}>Cambiar</button></div>`;
     else modalBody.innerHTML = `<h3>${fixed ? `<i class="dot" style="background:${G.players[target].color}"></i> Trueque con ${G.players[target].name}` : 'Comerciar'}</h3>${tabs}<p class="muted">${fixed ? `Elige qué das y qué pides. Si ${G.players[target].name} acepta, un mensajero a caballo hará el intercambio.` : 'Ofrece recursos a los demás jugadores. Ellos deciden si les conviene.'}</p>
     <div class="lbl">Das</div><div class="row">${RES.map(r => stp('g', r, pg[r], P.res[r])).join('')}</div>
     ${SPK.some(k => (P.special || {})[k]) ? `<div class="lbl">Das flores y objetos</div><div class="row">${SPK.filter(k => (P.special || {})[k]).map(k => stp('g', k, pg[k] || 0, P.special[k])).join('')}</div>` : ''}
@@ -24,11 +26,14 @@ function openTrade(tab0, o = {}){
     if (b.dataset.tab){ if (G.current !== 0 && b.dataset.tab === 'banco') return; tab = b.dataset.tab; draw(); }
     else if (b.dataset.give){ give = b.dataset.give; if (get === give) get = null; draw(); }
     else if (b.dataset.get){ get = b.dataset.get; draw(); }
-    else if (b.dataset.s){ const [k, r, op] = b.dataset.s.split('|'), o = k === 'g' ? pg : pw; o[r] = Math.max(0, (o[r] || 0) + (op === '+' ? 1 : -1)); if (k === 'g' && pw[r]) pw[r] = 0; if (k === 'w' && pg[r]) pg[r] = 0; draw(); }
+    else if (b.dataset.s){ const [k, r, op] = b.dataset.s.split('|'), o = { g: pg, w: pw, bl, bw }[k]; o[r] = Math.max(0, (o[r] || 0) + (op === '+' ? 1 : -1)); if (k === 'g' && pw[r]) pw[r] = 0; if (k === 'w' && pg[r]) pg[r] = 0; if (k === 'bl' && bw[r]) bw[r] = 0; if (k === 'bw' && bl[r]) bl[r] = 0; while (sum(bw) > Math.max(1, sum(bl))){ const x = RES.find(q => bw[q] > 0); bw[x]--; } draw(); }
     else if (b.dataset.t){ target = b.dataset.t === 'todos' ? 'todos' : +b.dataset.t; draw(); }
     else if (b.dataset.x) closeModal();
     else if (b.dataset.send){ closeModal(); proposeTrade(target, { ...pg }, { ...pw }); }
-    else if (b.dataset.ok){ const k = tradeRate(0, give); SFX.trade(); P.res[give] -= k; P.res[get] += 1; notify(`Cambiaste ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en tu puerto' : 'en el comercio'}`, P.color); closeModal(); refresh(); }
+    else if (b.dataset.ok){ const gave = Object.fromEntries(RES.filter(r => bl[r]).map(r => [r, bl[r]*tradeRate(0, r)])), port = Object.keys(gave).some(r => tradeRate(0, r) < 4);
+      if (!sum(bl) || sum(bl) !== sum(bw) || Object.entries(gave).some(([r, n]) => P.res[r] < n)) return;
+      SFX.trade(); Object.entries(gave).forEach(([r, n]) => P.res[r] -= n); RES.forEach(r => P.res[r] += bw[r]);
+      notify(`Cambiaste ${resList(gave)} por ${resList(bw)} ${port ? 'en tu puerto' : 'en el comercio'}`, P.color); closeModal(); refresh(); }
   };
 }
 async function proposeTrade(target, give, want){

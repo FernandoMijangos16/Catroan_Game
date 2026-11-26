@@ -43,7 +43,7 @@ function chestModel(){
   { const br = mesh(GEO.box, wood, .3, .44, 0, .06, .05, D + .1); br.rotation.x = .12; br.rotation.y = .3; g.add(br); }     // a loose broken slat
   // junk at the bottom
   g.add(mesh(GEO.cyl14, icm(0xc8a040, { m: .5 }), -.3, .1, .16, .07, .02, .07)); g.add(mesh(GEO.cyl14, icm(0xc8a040, { m: .5 }), -.24, .12, .2, .07, .02, .07));
-  { const rope = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 4, 10), icm(0x8a7048)); rope.rotation.x = Math.PI/2; rope.position.set(.28, .12, -.14); g.add(rope); }
+  { const rope = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 4, 10), icm(0x8a7048)); rope.rotation.x = Math.PI/2; rope.position.set(.28, .08, -.14); g.add(rope); }
   AMBOX.lid = null; return g;
 }
 function updateAmuletBox(force){

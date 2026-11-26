@@ -16,8 +16,8 @@ function floatWin(o){
   const W = { id: o.id, keys: o.keys, slots: {}, cv: {}, pivots: {}, spin: {}, t: 0, acc: 0, S: o.S || 58, h: false, x: o.x, y: o.y, side: o.side || 'l', o, active: null };
   const KEY = 'hexterra-' + (o.store || o.id);
   try { Object.assign(W, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
-  const el = document.createElement('div'); el.id = o.id; el.className = 'fwin'; W.el = el;
-  el.innerHTML = `<div class="ibar"><button class="flip"></button></div><div class="slots">${o.keys.map(k => `<div class="islot zero" data-k="${k}" title="${o.title(k)}"><span class="nm">${o.name ? o.name(k) : o.title(k)}</span><div class="sq"><div class="dia"></div><canvas width="64" height="64"></canvas><b>0</b><em class="need"></em></div></div>`).join('')}</div>${['tl', 'tr', 'bl', 'br'].map(c => `<i class="rs ${c}" data-c="${c}"></i>`).join('')}`;
+  const el = document.createElement('div'); el.id = o.id; el.className = 'fwin edfr'; W.el = el;
+  el.innerHTML = `<div class="ibar"><b class="edtag" title="Arrastra para mover · doble clic: tamaño normal">${o.label || ''}</b><button class="flip"></button></div><div class="slots">${o.keys.map(k => `<div class="islot zero" data-k="${k}" title="${o.title(k)}"><span class="nm">${o.name ? o.name(k) : o.title(k)}</span><div class="sq"><div class="dia"></div><canvas width="64" height="64"></canvas><b>0</b><em class="need"></em></div></div>`).join('')}</div>${['tl', 'tr', 'bl', 'br'].map(c => `<i class="rs ${c}" data-c="${c}"></i>`).join('')}`;
   document.body.appendChild(el);
   o.keys.forEach(k => { const s = el.querySelector(`.islot[data-k="${k}"]`); W.slots[k] = s; W.cv[k] = s.querySelector('canvas').getContext('2d'); W.spin[k] = 0; });
   W.apply = noClamp => {
@@ -32,9 +32,10 @@ function floatWin(o){
   W.apply();
   W.save = () => { try { localStorage.setItem(KEY, JSON.stringify({ S: W.S, h: W.h, y: W.y, side: W.side })); } catch {} };
   el.querySelector('.flip').addEventListener('click', e => { e.stopPropagation(); W.h = !W.h; W.apply(); W.save(); SFX.click?.(); });
+  el.querySelector('.edtag').addEventListener('dblclick', e => { e.stopPropagation(); W.S = o.S || 58; W.side = o.side || 'l'; W.apply(); dockWins(W); W.save(); SFX.click?.(); });
   let op = null;
   el.addEventListener('pointerdown', e => {
-    if (e.target.closest('.ibar')) return;
+    if (e.target.closest('.ibar') && !e.target.closest('.edtag')) return;   // the name plate moves the window like the rest of the frame
     e.preventDefault(); e.stopPropagation();
     if (W.payTo){ op = { kind: 'move', x0: e.clientX, y0: e.clientY, moved: 0 }; return; }   // the thief bar: a tap, never a drag
     const rs = e.target.closest('.rs'), r0 = el.getBoundingClientRect();
@@ -103,9 +104,9 @@ const invShown = r => G ? Math.max(0, G.players[0].res[r] - INV.pending[r]) : 0;
 let PIECES = null;
 function initInventory(){
   const pending = { madera: 0, ladrillo: 0, lana: 0, trigo: 0, mineral: 0 };
-  INV = floatWin({ id: 'inv', store: 'inv3', S: 54, keys: RES, side: 'l', x: 4, y: 48, title: r => RES_NAME[r], name: r => RES_NAME[r], count: r => invShown(r), model: k => makeResourceItem(k) });
+  INV = floatWin({ id: 'inv', label: 'Recursos', store: 'inv3', S: 54, keys: RES, side: 'l', x: 4, y: 48, title: r => RES_NAME[r], name: r => RES_NAME[r], count: r => invShown(r), model: k => makeResourceItem(k) });
   INV.pending = pending; INV.models();
-  PIECES = floatWin({ id: 'pieces', store: 'pieces3', S: 54, keys: ['camino', 'pueblo', 'ciudad'], side: 'r', x: 4, y: Math.round(($('#corner')?.getBoundingClientRect().bottom || 120) + 8), name: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k], title: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k] + ' (toca para verlos en el tablero)',
+  PIECES = floatWin({ id: 'pieces', label: 'Construcciones', store: 'pieces3', S: 54, keys: ['camino', 'pueblo', 'ciudad'], side: 'r', x: 4, y: Math.round(($('#corner')?.getBoundingClientRect().bottom || 120) + 8), name: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k], title: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k] + ' (toca para verlos en el tablero)',
     count: k => G ? ({ camino: G.players[0].roads, pueblo: G.players[0].pueblos, ciudad: G.players[0].ciudades })[k] : 0,
     model: k => pieceModel(k), onSlot: k => { highlightPieces(PIECES.active === k ? null : k); SFX.click?.(); } });
   PIECES.models();

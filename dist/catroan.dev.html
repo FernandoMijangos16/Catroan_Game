@@ -295,12 +295,6 @@ body.amtarget #players .pl:not(.me){cursor:crosshair;filter:drop-shadow(0 0 6px 
 #toasts{top:calc((var(--corner-b,60px) + 8px)/var(--ui,1)) !important}
 #mk-say{top:calc((var(--corner-b,70px) + 10px)/var(--ui,1)) !important}
 #announce{top:calc((var(--corner-b,60px) + 8px)/var(--ui,1)) !important}
-.rzgrip{position:absolute;width:18px;height:18px;z-index:5;pointer-events:auto;cursor:nwse-resize;opacity:0;transition:opacity .15s;background:linear-gradient(135deg,transparent 45%,#f2d27a 45% 55%,transparent 55% 65%,#f2d27a 65% 75%,transparent 75%);filter:drop-shadow(0 1px 0 #000)}
-#corner:hover>.rzgrip,#hexbar:hover .rzgrip,#hud-right:hover .rzgrip,.rzgrip.on{opacity:1}
-#corner>.rzgrip{left:-14px;bottom:-12px;transform:scaleX(-1);cursor:nesw-resize}
-#corner.left>.rzgrip{left:auto;right:-14px;transform:none;cursor:nwse-resize}
-#hexbar .rzgrip{right:-10px;top:-6px;transform:rotate(-90deg);cursor:nesw-resize}
-#hud-right{position:relative}#hud-right .rzgrip{left:50%;bottom:-16px;margin-left:-9px;transform:rotate(45deg);cursor:ns-resize;width:14px;height:14px}
 .pl .ordb{position:absolute;left:2px;top:22px;z-index:2;font:900 12px Verdana,Arial,sans-serif;color:#2a1a0c;background:#f2d27a;border:2px solid #1d1209;padding:0 4px;pointer-events:none}
 body.registering #hexbar,body.registering #b-endturn,body.registering .fwin,body.registering #cards{visibility:hidden}
 #reg{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(10,8,6,.35),rgba(10,8,6,.75))}
@@ -363,7 +357,7 @@ body[data-corner=l] #hud-top .brand{margin-left:auto;transform-origin:top right}
 #corner #news-board,#corner #quest-icon{margin:8px 0 0}
 #hud-top .brand{transform:scale(var(--ui,1));transform-origin:top left}
 .fwin{transform:scale(var(--ui,1))}
-#hexbar{transform:translateX(-50%) scale(calc(var(--ui,1)*var(--k-hex,1)));transform-origin:50% 100%}
+#hexbar{transform:translate(calc(-50% + var(--hb-x,0px)),var(--hb-y,0px)) scale(calc(var(--ui,1)*var(--k-hex,1)));transform-origin:50% 100%}
 #b-endturn{zoom:calc(var(--ui,1)*var(--k-hex,1))}
 #corner #hud-right{zoom:var(--k-hud,1)}
 #cards,#toasts,#mk-say,#mk-ui,#modal-body,#announce,#v-card,#v-btns,#v-help,#v-turn,#v-info{zoom:var(--ui,1)}
@@ -703,6 +697,32 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 #reg .rext.pick .rcount{font:700 14px 'Pixelify Sans',monospace;margin-right:10px;color:#3a2414}
 #reg .rext.pick .rgo:disabled{opacity:.45;cursor:not-allowed}
 #menu .mtitle canvas.grab{cursor:grabbing}
+
+/* ---------- the shared edit frame (players, actions, resources, buildings, items) ---------- */
+.edfr{--edc:#d6a84a}
+.edfr::after{content:'';position:absolute;inset:-6px;border:2px dashed transparent;border-radius:12px;pointer-events:none;transition:border-color .15s,background .15s}
+.edfr.hov::after,.edfr.edit::after,.fwin.hov::after,.fwin.drag::after{border-color:rgba(214,168,74,.85);background:rgba(20,14,8,.22)}
+.fwin.hov,.fwin.drag{border-color:transparent!important;background:transparent!important;box-shadow:none!important}
+.edc,.fwin .rs{position:absolute;width:18px;height:18px;z-index:6;opacity:0;pointer-events:none;transition:opacity .15s;border:0 solid var(--edc);filter:drop-shadow(0 1px 0 #2a1a0c) drop-shadow(0 0 3px rgba(0,0,0,.6))}
+.edc::before,.fwin .rs::before{content:'';position:absolute;width:5px;height:5px;border-radius:50%;background:#f6dc8a;box-shadow:inset -1px -1px 0 #8a6420}
+.edfr.hov>.edc,.edfr.edit>.edc,.fwin.hov .rs,.fwin.drag .rs{opacity:1;pointer-events:auto}
+.edc.tl,.fwin .rs.tl{left:-11px;top:-11px;border-width:4px 0 0 4px;border-radius:6px 0 0 0;cursor:nwse-resize}.edc.tl::before,.fwin .rs.tl::before{left:1px;top:1px}
+.edc.tr,.fwin .rs.tr{right:-11px;top:-11px;border-width:4px 4px 0 0;border-radius:0 6px 0 0;cursor:nesw-resize}.edc.tr::before,.fwin .rs.tr::before{right:1px;top:1px}
+.edc.bl,.fwin .rs.bl{left:-11px;bottom:-11px;border-width:0 0 4px 4px;border-radius:0 0 0 6px;cursor:nesw-resize}.edc.bl::before,.fwin .rs.bl::before{left:1px;bottom:1px}
+.edc.br,.fwin .rs.br{right:-11px;bottom:-11px;border-width:0 4px 4px 0;border-radius:0 0 6px 0;cursor:nwse-resize}.edc.br::before,.fwin .rs.br::before{right:1px;bottom:1px}
+.edtag{position:absolute;left:50%;top:-24px;transform:translateX(-50%);z-index:6;white-space:nowrap;padding:3px 12px 4px;font:700 11px 'Pixelify Sans',monospace;letter-spacing:1px;text-transform:uppercase;color:#2a1a0c;
+  background:linear-gradient(#f2d27a,#c8a040 55%,#a8822a);clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,6px 100%,0 50%);box-shadow:inset 0 1px 0 #fff2c0;cursor:grab;opacity:0;pointer-events:none;transition:opacity .15s;text-shadow:0 1px 0 rgba(255,240,190,.5)}
+.edfr.hov>.edtag,.edfr.edit>.edtag{opacity:1;pointer-events:auto}
+.edfr.drag>.edtag,.fwin.drag .edtag{cursor:grabbing}
+.fwin .ibar .edtag{position:static;transform:none;opacity:1;pointer-events:auto}
+.fwin .ibar{top:-26px;align-items:center}
+#hexbar.edfr>.edc,#hexbar.edfr>.edtag{pointer-events:auto}
+#corner.edfr>.edtag{top:auto;bottom:-26px}
+#corner.edfr>.edc.tl,#corner.edfr>.edc.tr{top:-2px}#corner.edfr>.edc.tr,#corner.edfr>.edc.br{right:-4px}
+#corner.edfr::after{inset:-2px -4px -6px -6px}
+.fwin .ibar button.flip{background:linear-gradient(#e8c870,#b8902e 55%,#94701e);color:#2a1a0c;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,6px 100%,0 50%);border-radius:0;box-shadow:inset 0 1px 0 #fff2c0;font:700 10.5px 'Pixelify Sans',monospace;letter-spacing:.5px;padding:3px 10px 4px}
+.fwin .ibar button.flip::before{display:none}
+.fwin .ibar button.flip:hover{filter:brightness(1.12)}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -1951,22 +1971,22 @@ function iconModel(k){
     case 'bomba': A(GEO.sphere, 0x24201e, 0, -.08, 0, .4, .4, .4); A(GEO.cyl, iron, .16, .3, 0, .1, .14, .1, 0, 0, -.5); A(GEO.box, 0xc8a070, .28, .44, 0, .03, .18, .03, 0, 0, -.7); A(GEO.sphere, icm(0xffb040, { e: 0xff6010, ei: 1 }), .36, .54, 0, .06, .06, .06); A(GEO.sphere, 0x4a4440, -.14, .08, .3, .08, .08, .04); break;
     case 'cuchillo': A(GEO.box, icm(0xc8ccd2, { m: .6, r: .3 }), 0, .05, 0, .1, .62, .025); A(GEO.cone4, icm(0xc8ccd2, { m: .6, r: .3 }), 0, .68, 0, .06, .14, .02); A(GEO.box, iron, 0, -.02, 0, .26, .05, .06); A(GEO.box, wood, 0, -.32, 0, .08, .3, .07); break;
     case 'martillo': A(GEO.box, wood, 0, -.5, 0, .1, .9, .1); A(GEO.box, iron, 0, .32, 0, .5, .2, .22); break;
-    case 'pluma': { const v = A(GEO.cone4, 0xf2ece0, 0, 0, 0, .18, .9, .04); v.rotation.z = .5; A(GEO.box, 0x8a7a6a, -.18, -.3, 0, .02, .5, .02, 0, 0, .5); break; }
+    case 'pluma': { const v = A(GEO.cone4, 0xf2ece0, 0, 0, 0, .18, .9, .04); v.rotation.z = .5; A(GEO.box, 0x8a7a6a, .24, -.44, 0, .02, .5, .02, 0, 0, .5); break; }
     case 'calavera': A(GEO.sphere, 0xe8e2d2, 0, .1, 0, .34, .32, .3); A(GEO.box, 0xe8e2d2, 0, -.18, .02, .3, .16, .24); [-1, 1].forEach(s => A(GEO.sphere, 0x15100c, s*.12, .1, .26, .08, .09, .05)); A(GEO.box, 0x15100c, 0, -.02, .29, .04, .06, .02); break;
     case 'ojo': A(GEO.sphere, 0xf4efe6, 0, 0, 0, .42, .26, .2); A(GEO.sphere, 0x3a7a5a, 0, 0, .15, .16, .16, .08); A(GEO.sphere, 0x0c0806, 0, 0, .2, .08, .08, .05); break;
     case 'escudo': { const sh = A(GEO.cyl14, 0x7a5232, 0, 0, 0, .4, .06, .46, Math.PI/2); A(GEO.box, iron, 0, 0, .05, .08, .82, .04); A(GEO.box, iron, 0, .1, .05, .7, .08, .04); A(GEO.sphere, gold, 0, .1, .08, .07, .07, .05); break; }
-    case 'camino': A(GEO.box, 0x8a6a48, 0, 0, 0, .9, .06, .34); for (let i=0;i<4;i++) A(GEO.box, 0xa8a090, -.33 + i*.22, .05, (i % 2 - .5)*.1, .14, .05, .12); A(GEO.box, wood, .38, .3, .2, .05, .6, .05); A(GEO.box, wood, .38, .5, .26, .3, .1, .03); break;
+    case 'camino': A(GEO.box, 0x8a6a48, 0, 0, 0, .9, .06, .34); for (let i=0;i<4;i++) A(GEO.box, 0xa8a090, -.33 + i*.22, .05, (i % 2 - .5)*.1, .14, .05, .12); A(GEO.box, wood, .38, .06, .2, .05, .84, .05); A(GEO.box, wood, .38, .5, .235, .3, .1, .03); break;
     case 'trofeo': A(GEO.box, dark, 0, -.5, 0, .4, .14, .3); A(GEO.cyl, gold, 0, -.36, 0, .06, .2, .06); { const cup = new THREE.Mesh(sg(new THREE.LatheGeometry([[0, 0], [.14, .02], [.26, .18], [.3, .42], [.28, .5]].map(([x, y]) => new THREE.Vector2(x, y)), 8)), gold); cup.position.y = -.18; g.add(cup); } [-1, 1].forEach(s => A(GEO.box, gold, s*.32, .08, 0, .06, .2, .05)); break;
     case 'trebol': [0, 1, 2, 3].forEach(i => { const a = i*Math.PI/2 + Math.PI/4; A(GEO.sphere, 0x3a9a3a, Math.cos(a)*.17, Math.sin(a)*.17 + .1, 0, .17, .17, .06); }); A(GEO.box, 0x2a6a2a, 0, -.25, 0, .04, .4, .03); break;
     case 'orbe': A(GEO.sphere, icm(0xb07aff, { e: 0x5a2aa8, ei: .8, r: .2 }), 0, .1, 0, .34, .34, .34); A(GEO.cyl14, gold, 0, -.28, 0, .26, .1, .26); break;
-    case 'pergamino': A(GEO.box, 0xe8d6ae, 0, 0, 0, .5, .64, .03); [-1, 1].forEach(s => A(GEO.cyl, 0xc9ae7c, 0, s*.32, 0, .08, .62, .08, 0, 0, Math.PI/2)); for (let i=0;i<4;i++) A(GEO.box, 0x6a4a2a, 0, .15 - i*.1, .02, .32 - (i % 2)*.1, .02, .01); break;
+    case 'pergamino': A(GEO.box, 0xe8d6ae, 0, -.32, 0, .5, .64, .03); [-1, 1].forEach(s => A(GEO.cyl, 0xc9ae7c, .31, s*.32, 0, .08, .62, .08, 0, 0, Math.PI/2)); for (let i=0;i<4;i++) A(GEO.box, 0x6a4a2a, 0, .15 - i*.1, .02, .32 - (i % 2)*.1, .02, .01); break;
     case 'estrella': { const sh = new THREE.Shape(); for (let i=0;i<10;i++){ const r = i % 2 ? .18 : .45, a = i/10*Math.PI*2 + Math.PI/2; i ? sh.lineTo(Math.cos(a)*r, Math.sin(a)*r) : sh.moveTo(Math.cos(a)*r, Math.sin(a)*r); } const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: .12, bevelEnabled: false }), icm(0xf2c23a, { e: 0x6a4a08, ei: .6 })); m.position.z = -.06; g.add(m); break; }
     case 'regalo': A(GEO.sphere, 0x9a7a4a, 0, -.08, 0, .4, .36, .36); A(GEO.cyl, 0x8a6a3a, 0, .25, 0, .12, .14, .12); A(GEO.box, 0xc8302a, 0, .3, 0, .3, .05, .05); break;
     case 'hierba': for (let i=0;i<5;i++){ const l = A(GEO.cone4, 0x4a9a3a, (i - 2)*.1, 0, 0, .08, .6 + (i % 2)*.2, .04); l.rotation.z = (i - 2)*.25; } break;
     case 'canasta': A(GEO.cyl14, 0xb08a4a, 0, -.1, 0, .4, .32, .32); A(GEO.sphere, 0xd9402a, -.12, .12, 0, .1, .1, .1); A(GEO.sphere, 0xe3c46a, .12, .12, .05, .1, .08, .1); { const h = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 4, 10, Math.PI), icm(0x8a6a3a)); h.position.y = .1; g.add(h); } break;
     case 'dado': return makeDie();
     case 'mapa': { const m = A(GEO.box, 0xd9c49a, 0, 0, 0, .8, .03, .6); A(GEO.box, 0x4a8a4a, -.12, .02, -.05, .3, .02, .22); A(GEO.box, 0x4a7aa8, .25, .02, .12, .2, .02, .18); A(GEO.box, 0xa8402a, .05, .025, .05, .05, .02, .05); g.rotation.x = .5; break; }
-    case 'ancla': { const iron = icm(0xb8b4ac, { m: .4, r: .5 }); A(GEO.box, iron, 0, 0, 0, .08, .8, .08); A(GEO.box, iron, 0, .28, 0, .4, .07, .07); { const h = new THREE.Mesh(new THREE.TorusGeometry(.3, .05, 4, 10, Math.PI), iron); h.rotation.z = Math.PI; h.position.y = -.12; g.add(h); const r = new THREE.Mesh(new THREE.TorusGeometry(.08, .03, 4, 8), iron); r.position.y = .46; g.add(r); } break; }
+    case 'ancla': { const iron = icm(0xb8b4ac, { m: .4, r: .5 }); A(GEO.box, iron, 0, -.42, 0, .08, 1.22, .08); A(GEO.box, iron, 0, .28, 0, .4, .07, .07); { const h = new THREE.Mesh(new THREE.TorusGeometry(.3, .05, 4, 10, Math.PI), iron); h.rotation.z = Math.PI; h.position.y = -.12; g.add(h); const r = new THREE.Mesh(new THREE.TorusGeometry(.08, .03, 4, 8), iron); r.position.y = .46; g.add(r); } break; }
     case 'sol': A(GEO.sphere, icm(0xf2c23a, { e: 0x8a5a08, ei: .8 }), 0, 0, 0, .3, .3, .3); for (let i=0;i<8;i++){ const a = i/8*Math.PI*2; A(GEO.cone4, icm(0xf29a2a, { e: 0x6a3a08, ei: .6 }), Math.cos(a)*.42, Math.sin(a)*.42, 0, .07, .16, .05, 0, 0, a - Math.PI/2); } break;
     case 'amanecer': A(GEO.sphere, icm(0xf28a3a, { e: 0x8a3a08, ei: .7 }), 0, 0, 0, .32, .32, .32); A(GEO.box, 0x4a6a8a, 0, -.2, 0, .9, .3, .2); break;
     case 'nube': A(GEO.sphere, icm(0xf2c23a, { e: 0x8a5a08, ei: .8 }), .15, .15, -.1, .25, .25, .25); [-.2, 0, .2].forEach((x, i) => A(GEO.sphere, 0xe8ecf0, x, -.05 + (i === 1 ? .08 : 0), .05, .2, .17, .17)); break;
@@ -1974,39 +1994,39 @@ function iconModel(k){
     case 'fuego': A(GEO.cone7, icm(0xd8401a, { e: 0x8a2008, ei: .9 }), 0, -.3, 0, .32, .8, .32); A(GEO.cone7, icm(0xf2c23a, { e: 0x8a6008, ei: .9 }), 0, -.3, .06, .18, .5, .18); break;
     case 'ola': for (let i=0;i<3;i++) A(GEO.sphere, 0x3a7aa8, (i - 1)*.28, -.05 + (i === 1 ? .08 : 0), 0, .2, .14, .2); A(GEO.box, 0x2a5a8a, 0, -.2, 0, .9, .1, .24); break;
     case 'montana': A(GEO.cone4, 0x8a8a90, -.1, -.4, 0, .45, .85, .45); A(GEO.cone4, 0x6a6a70, .25, -.4, .1, .3, .55, .3); A(GEO.cone4, 0xf2f2f2, -.1, .2, 0, .14, .25, .14); break;
-    case 'frasco': A(GEO.sphere, icm(0x6aa83a, { e: 0x2a5a0a, ei: .6, r: .3 }), 0, -.1, 0, .3, .32, .3); A(GEO.cyl, 0xd8e8e0, 0, .25, 0, .09, .22, .09); A(GEO.cyl, wood, 0, .42, 0, .1, .08, .1); break;
+    case 'frasco': A(GEO.sphere, icm(0x6aa83a, { e: 0x2a5a0a, ei: .6, r: .3 }), 0, -.1, 0, .3, .32, .3); A(GEO.cyl, 0xd8e8e0, 0, .18, 0, .09, .25, .09); A(GEO.cyl, wood, 0, .42, 0, .1, .08, .1); break;
     case 'arbol': A(GEO.box, wood, 0, -.45, 0, .1, .3, .1); A(GEO.cone7, 0x2a6a3a, 0, -.25, 0, .4, .5, .4); A(GEO.cone7, 0x3a7a3a, 0, .05, 0, .3, .45, .3); break;
-    case 'cactus': A(GEO.box, 0x4a8a3a, 0, -.4, 0, .16, .85, .16); A(GEO.box, 0x4a8a3a, .16, -.05, 0, .1, .3, .1); A(GEO.box, 0x4a8a3a, -.16, -.15, 0, .1, .25, .1); A(GEO.box, 0xd9c49a, 0, -.48, 0, .6, .06, .4); break;
+    case 'cactus': A(GEO.box, 0x4a8a3a, 0, -.43, 0, .16, .88, .16); A(GEO.box, 0x4a8a3a, .13, -.05, 0, .1, .3, .1); A(GEO.box, 0x4a8a3a, -.13, -.15, 0, .1, .25, .1); A(GEO.box, 0xd9c49a, 0, -.48, 0, .6, .06, .4); break;
     case 'serrucho': A(GEO.box, iron, .1, 0, 0, .7, .2, .02); A(GEO.box, wood, -.35, .02, 0, .2, .26, .06); break;
     case 'pico': A(GEO.box, wood, 0, -.4, 0, .08, .9, .08); { const h = A(GEO.box, iron, 0, .38, 0, .7, .08, .08); h.rotation.z = .1; } break;
     case 'vaca': return makeAnimal('vaca', mulberry32(4)).g;
-    case 'cana': A(GEO.box, 0x9a7a4a, 0, 0, 0, .04, 1, .04, 0, 0, .5); A(GEO.box, 0xd8d8d0, .3, -.1, 0, .01, .6, .01); A(GEO.sphere, 0xd8302a, .3, -.42, 0, .05, .05, .05); break;
-    case 'pez': A(GEO.sphere, 0x8ab0c8, 0, 0, 0, .4, .2, .1); A(GEO.cone4, 0x6a90a8, -.45, 0, 0, .14, .2, .05, 0, 0, Math.PI/2); A(GEO.sphere, 0x0c0806, .25, .05, .08, .03, .03, .03); break;
+    case 'cana': A(GEO.box, 0x9a7a4a, 0, 0, 0, .04, 1, .04, 0, 0, -.5); A(GEO.box, 0xd8d8d0, .48, -.38, 0, .01, 1.26, .01); A(GEO.sphere, 0xd8302a, .48, -.42, 0, .05, .05, .05); break;
+    case 'pez': A(GEO.sphere, 0x8ab0c8, 0, 0, 0, .4, .2, .1); A(GEO.cone4, 0x6a90a8, -.39, 0, 0, .14, .2, .05, 0, 0, Math.PI/2); A(GEO.sphere, 0x0c0806, .25, .05, .08, .03, .03, .03); break;
     case 'casa': A(GEO.box, 0xe8dcc0, 0, -.4, 0, .6, .45, .5); { const r = A(GEO.cone4, 0xa8503a, 0, .05, 0, .55, .4, .45); r.rotation.y = Math.PI/4; } A(GEO.box, wood, 0, -.4, .26, .14, .24, .02); break;
     case 'puerta': A(GEO.box, wood, 0, -.45, 0, .45, .9, .08); A(GEO.sphere, gold, .14, 0, .06, .04, .04, .04); [-.2, .2].forEach(y => A(GEO.box, iron, 0, y, .05, .45, .05, .02)); break;
-    case 'globo': A(GEO.sphere, 0xf4efe6, 0, .08, 0, .45, .32, .12); A(GEO.cone4, 0xf4efe6, -.15, -.3, 0, .1, .2, .06, 0, 0, Math.PI*.85); [-1, 0, 1].forEach(i => A(GEO.sphere, 0x3a2a1c, i*.13, .08, .1, .04, .04, .03)); break;
+    case 'globo': A(GEO.sphere, 0xf4efe6, 0, .08, 0, .45, .32, .12); A(GEO.cone4, 0xf4efe6, -.12, -.17, 0, .1, .2, .06, 0, 0, Math.PI*.85); [-1, 0, 1].forEach(i => A(GEO.sphere, 0x3a2a1c, i*.13, .08, .1, .04, .04, .03)); break;
     case 'mano': return handModel(0x8a6a48, true);
     case 'exclama': return exclaim();
     case 'pregunta': { const t = new THREE.Mesh(new THREE.TorusGeometry(.18, .06, 4, 8, Math.PI*1.4), icm(0xf2c23a, { e: 0x6a4a08, ei: .5 })); t.rotation.z = -.6; t.position.y = .22; g.add(t); A(GEO.box, icm(0xf2c23a), 0, -.15, 0, .09, .2, .09); A(GEO.sphere, icm(0xf2c23a), 0, -.38, 0, .07, .07, .07); break; }
     case 'nota': A(GEO.sphere, 0x2a2420, 0, -.3, 0, .17, .12, .1); A(GEO.box, 0x2a2420, .14, -.25, 0, .04, .7, .04); A(GEO.box, 0x2a2420, .24, .38, 0, .2, .06, .04, 0, 0, -.4); break;
     case 'pan': A(GEO.sphere, 0xd9a050, 0, 0, 0, .5, .18, .2); [-.2, 0, .2].forEach(x => A(GEO.box, 0xa86a2a, x, .15, 0, .04, .02, .16, 0, .6)); break;
     case 'queso': { const m = A(GEO.cyl14, 0xf2cc56, 0, -.1, 0, .4, .3, .4); A(GEO.sphere, 0xd8a83a, .15, .06, .2, .06, .06, .03); break; }
-    case 'manzana': A(GEO.sphere, 0xd8302a, 0, 0, 0, .36, .34, .36); A(GEO.box, wood, 0, .38, 0, .04, .14, .04); A(GEO.sphere, 0x4a9a3a, .1, .4, 0, .1, .04, .06); break;
+    case 'manzana': A(GEO.sphere, 0xd8302a, 0, 0, 0, .36, .34, .36); A(GEO.box, wood, 0, .3, 0, .04, .2, .04); A(GEO.sphere, 0x4a9a3a, .1, .4, 0, .1, .04, .06); break;
     case 'tarro': A(GEO.cyl14, 0xa87a4a, 0, -.3, 0, .26, .6, .26); A(GEO.cyl14, 0xf4efe0, 0, .28, 0, .27, .1, .27); { const h = new THREE.Mesh(new THREE.TorusGeometry(.15, .04, 4, 8), icm(0xa87a4a)); h.position.set(.3, 0, 0); g.add(h); } break;
-    case 'moneda': [0, 1, 2].forEach(i => A(GEO.cyl14, gold, (i % 2)*.05, -.2 + i*.12, 0, .32, .1, .32)); break;
+    case 'moneda': [0, 1, 2].forEach(i => A(GEO.cyl14, gold, (i % 2)*.05, -.2 + i*.1, 0, .32, .1, .32)); break;
     case 'carne': A(GEO.sphere, 0xa84a3a, 0, 0, 0, .34, .3, .24); A(GEO.cyl, 0xf0e6d2, .32, .2, 0, .05, .3, .05, 0, 0, -.8); break;
-    case 'hilo': A(GEO.cyl14, 0x8a2a5a, 0, -.2, 0, .26, .4, .26); [-1, 1].forEach(s => A(GEO.cyl14, wood, 0, s*.22 - .2 + (s > 0 ? .2 : 0), 0, .32, .06, .32)); break;
+    case 'hilo': A(GEO.cyl14, 0x8a2a5a, 0, -.2, 0, .26, .4, .26); [-1, 1].forEach(s => A(GEO.cyl14, wood, 0, s > 0 ? .2 : -.26, 0, .32, .06, .32)); break;
     case 'vasija': return makeSpecialItem('vasija');
     case 'gota': A(GEO.sphere, icm(0x4a8ad8, { r: .2 }), 0, -.1, 0, .3, .3, .3); A(GEO.cone7, icm(0x4a8ad8, { r: .2 }), 0, .1, 0, .2, .4, .2); break;
-    case 'brote': A(GEO.box, 0x3a8a3a, 0, -.2, 0, .04, .5, .04); [-1, 1].forEach(s => A(GEO.sphere, 0x4aaa3a, s*.14, .1, 0, .14, .06, .08, 0, 0, s*.4)); A(GEO.cyl14, 0x6a4a2a, 0, -.5, 0, .3, .1, .3); break;
+    case 'brote': A(GEO.box, 0x3a8a3a, 0, -.42, 0, .04, .72, .04); [-1, 1].forEach(s => A(GEO.sphere, 0x4aaa3a, s*.14, .1, 0, .14, .06, .08, 0, 0, s*.4)); A(GEO.cyl14, 0x6a4a2a, 0, -.5, 0, .3, .1, .3); break;
     case 'silla': A(GEO.box, wood, 0, -.1, 0, .5, .06, .5); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => A(GEO.box, wood, x*.2, -.45, z*.2, .05, .7, .05)); A(GEO.box, wood, 0, .2, -.22, .5, .55, .05); break;
     case 'girasol': A(GEO.box, 0x3a8a3a, 0, -.4, 0, .05, .7, .05); for (let i=0;i<8;i++){ const a = i/8*Math.PI*2; A(GEO.sphere, 0xf2c23a, Math.cos(a)*.22, .15 + Math.sin(a)*.22, 0, .1, .1, .04); } A(GEO.sphere, 0x5a3a1a, 0, .15, .03, .14, .14, .05); break;
     case 'olla': A(GEO.sphere, 0x3a3634, 0, -.1, 0, .4, .3, .4); A(GEO.cyl14, 0xd9a050, 0, .14, 0, .32, .04, .32); break;
     case 'cuerno': case 'cuerno-off': { const h = A(GEO.cone7, gold, 0, -.35, 0, .3, .8, .3, 0, 0, Math.PI/2); if (k === 'cuerno-off'){ A(GEO.box, 0xa82a2a, 0, 0, .2, .9, .08, .04, 0, 0, .7); } break; }
-    case 'check': A(GEO.box, 0x3a9a3a, -.15, -.1, 0, .12, .35, .1, 0, 0, .7); A(GEO.box, 0x3a9a3a, .12, .05, 0, .12, .65, .1, 0, 0, -.6); break;
+    case 'check': A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .38, .1, 0, 0, .7); A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .7, .1, 0, 0, -.6); break;
     case 'cruz': A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, .78); A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, -.78); break;
-    case 'flecha': { const fc = icm(0xf2c23a, { e: 0x5a3a08, ei: .5 }); A(GEO.box, fc, -.18, 0, 0, .5, .2, .12); A(GEO.cone4, fc, .2, 0, 0, .3, .38, .12, 0, 0, -Math.PI/2); break; }
-    case 'flechas': [-1, 1].forEach(s => { A(GEO.box, 0xe8dcc0, 0, s*.15, 0, .6, .08, .06); A(GEO.cone4, 0xe8dcc0, s*.35, s*.15, 0, .14, .2, .06, 0, 0, -s*Math.PI/2); }); break;
+    case 'flecha': { const fc = icm(0xf2c23a, { e: 0x5a3a08, ei: .5 }); A(GEO.box, fc, -.1, 0, 0, .62, .2, .12); A(GEO.cone4, fc, .2, 0, 0, .3, .38, .12, 0, 0, -Math.PI/2); break; }
+    case 'flechas': [-1, 1].forEach(s => { A(GEO.box, 0xe8dcc0, 0, s*.15, 0, .6, .08, .06); A(GEO.cone4, 0xe8dcc0, s*.29, s*.15, 0, .14, .2, .06, 0, 0, -s*Math.PI/2); }); break;
     default: A(GEO.sphere, 0xd8a23a, 0, 0, 0, .3, .3, .3);
   }
   return g;
@@ -2059,7 +2079,7 @@ function chestModel(){
   { const br = mesh(GEO.box, wood, .3, .44, 0, .06, .05, D + .1); br.rotation.x = .12; br.rotation.y = .3; g.add(br); }     // a loose broken slat
   // junk at the bottom
   g.add(mesh(GEO.cyl14, icm(0xc8a040, { m: .5 }), -.3, .1, .16, .07, .02, .07)); g.add(mesh(GEO.cyl14, icm(0xc8a040, { m: .5 }), -.24, .12, .2, .07, .02, .07));
-  { const rope = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 4, 10), icm(0x8a7048)); rope.rotation.x = Math.PI/2; rope.position.set(.28, .12, -.14); g.add(rope); }
+  { const rope = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 4, 10), icm(0x8a7048)); rope.rotation.x = Math.PI/2; rope.position.set(.28, .08, -.14); g.add(rope); }
   AMBOX.lid = null; return g;
 }
 function updateAmuletBox(force){
@@ -6024,7 +6044,7 @@ function useRoadToken(){
   G.freeRoads = 1; G.tokenRoad = false; SFX.click?.(); enterBuild('camino'); G.tokenRoad = true; refresh();
 }
 function initSpecialWin(){
-  SPECW = floatWin({ id: 'specials', store: 'specials3', S: 46, keys: [...SPK, 'caminoP'], side: 'l', x: 4, y: 420, title: k => AMULETS[k] ? `Amuleto · ${AMULETS[k].name}: ${AMULETS[k].desc}${AMULETS[k].tgt === 'passive' ? '' : ' · toca para usarlo'}` : k === 'caminoP' ? 'Camino de regalo · toca para construirlo gratis (no se puede intercambiar)' : SPECIAL[k].name + (SPECIAL[k].biome ? ' · ' + TERRAIN[SPECIAL[k].biome].label : ' · común'), name: k => AMULETS[k] ? AMULETS[k].name.split(' ')[0] : k === 'caminoP' ? 'Camino' : SPECIAL[k].name.split(' ')[0], count: k => !G ? 0 : AMULETS[k] ? amCount(0, k) : k === 'caminoP' ? G.players[0].roadTokens || 0 : (G.players[0].special || {})[k] || 0, model: k => AMULETS[k] ? amuletModel(k) : k === 'caminoP' ? pieceModel('camino') : makeSpecialItem(k), onSlot: k => { if (k === 'caminoP') useRoadToken(); else if (AMULETS[k]) useAmulet(k); } });
+  SPECW = floatWin({ id: 'specials', label: 'Objetos y flores', store: 'specials3', S: 46, keys: [...SPK, 'caminoP'], side: 'l', x: 4, y: 420, title: k => AMULETS[k] ? `Amuleto · ${AMULETS[k].name}: ${AMULETS[k].desc}${AMULETS[k].tgt === 'passive' ? '' : ' · toca para usarlo'}` : k === 'caminoP' ? 'Camino de regalo · toca para construirlo gratis (no se puede intercambiar)' : SPECIAL[k].name + (SPECIAL[k].biome ? ' · ' + TERRAIN[SPECIAL[k].biome].label : ' · común'), name: k => AMULETS[k] ? AMULETS[k].name.split(' ')[0] : k === 'caminoP' ? 'Camino' : SPECIAL[k].name.split(' ')[0], count: k => !G ? 0 : AMULETS[k] ? amCount(0, k) : k === 'caminoP' ? G.players[0].roadTokens || 0 : (G.players[0].special || {})[k] || 0, model: k => AMULETS[k] ? amuletModel(k) : k === 'caminoP' ? pieceModel('camino') : makeSpecialItem(k), onSlot: k => { if (k === 'caminoP') useRoadToken(); else if (AMULETS[k]) useAmulet(k); } });
   SPECW.models();
   const upd = SPECW.update; SPECW.update = () => { const was = SPECW.el.style.display; upd(); let any = false; SPECW.keys.forEach(k => { const n = SPECW.o.count(k); SPECW.slots[k].style.display = n ? '' : 'none'; if (n) any = true; }); SPECW.el.style.display = any ? '' : 'none'; if (was !== SPECW.el.style.display) setTimeout(() => dockWins(SPECW), 0); };
   SPECW.update();
@@ -6079,7 +6099,7 @@ function rewardText(r){
 function assignQuestFor0(){ const keep = G.players.map((P, i) => i); assignQuest(0); }
 // ---------- every town makes its own missions: a random timer per town, 3 to 5 an hour of play ----------
 // G.playT: seconds of play (advanced by whoever is acting); G.qAt: { vid: playT when that town posts its next one }.
-// A town with a mission still open posts nothing new, so they never pile up in one place.
+// A town keeps posting on its timer even while earlier ones are still open.
 const QUEST_GAP = () => 720 + Math.random()*480;   // 12-20 minutes
 function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register' && netAuth()) G.playT = (G.playT || 0) + dt; }
 function villageQuests(){
@@ -6089,7 +6109,7 @@ function villageQuests(){
     if (G.qAt[v.id] === undefined){ G.qAt[v.id] = now + 300 + Math.random()*900; return; }   // a new town: its first one in 5-20 min
     if (now < G.qAt[v.id] || gameRound() <= 4) return;
     G.qAt[v.id] = now + QUEST_GAP();
-    if (!(G.quests || []).some(q => q.vid === v.id && q.state !== 'done')) assignQuest(v.building.p, v.id); });
+    assignQuest(v.building.p, v.id); });
 }
 function assignQuest(force, vid){
   if (!G || G.over || G.setup || gameRound() <= 4 || isClassic()) return;
@@ -6370,8 +6390,8 @@ function floatWin(o){
   const W = { id: o.id, keys: o.keys, slots: {}, cv: {}, pivots: {}, spin: {}, t: 0, acc: 0, S: o.S || 58, h: false, x: o.x, y: o.y, side: o.side || 'l', o, active: null };
   const KEY = 'hexterra-' + (o.store || o.id);
   try { Object.assign(W, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
-  const el = document.createElement('div'); el.id = o.id; el.className = 'fwin'; W.el = el;
-  el.innerHTML = `<div class="ibar"><button class="flip"></button></div><div class="slots">${o.keys.map(k => `<div class="islot zero" data-k="${k}" title="${o.title(k)}"><span class="nm">${o.name ? o.name(k) : o.title(k)}</span><div class="sq"><div class="dia"></div><canvas width="64" height="64"></canvas><b>0</b><em class="need"></em></div></div>`).join('')}</div>${['tl', 'tr', 'bl', 'br'].map(c => `<i class="rs ${c}" data-c="${c}"></i>`).join('')}`;
+  const el = document.createElement('div'); el.id = o.id; el.className = 'fwin edfr'; W.el = el;
+  el.innerHTML = `<div class="ibar"><b class="edtag" title="Arrastra para mover · doble clic: tamaño normal">${o.label || ''}</b><button class="flip"></button></div><div class="slots">${o.keys.map(k => `<div class="islot zero" data-k="${k}" title="${o.title(k)}"><span class="nm">${o.name ? o.name(k) : o.title(k)}</span><div class="sq"><div class="dia"></div><canvas width="64" height="64"></canvas><b>0</b><em class="need"></em></div></div>`).join('')}</div>${['tl', 'tr', 'bl', 'br'].map(c => `<i class="rs ${c}" data-c="${c}"></i>`).join('')}`;
   document.body.appendChild(el);
   o.keys.forEach(k => { const s = el.querySelector(`.islot[data-k="${k}"]`); W.slots[k] = s; W.cv[k] = s.querySelector('canvas').getContext('2d'); W.spin[k] = 0; });
   W.apply = noClamp => {
@@ -6386,9 +6406,10 @@ function floatWin(o){
   W.apply();
   W.save = () => { try { localStorage.setItem(KEY, JSON.stringify({ S: W.S, h: W.h, y: W.y, side: W.side })); } catch {} };
   el.querySelector('.flip').addEventListener('click', e => { e.stopPropagation(); W.h = !W.h; W.apply(); W.save(); SFX.click?.(); });
+  el.querySelector('.edtag').addEventListener('dblclick', e => { e.stopPropagation(); W.S = o.S || 58; W.side = o.side || 'l'; W.apply(); dockWins(W); W.save(); SFX.click?.(); });
   let op = null;
   el.addEventListener('pointerdown', e => {
-    if (e.target.closest('.ibar')) return;
+    if (e.target.closest('.ibar') && !e.target.closest('.edtag')) return;   // the name plate moves the window like the rest of the frame
     e.preventDefault(); e.stopPropagation();
     if (W.payTo){ op = { kind: 'move', x0: e.clientX, y0: e.clientY, moved: 0 }; return; }   // the thief bar: a tap, never a drag
     const rs = e.target.closest('.rs'), r0 = el.getBoundingClientRect();
@@ -6457,9 +6478,9 @@ const invShown = r => G ? Math.max(0, G.players[0].res[r] - INV.pending[r]) : 0;
 let PIECES = null;
 function initInventory(){
   const pending = { madera: 0, ladrillo: 0, lana: 0, trigo: 0, mineral: 0 };
-  INV = floatWin({ id: 'inv', store: 'inv3', S: 54, keys: RES, side: 'l', x: 4, y: 48, title: r => RES_NAME[r], name: r => RES_NAME[r], count: r => invShown(r), model: k => makeResourceItem(k) });
+  INV = floatWin({ id: 'inv', label: 'Recursos', store: 'inv3', S: 54, keys: RES, side: 'l', x: 4, y: 48, title: r => RES_NAME[r], name: r => RES_NAME[r], count: r => invShown(r), model: k => makeResourceItem(k) });
   INV.pending = pending; INV.models();
-  PIECES = floatWin({ id: 'pieces', store: 'pieces3', S: 54, keys: ['camino', 'pueblo', 'ciudad'], side: 'r', x: 4, y: Math.round(($('#corner')?.getBoundingClientRect().bottom || 120) + 8), name: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k], title: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k] + ' (toca para verlos en el tablero)',
+  PIECES = floatWin({ id: 'pieces', label: 'Construcciones', store: 'pieces3', S: 54, keys: ['camino', 'pueblo', 'ciudad'], side: 'r', x: 4, y: Math.round(($('#corner')?.getBoundingClientRect().bottom || 120) + 8), name: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k], title: k => ({ camino: 'Caminos', pueblo: 'Pueblos', ciudad: 'Ciudades' })[k] + ' (toca para verlos en el tablero)',
     count: k => G ? ({ camino: G.players[0].roads, pueblo: G.players[0].pueblos, ciudad: G.players[0].ciudades })[k] : 0,
     model: k => pieceModel(k), onSlot: k => { highlightPieces(PIECES.active === k ? null : k); SFX.click?.(); } });
   PIECES.models();
@@ -7123,7 +7144,7 @@ function shopIcon(kind, color){
     case 'telas': [0x8a2a5a, 0x2a5a8a, 0xc9a040].forEach((c, i) => { const b = mesh(GEO.cyl, c, (i - 1)*.1, -.12, 0, .05, .26, .05); g.add(b); }); break;
     case 'alfareria': { const it = makeSpecialItem('vasija'); it.scale.setScalar(.5); g.add(it); break; }
     case 'carpinteria': { const it = makeResourceItem('madera'); it.scale.setScalar(.45); g.add(it); g.add(mesh(GEO.box, 0x9aa0a8, .05, .12, 0, .26, .06, .015)); break; }
-    case 'mariscos': g.add(mesh(GEO.sphere, 0x8ab0c8, 0, 0, 0, .2, .08, .05)); { const t = mesh(GEO.cone4, 0x6a90a8, .24, -.08, 0, .07, .12, .03); t.rotation.z = Math.PI/2; g.add(t); } g.add(mesh(GEO.sphere, 0x111111, -.13, .02, .04, .015, .015, .01)); break;
+    case 'mariscos': g.add(mesh(GEO.sphere, 0x8ab0c8, 0, 0, 0, .2, .08, .05)); { const t = mesh(GEO.cone4, 0x6a90a8, .31, 0, 0, .07, .12, .03); t.rotation.z = Math.PI/2; g.add(t); } g.add(mesh(GEO.sphere, 0x111111, -.13, .02, .04, .015, .015, .01)); break;
   }
   return g;
 }
@@ -8518,14 +8539,16 @@ function applyGameOpts(){
 // ================= SIMPLE PANELS (used when the first-person view is off): trade window and the thief's discard =================
 function openTrade(tab0, o = {}){
   const P = G.players[0], fixed = o.target !== undefined; let tab = G.current !== 0 || fixed ? 'jug' : (typeof tab0 === 'string' ? tab0 : 'banco'), give = null, get = null, target = fixed ? o.target : G.current !== 0 ? G.current : 'todos';
-  const pg = {}, pw = {}; RES.forEach(r => { pg[r] = 0; pw[r] = 0; });
+  const pg = {}, pw = {}, bl = {}, bw = {}; RES.forEach(r => { pg[r] = 0; pw[r] = 0; bl[r] = 0; bw[r] = 0; });   // bl/bw: lots you give / pieces you get in the comercio
+  const sum = o => Object.values(o).reduce((a, n) => a + n, 0);
   const stp = (k, r, n, max) => `<span class="stp">${RES.includes(r) ? resImg(r) : specImg(r)}<button data-s="${k}|${r}|-" ${n <= 0 ? 'disabled' : ''}>−</button><b>${n}</b><button data-s="${k}|${r}|+" ${max !== undefined && n >= max ? 'disabled' : ''}>+</button></span>`;
   const draw = () => {
     const tabs = fixed ? '' : `<div class="row tabs"><button data-tab="banco" class="${tab === 'banco' ? 'on' : ''}">🏦 Comercio y puertos</button><button data-tab="jug" class="${tab === 'jug' ? 'on' : ''}">🤝 Trueque con jugadores</button></div>`;
     if (tab === 'banco') modalBody.innerHTML = `<h3>Comerciar</h3>${tabs}<p class="muted">En el comercio das 4 iguales por 1. Si tienes un pueblo en un puerto: 3:1 con cualquier recurso o 2:1 con el recurso del puerto.</p>
-    <div class="lbl">Das</div><div class="row">${RES.map(r => { const k = tradeRate(0, r); return `<button data-give="${r}" ${P.res[r] < k ? 'disabled' : ''} class="${give === r ? 'on' : ''}">${resImg(r)} ${P.res[r]}<small>${k}:1${k < 4 ? ' ⚓' : ''}</small></button>`; }).join('')}</div>
-    <div class="lbl">Recibes 1 de</div><div class="row">${RES.map(r => `<button data-get="${r}" ${r === give ? 'disabled' : ''} class="${get === r ? 'on' : ''}">${resImg(r)} ${RES_NAME[r]}</button>`).join('')}</div>
-    <div class="row end"><button data-x="1">Cancelar</button><button class="primary" data-ok="1" ${give && get ? '' : 'disabled'}>Cambiar</button></div>`;
+    <div class="lbl">Das <small class="muted">(cada + es un lote)</small></div><div class="row">${RES.map(r => { const k = tradeRate(0, r); return `<span class="stp">${resImg(r)}<button data-s="bl|${r}|-" ${bl[r] <= 0 ? 'disabled' : ''}>−</button><b>${bl[r]*k}</b><button data-s="bl|${r}|+" ${(bl[r] + 1)*k > P.res[r] ? 'disabled' : ''}>+</button><small>${k}:1${k < 4 ? ' ⚓' : ''}</small></span>`; }).join('')}</div>
+    <div class="lbl">Recibes</div><div class="row">${RES.map(r => `<span class="stp">${resImg(r)}<button data-s="bw|${r}|-" ${bw[r] <= 0 ? 'disabled' : ''}>−</button><b>${bw[r]}</b><button data-s="bw|${r}|+" ${sum(bw) >= Math.max(1, sum(bl)) ? 'disabled' : ''}>+</button></span>`).join('')}</div>
+    <p class="muted">${sum(bl) && sum(bl) !== sum(bw) ? `Das para <b>${sum(bl)}</b> y pides <b>${sum(bw)}</b>: iguala las cantidades.` : sum(bl) ? `Das ${resList(Object.fromEntries(RES.map(r => [r, bl[r]*tradeRate(0, r)])))} y recibes ${resList(bw)}.` : 'Puedes cambiar varios recursos a la vez.'}</p>
+    <div class="row end"><button data-x="1">Cancelar</button><button class="primary" data-ok="1" ${sum(bl) && sum(bl) === sum(bw) ? '' : 'disabled'}>Cambiar</button></div>`;
     else modalBody.innerHTML = `<h3>${fixed ? `<i class="dot" style="background:${G.players[target].color}"></i> Trueque con ${G.players[target].name}` : 'Comerciar'}</h3>${tabs}<p class="muted">${fixed ? `Elige qué das y qué pides. Si ${G.players[target].name} acepta, un mensajero a caballo hará el intercambio.` : 'Ofrece recursos a los demás jugadores. Ellos deciden si les conviene.'}</p>
     <div class="lbl">Das</div><div class="row">${RES.map(r => stp('g', r, pg[r], P.res[r])).join('')}</div>
     ${SPK.some(k => (P.special || {})[k]) ? `<div class="lbl">Das flores y objetos</div><div class="row">${SPK.filter(k => (P.special || {})[k]).map(k => stp('g', k, pg[k] || 0, P.special[k])).join('')}</div>` : ''}
@@ -8541,11 +8564,14 @@ function openTrade(tab0, o = {}){
     if (b.dataset.tab){ if (G.current !== 0 && b.dataset.tab === 'banco') return; tab = b.dataset.tab; draw(); }
     else if (b.dataset.give){ give = b.dataset.give; if (get === give) get = null; draw(); }
     else if (b.dataset.get){ get = b.dataset.get; draw(); }
-    else if (b.dataset.s){ const [k, r, op] = b.dataset.s.split('|'), o = k === 'g' ? pg : pw; o[r] = Math.max(0, (o[r] || 0) + (op === '+' ? 1 : -1)); if (k === 'g' && pw[r]) pw[r] = 0; if (k === 'w' && pg[r]) pg[r] = 0; draw(); }
+    else if (b.dataset.s){ const [k, r, op] = b.dataset.s.split('|'), o = { g: pg, w: pw, bl, bw }[k]; o[r] = Math.max(0, (o[r] || 0) + (op === '+' ? 1 : -1)); if (k === 'g' && pw[r]) pw[r] = 0; if (k === 'w' && pg[r]) pg[r] = 0; if (k === 'bl' && bw[r]) bw[r] = 0; if (k === 'bw' && bl[r]) bl[r] = 0; while (sum(bw) > Math.max(1, sum(bl))){ const x = RES.find(q => bw[q] > 0); bw[x]--; } draw(); }
     else if (b.dataset.t){ target = b.dataset.t === 'todos' ? 'todos' : +b.dataset.t; draw(); }
     else if (b.dataset.x) closeModal();
     else if (b.dataset.send){ closeModal(); proposeTrade(target, { ...pg }, { ...pw }); }
-    else if (b.dataset.ok){ const k = tradeRate(0, give); SFX.trade(); P.res[give] -= k; P.res[get] += 1; notify(`Cambiaste ${k} ${resImg(give)} por 1 ${resImg(get)} ${k < 4 ? 'en tu puerto' : 'en el comercio'}`, P.color); closeModal(); refresh(); }
+    else if (b.dataset.ok){ const gave = Object.fromEntries(RES.filter(r => bl[r]).map(r => [r, bl[r]*tradeRate(0, r)])), port = Object.keys(gave).some(r => tradeRate(0, r) < 4);
+      if (!sum(bl) || sum(bl) !== sum(bw) || Object.entries(gave).some(([r, n]) => P.res[r] < n)) return;
+      SFX.trade(); Object.entries(gave).forEach(([r, n]) => P.res[r] -= n); RES.forEach(r => P.res[r] += bw[r]);
+      notify(`Cambiaste ${resList(gave)} por ${resList(bw)} ${port ? 'en tu puerto' : 'en el comercio'}`, P.color); closeModal(); refresh(); }
   };
 }
 async function proposeTrade(target, give, want){
@@ -9587,29 +9613,53 @@ function cornerBottom(){ const c = $('#corner'); if (c) document.documentElement
 try { Object.assign(KSIZE, JSON.parse(localStorage.getItem('hexterra-ksize') || '{}')); } catch {}
 Object.keys(KSIZE).forEach(k => KSIZE[k] = clamp(+KSIZE[k] || 1, KLIM[k][0], KLIM[k][1]));
 applyK(); addEventListener('resize', () => setTimeout(cornerBottom, 50));
-function addGrip(el, key, dirFn){
-  if (!el || el.querySelector(':scope > .rzgrip')) return; const g = document.createElement('i'); g.className = 'rzgrip'; g.title = 'Arrastra para cambiar el tamaño'; el.appendChild(g);
-  let op = null;
-  g.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY, k: KSIZE[key] }; g.classList.add('on'); try { g.setPointerCapture(e.pointerId); } catch {} });
-  g.addEventListener('pointermove', e => { if (!op) return; const d = dirFn(e.clientX - op.x, e.clientY - op.y), L = KLIM[key], prev = KSIZE[key]; KSIZE[key] = clamp(op.k*(1 + d/260), L[0], L[1]); applyK();
-    const r = el.getBoundingClientRect(); if (KSIZE[key] > prev && (r.width > innerWidth*L[2] || r.height > innerHeight*L[3])){ KSIZE[key] = prev; applyK(); } g.classList.toggle('lim', KSIZE[key] <= L[0] + .001 || KSIZE[key] === prev); });
-  const end = () => { if (!op) return; op = null; g.classList.remove('on'); try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); };
-  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
-  g.addEventListener('click', e => e.stopPropagation(), true);
+// ---------- one way to edit every board panel: brass frame on hover, a name plate to move it, four corners to resize ----------
+// (the floating inventories build the same pieces themselves: ui/inventory.js). Double click on the plate = back to normal.
+function edCorners(el, onDown, onMove, onEnd){
+  ['tl', 'tr', 'bl', 'br'].forEach(c => { const h = document.createElement('i'); h.className = 'edc ' + c; h.dataset.c = c; h.title = 'Arrastra para cambiar el tamaño'; el.appendChild(h);
+    let op = null;
+    h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; onDown(); el.classList.add('edit'); try { h.setPointerCapture(e.pointerId); } catch {} });
+    h.addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x, dy = e.clientY - op.y; onMove((c[1] === 'r' ? dx : -dx) + (c[0] === 'b' ? dy : -dy)); });
+    const end = () => { if (!op) return; op = null; el.classList.remove('edit'); onEnd(); }; h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
+    h.addEventListener('click', e => e.stopPropagation(), true); });
 }
+function edTag(el, name, onReset){ const t = document.createElement('b'); t.className = 'edtag'; t.textContent = name; t.title = 'Arrastra para mover · doble clic: tamaño y lugar normales'; el.appendChild(t);
+  t.addEventListener('dblclick', e => { e.stopPropagation(); onReset(); SFX.click?.(); }); return t; }
+function addGrip(el, key, name, move){
+  if (!el || el.querySelector(':scope > .edc')) return; el.classList.add('edfr');
+  // hover by position: these panels let clicks through (pointer-events:none) and other layers may sit on top of them
+  addEventListener('pointermove', e => { if (e.buttons) return; const r = el.getBoundingClientRect(), m = 14, on = r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - 30 && e.clientY < r.bottom + m; el.classList.toggle('hov', on); }, { passive: true });
+  let k0 = 1;
+  edCorners(el, () => { k0 = KSIZE[key]; }, d => { const L = KLIM[key], prev = KSIZE[key]; KSIZE[key] = clamp(k0*(1 + d/260), L[0], L[1]); applyK();
+      const r = el.getBoundingClientRect(); if (KSIZE[key] > prev && (r.width > innerWidth*L[2] || r.height > innerHeight*L[3])){ KSIZE[key] = prev; applyK(); } },
+    () => { try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
+  const t = edTag(el, name, () => { KSIZE[key] = 1; applyK(); if (move && move.reset) move.reset(); try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
+  if (move && move.drag){ let op = null;
+    t.addEventListener('pointerdown', e => { if (e.button) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; move.start(); el.classList.add('edit', 'drag'); try { t.setPointerCapture(e.pointerId); } catch {} });
+    t.addEventListener('pointermove', e => { if (op) move.drag(e.clientX - op.x, e.clientY - op.y); });
+    const end = () => { if (!op) return; op = null; el.classList.remove('edit', 'drag'); move.end(); }; t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); }
+}
+// the action bar can also be moved (kept fully on screen)
+const HBPOS = (() => { try { return JSON.parse(localStorage.getItem('hexterra-hbpos') || '{}'); } catch { return {}; } })();
+function applyHbPos(){ const h = $('#hexbar'); if (!h) return; let x = HBPOS.x || 0, y = HBPOS.y || 0; h.style.setProperty('--hb-x', '0px'); h.style.setProperty('--hb-y', '0px');
+  const r = h.getBoundingClientRect(); x = clamp(x, -r.left, innerWidth - r.right); y = clamp(y, -r.top + 40, innerHeight - r.bottom); HBPOS.x = x; HBPOS.y = y;
+  h.style.setProperty('--hb-x', x + 'px'); h.style.setProperty('--hb-y', y + 'px'); }
+const HB_MOVE = { s: null, start(){ this.s = { x: HBPOS.x || 0, y: HBPOS.y || 0 }; }, drag(dx, dy){ HBPOS.x = this.s.x + dx; HBPOS.y = this.s.y + dy; applyHbPos(); },
+  end(){ try { localStorage.setItem('hexterra-hbpos', JSON.stringify(HBPOS)); } catch {} }, reset(){ HBPOS.x = 0; HBPOS.y = 0; applyHbPos(); this.end(); } };
+addEventListener('resize', () => setTimeout(applyHbPos, 60));
 let CORNER_SIDE = (() => { try { return localStorage.getItem('hexterra-corner') || 'r'; } catch { return 'r'; } })();
 function layoutCorner(){
   let c = $('#corner'); if (!c){ c = document.createElement('div'); c.id = 'corner'; document.body.appendChild(c); cornerDrag(c); }
   const order = CORNER_SIDE === 'r' ? ['#news-board', '#quest-icon', '#players', '#hud-right'] : ['#hud-right', '#players', '#news-board', '#quest-icon'];
   c.append(...order.map(q => $(q)).filter(Boolean));
   c.style.left = c.style.right = ''; c.classList.toggle('left', CORNER_SIDE === 'l'); document.body.dataset.corner = CORNER_SIDE;
-  addGrip(c, 'corner', (dx, dy) => (CORNER_SIDE === 'r' ? -dx : dx) + dy); addGrip($('#hud-right'), 'hud', (dx, dy) => dy);
+  addGrip(c, 'corner', 'Jugadores', { start(){}, drag(){}, end(){}, reset(){ CORNER_SIDE = 'r'; try { localStorage.setItem('hexterra-corner', 'r'); } catch {} layoutCorner(); } });   // moved by dragging the signs themselves (cornerDrag)
   setTimeout(() => { cornerBottom(); if (typeof dockWins === 'function') dockWins(); }, 0);
 }
 // the whole group of signs can be dragged; it sticks to the closest side (board / missions icons always face the center)
 function cornerDrag(c){
   let op = null, block = false;
-  c.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.rzgrip')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
+  c.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.edc')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
   addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x0; op.moved = Math.max(op.moved, Math.abs(dx) + Math.abs(e.clientY - op.y0));
     if (op.moved > 8){ c.classList.add('drag'); c.style.right = 'auto'; c.style.left = (op.l + dx) + 'px'; c.style.transformOrigin = 'top left'; } });
   addEventListener('pointerup', () => { if (!op) return; const moved = op.moved > 8; op = null; if (!moved) return;
@@ -9632,7 +9682,7 @@ initInventory();
 initSpecialWin();
 initQuestPanel();
 initHexbar();
-addGrip($('#hexbar'), 'hex', (dx, dy) => dx - dy);
+addGrip($('#hexbar'), 'hex', 'Acciones', HB_MOVE); applyHbPos();
 initCardFan(); initAmuletBox();
 renderCardArt();
 (document.fonts?.ready || Promise.resolve()).then(() => { renderCardArt(); renderFan(); });

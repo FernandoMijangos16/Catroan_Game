@@ -50,7 +50,7 @@ function shopIcon(kind, color){
     case 'telas': [0x8a2a5a, 0x2a5a8a, 0xc9a040].forEach((c, i) => { const b = mesh(GEO.cyl, c, (i - 1)*.1, -.12, 0, .05, .26, .05); g.add(b); }); break;
     case 'alfareria': { const it = makeSpecialItem('vasija'); it.scale.setScalar(.5); g.add(it); break; }
     case 'carpinteria': { const it = makeResourceItem('madera'); it.scale.setScalar(.45); g.add(it); g.add(mesh(GEO.box, 0x9aa0a8, .05, .12, 0, .26, .06, .015)); break; }
-    case 'mariscos': g.add(mesh(GEO.sphere, 0x8ab0c8, 0, 0, 0, .2, .08, .05)); { const t = mesh(GEO.cone4, 0x6a90a8, .24, -.08, 0, .07, .12, .03); t.rotation.z = Math.PI/2; g.add(t); } g.add(mesh(GEO.sphere, 0x111111, -.13, .02, .04, .015, .015, .01)); break;
+    case 'mariscos': g.add(mesh(GEO.sphere, 0x8ab0c8, 0, 0, 0, .2, .08, .05)); { const t = mesh(GEO.cone4, 0x6a90a8, .31, 0, 0, .07, .12, .03); t.rotation.z = Math.PI/2; g.add(t); } g.add(mesh(GEO.sphere, 0x111111, -.13, .02, .04, .015, .015, .01)); break;
   }
   return g;
 }

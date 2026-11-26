@@ -24,29 +24,53 @@ function cornerBottom(){ const c = $('#corner'); if (c) document.documentElement
 try { Object.assign(KSIZE, JSON.parse(localStorage.getItem('hexterra-ksize') || '{}')); } catch {}
 Object.keys(KSIZE).forEach(k => KSIZE[k] = clamp(+KSIZE[k] || 1, KLIM[k][0], KLIM[k][1]));
 applyK(); addEventListener('resize', () => setTimeout(cornerBottom, 50));
-function addGrip(el, key, dirFn){
-  if (!el || el.querySelector(':scope > .rzgrip')) return; const g = document.createElement('i'); g.className = 'rzgrip'; g.title = 'Arrastra para cambiar el tamaño'; el.appendChild(g);
-  let op = null;
-  g.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY, k: KSIZE[key] }; g.classList.add('on'); try { g.setPointerCapture(e.pointerId); } catch {} });
-  g.addEventListener('pointermove', e => { if (!op) return; const d = dirFn(e.clientX - op.x, e.clientY - op.y), L = KLIM[key], prev = KSIZE[key]; KSIZE[key] = clamp(op.k*(1 + d/260), L[0], L[1]); applyK();
-    const r = el.getBoundingClientRect(); if (KSIZE[key] > prev && (r.width > innerWidth*L[2] || r.height > innerHeight*L[3])){ KSIZE[key] = prev; applyK(); } g.classList.toggle('lim', KSIZE[key] <= L[0] + .001 || KSIZE[key] === prev); });
-  const end = () => { if (!op) return; op = null; g.classList.remove('on'); try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); };
-  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
-  g.addEventListener('click', e => e.stopPropagation(), true);
+// ---------- one way to edit every board panel: brass frame on hover, a name plate to move it, four corners to resize ----------
+// (the floating inventories build the same pieces themselves: ui/inventory.js). Double click on the plate = back to normal.
+function edCorners(el, onDown, onMove, onEnd){
+  ['tl', 'tr', 'bl', 'br'].forEach(c => { const h = document.createElement('i'); h.className = 'edc ' + c; h.dataset.c = c; h.title = 'Arrastra para cambiar el tamaño'; el.appendChild(h);
+    let op = null;
+    h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; onDown(); el.classList.add('edit'); try { h.setPointerCapture(e.pointerId); } catch {} });
+    h.addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x, dy = e.clientY - op.y; onMove((c[1] === 'r' ? dx : -dx) + (c[0] === 'b' ? dy : -dy)); });
+    const end = () => { if (!op) return; op = null; el.classList.remove('edit'); onEnd(); }; h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
+    h.addEventListener('click', e => e.stopPropagation(), true); });
 }
+function edTag(el, name, onReset){ const t = document.createElement('b'); t.className = 'edtag'; t.textContent = name; t.title = 'Arrastra para mover · doble clic: tamaño y lugar normales'; el.appendChild(t);
+  t.addEventListener('dblclick', e => { e.stopPropagation(); onReset(); SFX.click?.(); }); return t; }
+function addGrip(el, key, name, move){
+  if (!el || el.querySelector(':scope > .edc')) return; el.classList.add('edfr');
+  // hover by position: these panels let clicks through (pointer-events:none) and other layers may sit on top of them
+  addEventListener('pointermove', e => { if (e.buttons) return; const r = el.getBoundingClientRect(), m = 14, on = r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - 30 && e.clientY < r.bottom + m; el.classList.toggle('hov', on); }, { passive: true });
+  let k0 = 1;
+  edCorners(el, () => { k0 = KSIZE[key]; }, d => { const L = KLIM[key], prev = KSIZE[key]; KSIZE[key] = clamp(k0*(1 + d/260), L[0], L[1]); applyK();
+      const r = el.getBoundingClientRect(); if (KSIZE[key] > prev && (r.width > innerWidth*L[2] || r.height > innerHeight*L[3])){ KSIZE[key] = prev; applyK(); } },
+    () => { try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
+  const t = edTag(el, name, () => { KSIZE[key] = 1; applyK(); if (move && move.reset) move.reset(); try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
+  if (move && move.drag){ let op = null;
+    t.addEventListener('pointerdown', e => { if (e.button) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; move.start(); el.classList.add('edit', 'drag'); try { t.setPointerCapture(e.pointerId); } catch {} });
+    t.addEventListener('pointermove', e => { if (op) move.drag(e.clientX - op.x, e.clientY - op.y); });
+    const end = () => { if (!op) return; op = null; el.classList.remove('edit', 'drag'); move.end(); }; t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); }
+}
+// the action bar can also be moved (kept fully on screen)
+const HBPOS = (() => { try { return JSON.parse(localStorage.getItem('hexterra-hbpos') || '{}'); } catch { return {}; } })();
+function applyHbPos(){ const h = $('#hexbar'); if (!h) return; let x = HBPOS.x || 0, y = HBPOS.y || 0; h.style.setProperty('--hb-x', '0px'); h.style.setProperty('--hb-y', '0px');
+  const r = h.getBoundingClientRect(); x = clamp(x, -r.left, innerWidth - r.right); y = clamp(y, -r.top + 40, innerHeight - r.bottom); HBPOS.x = x; HBPOS.y = y;
+  h.style.setProperty('--hb-x', x + 'px'); h.style.setProperty('--hb-y', y + 'px'); }
+const HB_MOVE = { s: null, start(){ this.s = { x: HBPOS.x || 0, y: HBPOS.y || 0 }; }, drag(dx, dy){ HBPOS.x = this.s.x + dx; HBPOS.y = this.s.y + dy; applyHbPos(); },
+  end(){ try { localStorage.setItem('hexterra-hbpos', JSON.stringify(HBPOS)); } catch {} }, reset(){ HBPOS.x = 0; HBPOS.y = 0; applyHbPos(); this.end(); } };
+addEventListener('resize', () => setTimeout(applyHbPos, 60));
 let CORNER_SIDE = (() => { try { return localStorage.getItem('hexterra-corner') || 'r'; } catch { return 'r'; } })();
 function layoutCorner(){
   let c = $('#corner'); if (!c){ c = document.createElement('div'); c.id = 'corner'; document.body.appendChild(c); cornerDrag(c); }
   const order = CORNER_SIDE === 'r' ? ['#news-board', '#quest-icon', '#players', '#hud-right'] : ['#hud-right', '#players', '#news-board', '#quest-icon'];
   c.append(...order.map(q => $(q)).filter(Boolean));
   c.style.left = c.style.right = ''; c.classList.toggle('left', CORNER_SIDE === 'l'); document.body.dataset.corner = CORNER_SIDE;
-  addGrip(c, 'corner', (dx, dy) => (CORNER_SIDE === 'r' ? -dx : dx) + dy); addGrip($('#hud-right'), 'hud', (dx, dy) => dy);
+  addGrip(c, 'corner', 'Jugadores', { start(){}, drag(){}, end(){}, reset(){ CORNER_SIDE = 'r'; try { localStorage.setItem('hexterra-corner', 'r'); } catch {} layoutCorner(); } });   // moved by dragging the signs themselves (cornerDrag)
   setTimeout(() => { cornerBottom(); if (typeof dockWins === 'function') dockWins(); }, 0);
 }
 // the whole group of signs can be dragged; it sticks to the closest side (board / missions icons always face the center)
 function cornerDrag(c){
   let op = null, block = false;
-  c.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.rzgrip')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
+  c.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.edc')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
   addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x0; op.moved = Math.max(op.moved, Math.abs(dx) + Math.abs(e.clientY - op.y0));
     if (op.moved > 8){ c.classList.add('drag'); c.style.right = 'auto'; c.style.left = (op.l + dx) + 'px'; c.style.transformOrigin = 'top left'; } });
   addEventListener('pointerup', () => { if (!op) return; const moved = op.moved > 8; op = null; if (!moved) return;
@@ -69,7 +93,7 @@ initInventory();
 initSpecialWin();
 initQuestPanel();
 initHexbar();
-addGrip($('#hexbar'), 'hex', (dx, dy) => dx - dy);
+addGrip($('#hexbar'), 'hex', 'Acciones', HB_MOVE); applyHbPos();
 initCardFan(); initAmuletBox();
 renderCardArt();
 (document.fonts?.ready || Promise.resolve()).then(() => { renderCardArt(); renderFan(); });
