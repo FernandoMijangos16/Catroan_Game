@@ -24,5 +24,8 @@ npm run dist         # las tres salidas
 - El Wine local de CachyOS se queda colgado al generar el desinstalador de NSIS; por eso los .exe se hacen con Docker.
 - Los .exe no van firmados: Windows muestra SmartScreen ("Windows protegió su PC") la primera vez. Se abre con
   **Más información → Ejecutar de todas formas**. Firmarlos requiere un certificado de firma de código (de pago).
-- La primera vez que el anfitrión crea una partida **Local**, Windows pregunta si Catroan puede usar la red: hay que
-  permitir **redes privadas**. Si no, los demás no lo encuentran.
+- **Firewall (partidas Local, puerto 47213):** al elegir Local, la carta revisa el firewall del anfitrión.
+  - Windows: si falta la regla "SwapHolm LAN", el botón **Permitir en el firewall** la agrega por puerto (sirve para
+    la portátil y la instalada) con el aviso de administrador de Windows, una sola vez.
+  - Linux: si `ufw` o `firewalld` están activos, muestra el comando para abrir el puerto (`sudo ufw allow 47213/tcp`)
+    con botón para copiarlo; el juego no puede hacerlo solo porque pide contraseña.
