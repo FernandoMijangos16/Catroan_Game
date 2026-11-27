@@ -107,6 +107,7 @@ function endTurn(){
   }
   refresh();
   if (NG.on){ netFlush(true); netKick(); return; }
+  autoSave();   // solo games keep themselves saved at every turn (core/save.js)
   if (P.bot) botTurn(G.current);
   else { notify('🔔 <b>Es tu turno</b>' + (mode !== 'board' ? ' · vuelve al tablero para jugar' : ''), P.color, 'sys'); SFX.turn(); }
 }

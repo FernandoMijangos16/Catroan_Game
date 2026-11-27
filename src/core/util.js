@@ -9,7 +9,14 @@ const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 // Nothing is decided for the player — only the waiting is cut.
 const SKIP = { until: 0, timers: new Set() };
 const skipping = () => performance.now() < SKIP.until;
-const wait = ms => new Promise(r => { if (skipping()) ms = Math.min(ms, 40); const t = { r }; t.id = setTimeout(() => { SKIP.timers.delete(t); r(); }, ms); SKIP.timers.add(t); });
+// pause (ui/pause.js): a wait that ends while paused is held until the game resumes; PAUSE.gen changes when the game is
+// thrown away (restart, continue, exit), and waits from the old game then never end, so nothing stale runs on the new one
+const PAUSE = { on: false, frozen: false, q: [], gen: 0, at: 0 };
+const PREFS = { fast: false };
+try { PREFS.fast = localStorage.getItem('hexterra-fast') === '1'; } catch {}
+const wait = ms => new Promise(res => { if (skipping()) ms = Math.min(ms, 40); else if (PREFS.fast) ms *= .5;
+  const gen = PAUSE.gen, r = () => { if (gen !== PAUSE.gen) return; if (PAUSE.frozen) PAUSE.q.push(res); else res(); };
+  const t = { r }; t.id = setTimeout(() => { SKIP.timers.delete(t); r(); }, ms); SKIP.timers.add(t); });
 function skipAnims(){
   SKIP.until = performance.now() + 1200;
   SKIP.timers.forEach(t => { clearTimeout(t.id); t.r(); }); SKIP.timers.clear();

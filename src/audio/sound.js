@@ -6,7 +6,7 @@ function audioInit(){
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   try { SND.ctx = new AC(); } catch { return; }
   const c = SND.ctx;
-  SND.master = c.createGain(); SND.master.gain.value = SND.on ? .8 : 0;
+  SND.master = c.createGain(); SND.master.gain.value = SND.on ? .8*SND.vol : 0;
   const comp = c.createDynamicsCompressor(); SND.master.connect(comp); comp.connect(c.destination);
   const nb = c.createBuffer(1, c.sampleRate*2, c.sampleRate), d = nb.getChannelData(0);
   for (let i=0;i<d.length;i++) d[i] = Math.random()*2 - 1;
@@ -33,8 +33,11 @@ function audioInit(){
 }
 function setSound(on){
   SND.on = on; try { localStorage.setItem('hexterra-sound', on ? 'on' : 'off'); } catch {}
-  if (SND.master) SND.master.gain.setTargetAtTime(on ? .8 : 0, SND.ctx.currentTime, .1);
+  if (SND.master) SND.master.gain.setTargetAtTime(on ? .8*SND.vol : 0, SND.ctx.currentTime, .1);
 }
+// overall volume, 0..1 (pause menu → Ajustes)
+SND.vol = 1; try { const v = parseFloat(localStorage.getItem('hexterra-vol')); if (v >= 0 && v <= 1) SND.vol = v; } catch {}
+function setVolume(v){ SND.vol = clamp(v, 0, 1); try { localStorage.setItem('hexterra-vol', String(SND.vol)); } catch {} if (SND.master && SND.on) SND.master.gain.setTargetAtTime(.8*SND.vol, SND.ctx.currentTime, .05); }
 const sndOk = () => SND.ctx && SND.on && SND.ctx.state === 'running';
 function tone(freq, dur, type='sine', vol=.2, o={}){
   if (!sndOk()) return;

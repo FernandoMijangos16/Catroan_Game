@@ -138,6 +138,15 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
 - Las animaciones son suaves (con aceleración y frenado) y los avisos se mantienen cortos.
 - **Las vistas del menú se encogen solas si no caben** en la altura de la ventana (`fitMenuView` en `ui/menu.js`); si
   agregas o muestras filas en una vista, llama `fitMenuView()` después.
+- **Menú de pausa** (`ui/pause.js`): Esc (si no hay nada que cerrar antes) o el engrane de arriba a la derecha. Capa
+  oscura sobre el juego, PAUSA con recursos en el lugar del título y las opciones con la letra del menú: Reanudar,
+  Guardar, Guardar y salir, Reiniciar (con confirmación), Ajustes (volumen `hexterra-vol`, pantalla completa,
+  animaciones rápidas `hexterra-fast`), Ayuda (pendiente) y Salir; abajo un resumen (ronda, evento, puntos).
+  - Sin conexión todo se detiene: `PAUSE.frozen` retiene cada `wait()` y el bucle solo dibuja. **Usa `wait()` para
+    esperar en el juego**, no `setTimeout`, o eso seguirá corriendo en pausa.
+  - En línea solo oscurece (los demás siguen) y no hay Guardar ni Reiniciar.
+  - Salir y Reiniciar recargan la página (`PAUSE.gen` corta las esperas viejas); Reiniciar deja sus opciones en
+    `sessionStorage` y `restartPending` abre la partida nueva al arrancar.
 - **Doble clic omite animaciones** (`skipAnims` en `core/util.js`): usa `wait()` para esperar (se puede interrumpir) y
   las escenas avanzan con `dt` en el bucle; así todo lo nuevo también se puede omitir.
 
@@ -189,10 +198,12 @@ Antes de cada uno, comparte tus dudas con Fernando.
    línea la semilla va con el tablero del anfitrión. Dados, mazo, bots, hallazgos y misiones siguen con `Math.random`.
    El **tutorial** sí será fijo en todo (dados, bots, mazo): eso se hace con el pendiente 9.
 4. **Clave de mapa:** un código para repetir o compartir el mismo tablero.
-5. **Guardar y continuar.**
-   - Guarda en `localStorage` (`hexterra-save`) con el mismo formato del estado en línea (`netSnap`) y restaura
-     reconstruyendo el tablero (como `netApply`).
-   - En el menú aparece "Continuar" si hay partida guardada.
+5. ~~**Guardar y continuar**~~ **hecho** (`core/save.js`). Una ranura (`hexterra-save`), solo partidas sin conexión.
+   - Formato: el estado en línea (`netSnap` con el asiento 0) + tablero (tipos, números, puertos, semilla) + opciones.
+     Continuar reconstruye con `newGame(n, board, seed)` y aplica el estado con `netApply`.
+   - Se guarda solo al terminar cada turno (`autoSave` en `endTurn`). "Guardar" en la pausa guarda el momento si es
+     tranquilo (`calmNow`: tu turno, nada a medias); si no, queda el guardado del inicio del turno. Ganar lo borra.
+   - En el menú aparece "Continuar" (con ronda y fecha) si hay partida guardada.
 6. **Pantalla final con estadísticas:** qué números salieron, robos, intercambios y de dónde vino cada punto.
 7. ~~**Dificultad de bots**~~ **hecho** (`BOT_LEVELS` en `core/bots.js`): fila **Dificultad: Fácil · Normal · Difícil** en
    la vista Jugar (se guarda en `hexterra-botlvl`; en línea la elige el anfitrión, que es quien mueve a los bots; se

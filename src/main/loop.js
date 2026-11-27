@@ -5,6 +5,7 @@ function draw(sc){ if (sc.userData.env){ applyEnv(sc.userData.env, 0, clock.elap
 let pulseT = 0;
 renderer.setAnimationLoop(() => {
   const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
+  if (PAUSE.frozen){ stepMini(raw); const sc = mode === 'village' && villageCtx ? villageCtx.sc : mode === 'market' && marketCtx ? marketCtx.sc : boardScene; if (sc) draw(sc); return; }   // paused: the game stands still under the dark layer
   WIND.value = t; stepInventory(raw); stepMini(raw); stepHexbar(raw); stepHighlight(t);
   advanceDay(dt); updateAudio(Math.min(raw, .1), t); tickPlayTime(Math.min(raw, 1)); seasonStep(dt, t);
   if ((uiT += raw) > .5){ uiT = 0; const [ik, tx] = dayLabel(), bt = $('#b-time'); if (bt.dataset.ic !== ik){ bt.dataset.ic = ik; bt.innerHTML = ic(ik) + '<span></span>'; } bt.lastChild.textContent = ' ' + tx; }

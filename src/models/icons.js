@@ -68,6 +68,10 @@ function iconModel(k){
     case 'silla': A(GEO.box, wood, 0, -.1, 0, .5, .06, .5); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => A(GEO.box, wood, x*.2, -.45, z*.2, .05, .7, .05)); A(GEO.box, wood, 0, .2, -.22, .5, .55, .05); break;
     case 'girasol': A(GEO.box, 0x3a8a3a, 0, -.4, 0, .05, .7, .05); for (let i=0;i<8;i++){ const a = i/8*Math.PI*2; A(GEO.sphere, 0xf2c23a, Math.cos(a)*.22, .15 + Math.sin(a)*.22, 0, .1, .1, .04); } A(GEO.sphere, 0x5a3a1a, 0, .15, .03, .14, .14, .05); break;
     case 'olla': A(GEO.sphere, 0x3a3634, 0, -.1, 0, .4, .3, .4); A(GEO.cyl14, 0xd9a050, 0, .14, 0, .32, .04, .32); break;
+    case 'engrane': { const W = new THREE.Group(); W.rotation.x = Math.PI/2; g.add(W); const ring = (geo, c, y, sx, sy, sz, ry = 0) => { const m = mesh(geo, c, 0, y, 0, sx, sy, sz, false); m.rotation.y = ry; W.add(m); };
+      ring(GEO.cyl, gold, 0, .52, .16, .52); ring(GEO.cyl, dark, 0, .17, .18, .17);   // brass wheel with a dark hub hole
+      for (let i=0;i<8;i++){ const a = i*Math.PI/4, m = mesh(GEO.box, gold, Math.cos(a)*.56, 0, Math.sin(a)*.56, .2, .16, .16, false); m.rotation.y = -a; W.add(m); }
+      break; }
     case 'cuerno': case 'cuerno-off': { const h = A(GEO.cone7, gold, 0, -.35, 0, .3, .8, .3, 0, 0, Math.PI/2); if (k === 'cuerno-off'){ A(GEO.box, 0xa82a2a, 0, 0, .2, .9, .08, .04, 0, 0, .7); } break; }
     case 'check': A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .38, .1, 0, 0, .7); A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .7, .1, 0, 0, -.6); break;
     case 'cruz': A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, .78); A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, -.78); break;

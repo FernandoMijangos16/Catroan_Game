@@ -7,6 +7,7 @@ const GLYPHS = {
   H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
   L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
   M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
+  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
 };
 // ---------- the SwapHolm wordmark: letters piled out of one resource; the O is a little tile of the biome that gives it ----------
 const LOGO_BIOMES = ['bosque', 'pradera', 'cerro', 'campo', 'montana'];
@@ -47,11 +48,12 @@ function resourceLetter(res, spots, size, rnd){
     at.forEach((a, k) => im.setMatrixAt(k, m.multiplyMatrices(a, o.matrixWorld))); im.frustumCulled = false; g.add(im); });
   return g;
 }
-function buildWordmark(biome){
-  const word = 'SWAPHOLM', cs = .1, gap = 6, letters = [], rnd = mulberry32(Math.floor(Math.random()*1e6)), res = TERRAIN[biome].res, long = ['madera', 'ladrillo', 'mineral'].includes(res);
+// a word of GLYPHS piled out of one resource, centred; letters in `skip` are left empty (the O of the title)
+function resourceWord(word, res, skip = ''){
+  const cs = .1, gap = 6, letters = [], rnd = mulberry32(Math.floor(Math.random()*1e6)), long = ['madera', 'ladrillo', 'mineral'].includes(res);
   const W = (word.length*gap - 1)*cs, g = new THREE.Group();
   [...word].forEach((ch, i) => { const L = new THREE.Group(); L.position.x = -W/2 + (i*gap + 2)*cs + cs/2; g.add(L); letters.push(L);
-    if (ch === 'O') return; const spots = [], on = (x, y) => GLYPHS[ch][y] && GLYPHS[ch][y][x] === '#';
+    if (skip.includes(ch)) return; const spots = [], on = (x, y) => GLYPHS[ch][y] && GLYPHS[ch][y][x] === '#';
     GLYPHS[ch].forEach((row, y) => [...row].forEach((c, x) => { if (c !== '#') return; const px = (x - 2)*cs, py = (3 - y)*cs - cs*.47;
       if (!long){ spots.push([px + (rnd() - .5)*cs*.12, py + (rnd() - .5)*cs*.12, null]); return; }
       // the stroke through this cell: across, down, or the diagonal of the W and the M
@@ -59,6 +61,10 @@ function buildWordmark(biome){
       const a = h && !v ? 0 : v && !h ? Math.PI/2 : h && v ? (rnd() < .5 ? 0 : Math.PI/2) : (on(x + 1, y + 1) || on(x - 1, y - 1)) ? -Math.PI/4 : Math.PI/4;
       [-1, 1].forEach(sd => spots.push([px - Math.sin(a)*sd*cs*.22 + (rnd() - .5)*cs*.08, py + Math.cos(a)*sd*cs*.22 + (rnd() - .5)*cs*.08, a])); }));   // two per cell, side by side
     L.add(resourceLetter(res, spots, long ? cs*1.45 : res === 'lana' ? cs*1.9 : cs*1.7, rnd)); });
+  return { g, letters, cs };
+}
+function buildWordmark(biome){
+  const word = 'SWAPHOLM', { g, letters, cs } = resourceWord(word, TERRAIN[biome].res, 'O');
   // the O: as tall as the letters, tilted toward you, turning on its own axis
   const O = letters[word.indexOf('O')], hex = spinner(logoHex(biome), 1); hex.rotation.x = 1.0; hex.updateMatrixWorld(true);
   const hb = new THREE.Box3().setFromObject(hex), hs = hb.getSize(new THREE.Vector3()); hex.scale.multiplyScalar(Math.min(7*cs/hs.y, 6.4*cs/hs.x));
