@@ -61,7 +61,7 @@ async function tradeLetter(target){
 async function askHuman(p, gives, wants){ for (let k=0;k<60 && (marketCtx || $('#offer').classList.contains('show'));k++) await wait(250); return offerToHuman(p, gives, wants); }
 // a bot proposes to the human: glowing parchment, everything else darkened
 async function botOfferTrade(p, st){
-  if (st.offered || Math.random() > .35) return false;
+  if (st.offered || Math.random() > botLvl().offer) return false;
   st.offered = true;
   // online the bot writes to any of the humans at the table (away players excluded), offline to you
   const hs = (NG.on ? humanSeats().filter(h => h !== p && !G.players[h].away) : [0]).filter(h => tradesLeft(h, p) > 0); if (!hs.length) return false;

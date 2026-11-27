@@ -177,7 +177,7 @@ async function nextSetup(){
     SETUP.busy = key;
     setupTip(`<i style="--c:${P.color}"></i><b>${P.name}</b> está colocando su ${round === 1 ? 'primer' : 'segundo'} pueblo…`);
     await wait(900);
-    const cands = G.verts.filter(distanceOK).map(v => ({ v, s: vscore(v) + Math.random()*1.6 })).sort((a, b) => b.s - a.s), v = cands[0].v;
+    const v = botBestSpot(p, G.verts.filter(distanceOK), true);
     buildSettlement(p, v.id, true); if (round === 2) P.v2 = v.id; focusBoard?.(v.x, v.z, P.color); SFX.build?.(); await wait(700);
     const e = v.edges.map(id => G.edges[id]).map(e => { const o = G.verts[e.a === v.id ? e.b : e.a]; return { e, s: Math.max(0, ...o.adj.filter(x => x !== v.id).map(x => distanceOK(G.verts[x]) ? vscore(G.verts[x]) : 0)) + Math.random() }; }).sort((a, b) => b.s - a.s)[0].e;
     buildRoad(p, e.id, true); SFX.build?.();

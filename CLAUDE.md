@@ -191,8 +191,11 @@ Antes de cada uno, comparte tus dudas con Fernando.
      reconstruyendo el tablero (como `netApply`).
    - En el menú aparece "Continuar" si hay partida guardada.
 6. **Pantalla final con estadísticas:** qué números salieron, robos, intercambios y de dónde vino cada punto.
-7. **Dificultad de bots** (Fácil / Normal / Difícil), elegida en la vista Jugar: cambia qué tan bien eligen
-   esquinas, cuánto comercian y si bloquean caminos.
+7. ~~**Dificultad de bots**~~ **hecho** (`BOT_LEVELS` en `core/bots.js`): fila **Dificultad: Fácil · Normal · Difícil** en
+   la vista Jugar (se guarda en `hexterra-botlvl`; en línea la elige el anfitrión, que es quien mueve a los bots; se
+   oculta con Bots: No). Normal = los bots de siempre. Fácil: esquinas peores, comercia poco, evita disputas. Difícil:
+   mejores esquinas y busca recursos que le faltan, comercia más (hasta 2 cambios), va por cruces en disputa para
+   bloquear y compra más cartas.
 8. **Eventos de temporada** (solo en modo Catroan, salvo que Fernando diga otra cosa). Cada evento cambia el tablero
    a la vista. Regla de probabilidades fijada por Fernando:
    - Cuando un evento **favorece** un recurso y lo recibes: **68 %** de probabilidad de recibir **1 extra**.
