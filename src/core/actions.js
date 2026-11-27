@@ -103,6 +103,7 @@ function botRobber(p){
     s += Math.random();
     if (s > bs){ bs = s; best = t.i; }
   });
+  if (TUT.on && TUT.robTile != null) best = TUT.robTile;   // the tutorial's bot robs you, on purpose
   moveRobber(best, p);
 }
 function checkWin(p){

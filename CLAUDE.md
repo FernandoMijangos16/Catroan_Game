@@ -227,14 +227,21 @@ Antes de cada uno, comparte tus dudas con Fernando.
    - Estado `G.event`, `G.evNext`, `G.evLast`, `G.evOn` en `netSnap`; los dados de probabilidad los tira quien actúa.
    - Se ve en el tablero (colores de los hexágonos por vértice, luces, nubes, partículas, charcos, hielo en la costa,
      humo, abejas, caravana de 8 carretas) y en el pueblo (lluvia, nieve, polen y abejas, bruma, banderines).
-9. **Tutorial** ("Cómo jugar") — **primera parte hecha** (`core/tutorial.js` guion y candados, `ui/tutorial-guide.js`
+9. **Tutorial** ("Cómo jugar") — **partes 1 y 2 hechas** (`core/tutorial.js` guion y candados, `ui/tutorial-guide.js`
    panel, `models/traveler.js` Ulises). Lo guía **Ulises, el viajero** (mochila con cobija, mapa, olla y farol).
    - Partida fija: semilla `TUT.seed`, tú primero contra Rosa y Nico; los pueblos de los bots salen de `tutPlan()`
      (calculado del mapa), los dados de `TUT.dice` y los bots solo tiran y pasan (`tutBotTurn`).
    - Cada paso es `tutSay` (Siguiente) o `tutAct` (espera algo del juego); solo se puede usar lo de `TUT.allow`
      (`tutAllow` en la barra de acciones, terminar turno, tablero, letreros y cartas). El panel se aparta si tapa el
      lugar que pide (`tutDodge`). Al final: Volver al menú o Seguir jugando (bots normales).
-   - Hecho: bienvenida, colocación, recursos iniciales, dados y producción, construir. Falta lo demás de la lista.
+   - Parte 1: bienvenida, colocación, recursos iniciales, dados y producción, construir. Parte 2 (sigue en la misma
+     partida, o desde "Cómo jugar" con `tutSkipToPart2`, que arma el tablero como quedaría): el 7 (un bot saca 7, tú
+     descartas en el callejón y su ladrón va a tu terreno, `TUT.robTile`; luego sacas 7 tú), comercio (mercado 4:1,
+     muelle del pirata: tu 2° pueblo va en un puerto; carta de trueque a Rosa, que acepta) y cartas (la siguiente del
+     mazo es una Guardia; se juega el turno siguiente, antes de tirar). Ulises completa con `tutTopUp` lo que falte.
+   - Con primera persona apagada, los mismos pasos usan los paneles simples.
+   - Falta: misiones, brujo, amuletos, objetos y flores, el pueblo en primera persona, eventos, camino más largo,
+     Guardia más poderosa (solo se menciona) y ganar.
    - Es una **partida arreglada que siempre sigue los mismos pasos**: mismo mapa, dados en orden fijo, bots con
      jugadas escritas y más facilidad para conseguir las cosas. Así todo se explica en una sola partida.
    - Debe cubrir todo:

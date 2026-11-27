@@ -105,14 +105,14 @@ async function pauseClick(e){
 }
 // a new game with the same options: the page starts over (like leaving) and start.js opens it straight away
 function restartGame(){
-  try { sessionStorage.setItem('hexterra-restart', JSON.stringify({ opts: { ...GAME_OPTS, online: false }, n: G.players.length, tut: TUT.on })); } catch {}
+  try { sessionStorage.setItem('hexterra-restart', JSON.stringify({ opts: { ...GAME_OPTS, online: false }, n: G.players.length, tut: TUT.on ? TUT.part : 0 })); } catch {}
   leaveToMenu();
 }
 // called once at startup (main/start.js): true if a restart was asked for and the game is already open
 function restartPending(){
   let d = null; try { d = JSON.parse(sessionStorage.getItem('hexterra-restart') || 'null'); sessionStorage.removeItem('hexterra-restart'); } catch {}
   if (!d || !d.opts) return false;
-  if (d.tut){ startTutorial(); return true; }
+  if (d.tut){ startTutorial(d.tut === 2 ? 2 : 1); return true; }
   Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts(); newGame(d.n > 4 ? d.n : undefined); startRegistration();
   return true;
 }
