@@ -4,6 +4,33 @@
 import { ipcMain } from 'electron';
 import { WebSocketServer, WebSocket } from 'ws';
 import os from 'node:os';
+import { execFile } from 'node:child_process';
+
+// ---------- the firewall: other PCs must be let in on LAN_PORT ----------
+// Windows: a rule by port (not by program: the portable .exe unpacks to a new temp folder each time), added once with
+// the admin prompt. Linux: ufw / firewalld need the user's password, so the game only tells which command to run.
+const FW_RULE = 'SwapHolm LAN';
+const run = (cmd, args) => new Promise(res => execFile(cmd, args, { windowsHide: true, timeout: 8000 }, (err, out) => res({ ok: !err, out: String(out || '') })));
+async function firewallStatus() {
+  if (process.platform === 'win32') {
+    const r = await run('netsh', ['advfirewall', 'firewall', 'show', 'rule', `name=${FW_RULE}`]);
+    return { os: 'win', ok: r.ok && r.out.includes(String(LAN_PORT)) };
+  }
+  if (process.platform === 'linux') {
+    const ufw = (await run('systemctl', ['is-active', 'ufw'])).out.trim() === 'active';
+    const fwd = (await run('systemctl', ['is-active', 'firewalld'])).out.trim() === 'active';
+    if (ufw) return { os: 'linux', ok: null, tool: 'ufw', cmd: `sudo ufw allow ${LAN_PORT}/tcp` };
+    if (fwd) return { os: 'linux', ok: null, tool: 'firewalld', cmd: `sudo firewall-cmd --permanent --add-port=${LAN_PORT}/tcp && sudo firewall-cmd --reload` };
+    return { os: 'linux', ok: true };
+  }
+  return { os: process.platform, ok: null };
+}
+async function firewallAllow() {
+  if (process.platform !== 'win32') return firewallStatus();
+  const add = `advfirewall firewall add rule name="${FW_RULE}" dir=in action=allow protocol=TCP localport=${LAN_PORT} profile=private,domain`;
+  await run('powershell', ['-NoProfile', '-Command', `Start-Process netsh -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList '${add}'`]);   // Windows asks for admin here
+  return firewallStatus();
+}
 
 export const LAN_PORT = 47213;
 const MAX = 16 * 1024 * 1024;                          // full game snapshots can be large
@@ -29,6 +56,8 @@ export function setupLan(getWin) {
   };
 
   ipcMain.on('lan-ip', e => { e.returnValue = lanIP(); });
+  ipcMain.handle('lan-fw', () => firewallStatus());
+  ipcMain.handle('lan-fw-allow', () => firewallAllow());
 
   ipcMain.handle('lan-host', () => new Promise(res => {
     stop();

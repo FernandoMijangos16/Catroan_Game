@@ -38,7 +38,7 @@ function openMainMenu(){
         <div class="mrow"><button data-go="back">◀ Volver</button><button class="primary" data-go="start">Comenzar ▶</button></div></div>
       <div class="mview" data-v="mp"><h2>Multijugador</h2><div class="mbig"><button class="primary" data-go="create">Crear partida</button><button data-go="join">Unirse con clave</button></div><p class="mnote"></p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="create"><h2>Nueva partida</h2><div class="mcardwrap"><canvas class="mcard"></canvas></div>
-        <div class="mrow mnamerow"><label class="mfield">Nombre de la partida<input class="mname" maxlength="24"></label>${window.catroanDesk ? '<button class="mtoggle mnet"></button>' : ''}</div>
+        <div class="mrow mnamerow"><label class="mfield">Nombre de la partida<input class="mname" maxlength="24"></label>${window.catroanDesk ? '<button class="mtoggle mnet"></button>' : ''}</div>${window.catroanDesk ? '<p class="mfw"></p>' : ''}
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
@@ -123,11 +123,27 @@ function updFpToggle(){ const b = MENU.el.querySelector('.mtoggle[data-fp]'); b.
 // ---------- desktop only: the room lives on this computer's local network (LAN key) or online (WebRTC) ----------
 function updNetToggle(){ const b = MENU.el.querySelector('.mnet'); if (!b) return; const ip = deskLanIP(); if (!ip) NET.lan = false; else if (NET.lan === undefined) NET.lan = true;
   b.innerHTML = NET.lan ? `${ic('casa')} Red: <b>Local (misma WiFi)</b>` : `${ic('globo')} Red: <b>En línea (internet)</b>`;
-  b.title = !ip ? 'No estás conectado a una red local: la partida será en línea' : NET.lan ? 'Sin internet: los demás deben estar en tu misma red WiFi' : 'Por internet: los demás pueden estar en cualquier lugar'; }
+  b.title = !ip ? 'No estás conectado a una red local: la partida será en línea' : NET.lan ? 'Sin internet: los demás deben estar en tu misma red WiFi' : 'Por internet: los demás pueden estar en cualquier lugar';
+  updFirewallNote(); }
+// Local games need the firewall to let the others in (port 47213): Windows gets a button, Linux the command to run
+async function updFirewallNote(){
+  const el = MENU.el.querySelector('.mfw'); if (!el) return; el.innerHTML = '';
+  if (!NET.lan || !window.catroanDesk || !window.catroanDesk.lanFirewall) return;
+  let st; try { st = await window.catroanDesk.lanFirewall(); } catch { return; }
+  if (!NET.lan) return;
+  if (st.os === 'win' && !st.ok){
+    el.innerHTML = 'Windows puede bloquear a los demás jugadores. <button class="primary mfwb">Permitir en el firewall</button>';
+    el.querySelector('.mfwb').onclick = async e => { e.stopPropagation(); SFX.click?.(); e.target.disabled = true; e.target.textContent = 'Esperando permiso…';
+      const r = await window.catroanDesk.lanFirewallAllow().catch(() => ({})); el.innerHTML = r.ok ? 'Listo: los demás ya pueden entrar a tu partida.' : 'No se dio el permiso. Puedes intentarlo otra vez al volver a esta carta.'; };
+  } else if (st.os === 'linux' && st.cmd){
+    el.innerHTML = `Si no te encuentran, tu firewall (${st.tool}) los bloquea. Ejecuta una vez en una terminal: <code>${st.cmd}</code> <button class="mfwb">Copiar</button>`;
+    el.querySelector('.mfwb').onclick = e => { e.stopPropagation(); SFX.click?.(); try { navigator.clipboard.writeText(st.cmd); e.target.textContent = 'Copiado'; } catch {} };
+  }
+}
 const menuNewKey = () => { const ip = deskLanIP(); if (NET.lan === undefined) NET.lan = !!ip; return NET.lan && ip ? lanKey(ip) : newKey(); };   // desktop starts on Local
 function netErrText(code){
   return { port_busy: 'El puerto del juego (47213) está ocupado: ¿hay otra partida abierta en esta computadora?',
-    lan_unreachable: 'No se encontró al anfitrión en tu red. Revisen que estén en la misma WiFi.',
+    lan_unreachable: 'No se encontró al anfitrión. Revisen que estén en la misma WiFi y que el firewall del anfitrión deje entrar a SwapHolm (al crear la partida Local, la carta indica cómo).',
     lan_only: 'Esa clave es de una partida en red local: entra desde SwapHolm de escritorio, en la misma WiFi.',
     no_room: 'No hay ninguna partida abierta con esa clave.',
     offline: 'No hay conexión a internet (o el servidor de partidas no responde).',
