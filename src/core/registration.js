@@ -177,17 +177,17 @@ async function nextSetup(){
     SETUP.busy = key;
     setupTip(`<i style="--c:${P.color}"></i><b>${P.name}</b> está colocando su ${round === 1 ? 'primer' : 'segundo'} pueblo…`);
     await wait(900);
-    const v = botBestSpot(p, G.verts.filter(distanceOK), true);
+    const v = TUT.on && tutSlot() ? G.verts[tutSlot().v] : botBestSpot(p, G.verts.filter(distanceOK), true);
     buildSettlement(p, v.id, true); if (round === 2) P.v2 = v.id; focusBoard?.(v.x, v.z, P.color); SFX.build?.(); await wait(700);
     const e = v.edges.map(id => G.edges[id]).map(e => { const o = G.verts[e.a === v.id ? e.b : e.a]; return { e, s: Math.max(0, ...o.adj.filter(x => x !== v.id).map(x => distanceOK(G.verts[x]) ? vscore(G.verts[x]) : 0)) + Math.random() }; }).sort((a, b) => b.s - a.s)[0].e;
-    buildRoad(p, e.id, true); SFX.build?.();
+    buildRoad(p, TUT.on && tutSlot() ? tutSlot().e : e.id, true); SFX.build?.();
     histPush(`${P.name} colocó su ${round === 1 ? 'primer' : 'segundo'} pueblo en <b>${v.name}</b>`, P.color);
     await wait(600); SETUP.busy = null; SETUP.k++; nextSetup(); return;
   }
   // the human chooses
   SETUP.round = round; G.phase = 'setupV';
   setupTip(`<i style="--c:${P.color}"></i>Coloca tu <b>${round === 1 ? 'primer' : 'segundo'} pueblo</b>${round === 2 ? ' · de sus terrenos elegirás tus recursos iniciales' : ''}`);
-  setupMarkers('v', G.verts.filter(distanceOK));
+  setupMarkers('v', TUT.on && tutSlot() ? [G.verts[tutSlot().v]] : G.verts.filter(distanceOK));
   refresh();
 }
 // ---------- starting resources (the original rule, adjusted) ----------
@@ -245,7 +245,7 @@ function setupClick(e){
   if (G.phase === 'setupV' && hit.object.userData.setupV !== undefined){
     const v = G.verts[hit.object.userData.setupV]; buildSettlement(0, v.id, true); SFX.build?.(); SETUP.v = v; if (SETUP.round === 2) G.players[0].v2 = v.id; setupPreview(null);
     G.phase = 'setupE'; setupTip(`<i style="--c:${G.players[0].color}"></i>Ahora coloca un <b>camino</b> junto a tu pueblo`);
-    setupMarkers('e', v.edges.map(id => G.edges[id]).filter(ed => ed.road === null)); refresh(); return true;
+    setupMarkers('e', v.edges.map(id => G.edges[id]).filter(ed => ed.road === null && (!TUT.on || !tutSlot() || ed.id === tutSlot().e))); refresh(); return true;
   }
   if (G.phase === 'setupE' && hit.object.userData.setupE !== undefined){
     buildRoad(0, hit.object.userData.setupE, true); SFX.build?.();

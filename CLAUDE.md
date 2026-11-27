@@ -14,6 +14,14 @@ SwapHolm (antes Catroan) es un juego tipo Catan en 3D low poly para navegador, h
   captura antes de seguir.
 - Al terminar, resume qué cambió, qué se probó y qué quedó pendiente, sin rodeos.
 
+## Versiones
+
+- La versión está solo en `package.json`; `build.mjs` la pone en el menú (`APP_VERSION`) y los instaladores la usan.
+- **1.0 = la primera publicación.** Antes, cada actualización grande sube el número del medio (0.8 → 0.9) y cada
+  entrega de solo correcciones sube el último (0.8.0 → 0.8.1). Historia: 0.2 claude.ai, 0.3 escritorio y red local,
+  0.4 lote de notas, 0.5 SwapHolm, 0.6 semilla y dificultad, 0.7 eventos, 0.8 pausa y guardado, 0.9 tutorial.
+- Al cambiar la versión, etiqueta el commit en git (`v0.8.0`).
+
 ## Construir y probar
 
 ```
@@ -102,8 +110,8 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
      con el recurso que produce (`resourceLetter`: copias de `makeResourceItem` con `InstancedMesh`, pegadas y algo
      revueltas; madera, ladrillo y metal van a lo largo del trazo, dos por casilla). Las letras **no giran**. El ícono de la app es ese hexágono (bosque, con ciudad) inclinado.
 10. **Todo modelo 3D que se muestre en la interfaz gira sobre su propio eje** (`spinner` + `userData.inner`). Las
-    excepciones son los modelos que caen en el menú (cada uno conserva su inclinación) y los recursos que forman las
-    letras del título.
+    excepciones son los modelos que caen en el menú (cada uno conserva su inclinación), los recursos que forman las
+    letras del título y Ulises en el tutorial (te está hablando: mira hacia ti).
 11. **Las claves de `localStorage` empiezan con `hexterra-`** a propósito, para no perder las preferencias guardadas.
     El token de reconexión en línea es `sessionStorage` `catroan-tok`.
 12. **Selección en el tablero** (`ui/board-input.js`): marcas de misión, lupas, pueblos y puertos compiten y gana lo
@@ -219,7 +227,14 @@ Antes de cada uno, comparte tus dudas con Fernando.
    - Estado `G.event`, `G.evNext`, `G.evLast`, `G.evOn` en `netSnap`; los dados de probabilidad los tira quien actúa.
    - Se ve en el tablero (colores de los hexágonos por vértice, luces, nubes, partículas, charcos, hielo en la costa,
      humo, abejas, caravana de 8 carretas) y en el pueblo (lluvia, nieve, polen y abejas, bruma, banderines).
-9. **Tutorial** ("Cómo jugar").
+9. **Tutorial** ("Cómo jugar") — **primera parte hecha** (`core/tutorial.js` guion y candados, `ui/tutorial-guide.js`
+   panel, `models/traveler.js` Ulises). Lo guía **Ulises, el viajero** (mochila con cobija, mapa, olla y farol).
+   - Partida fija: semilla `TUT.seed`, tú primero contra Rosa y Nico; los pueblos de los bots salen de `tutPlan()`
+     (calculado del mapa), los dados de `TUT.dice` y los bots solo tiran y pasan (`tutBotTurn`).
+   - Cada paso es `tutSay` (Siguiente) o `tutAct` (espera algo del juego); solo se puede usar lo de `TUT.allow`
+     (`tutAllow` en la barra de acciones, terminar turno, tablero, letreros y cartas). El panel se aparta si tapa el
+     lugar que pide (`tutDodge`). Al final: Volver al menú o Seguir jugando (bots normales).
+   - Hecho: bienvenida, colocación, recursos iniciales, dados y producción, construir. Falta lo demás de la lista.
    - Es una **partida arreglada que siempre sigue los mismos pasos**: mismo mapa, dados en orden fijo, bots con
      jugadas escritas y más facilidad para conseguir las cosas. Así todo se explica en una sola partida.
    - Debe cubrir todo:

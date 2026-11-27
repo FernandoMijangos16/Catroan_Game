@@ -4,7 +4,7 @@
 // It is saved by itself at the end of every turn; "Guardar" in the pause menu saves the moment if it is a calm one
 // (your turn, before or after rolling, nothing open), otherwise that turn's start is what stays saved.
 const SAVE_KEY = 'hexterra-save';
-const canSave = () => !!G && !NG.on && !G.setup && !G.over && G.phase !== 'register';
+const canSave = () => !!G && !NG.on && !TUT.on && !G.setup && !G.over && G.phase !== 'register';
 function snapLocal(){
   const keep = { seat: NG.seat, n: NG.n, ver: NG.ver };
   NG.seat = 0; NG.n = G.players.length; NG.ver = 0;

@@ -10,7 +10,8 @@ const read = p => readFileSync(new URL(p, import.meta.url), 'utf8');
 const manifest = JSON.parse(read('./src/manifest.json'));
 const template = read('./src/index.html');
 const css = read('./src/styles/main.css').replace(/\n$/, '');
-const js = manifest.map(f => read('./src/' + f)).join('').replace(/\n$/, '');
+const version = JSON.parse(read('./package.json')).version;   // shown in the menu: one number for the game and the installers
+const js = manifest.map(f => read('./src/' + f)).join('').replace(/\n$/, '').replace("'__APP_VERSION__'", () => JSON.stringify(version));
 const page = (style, script, tpl = template) => tpl.replace('/*@STYLES*/', () => '\n' + style + '\n').replace('//@SCRIPT', () => script);
 
 mkdirSync(new URL('./dist/', import.meta.url), { recursive: true });

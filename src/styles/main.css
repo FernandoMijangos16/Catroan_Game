@@ -753,3 +753,23 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 #pause .pvol .m3{width:24px;height:24px;margin:0}#pause .pvol b{min-width:52px;color:#ffd890}
 #pause .pvol input{width:240px;accent-color:#c8a040}
 body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}
+/* ---------- tutorial (ui/tutorial-guide.js): Ulises and his note ---------- */
+#tut{position:fixed;left:calc(92px*var(--ui,1));top:calc(96px*var(--ui,1));z-index:45;display:none;flex-direction:column;align-items:flex-start;pointer-events:auto;zoom:var(--ui,1);font-family:'Pixelify Sans',monospace;width:236px}
+#tut.right{left:auto;right:calc(92px*var(--ui,1))}
+#tut.show{display:flex;animation:ofade .3s}
+#tut .tutv canvas{width:130px;height:150px;image-rendering:pixelated;filter:drop-shadow(0 10px 12px rgba(0,0,0,.6));margin-left:6px}
+#tut .tutb{position:relative;width:236px;box-sizing:border-box;margin-top:-6px;padding:8px 11px 8px;background:var(--paperimg,#e8dcc0);color:#2a1e12;box-shadow:0 0 0 2px #5a4028,0 8px 18px rgba(0,0,0,.5)}
+#tut .tutb::before{content:'';position:absolute;left:52px;top:-12px;border:6px solid transparent;border-bottom:7px solid #5a4028}
+#tut .tuth{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;border-bottom:1px dashed rgba(60,40,20,.4);padding-bottom:3px;margin-bottom:5px}
+#tut .tuth b{font-size:14px;letter-spacing:1px}#tut .tuth span{font-size:10px;color:#6a5034}
+#tut .tutc{margin-left:auto;font-style:normal;font-size:9px;color:#7a6044;letter-spacing:1px;text-transform:uppercase}
+#tut .tutt{margin:0;font-size:12.5px;line-height:1.42;min-height:3em}
+#tut .tutt .ri,#tut .tutt .m3{width:18px;height:18px;vertical-align:-4px}
+#tut .tutr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-top:6px;min-height:26px}
+#tut .tuthint{font-size:11px;color:#8a3a2a;letter-spacing:1px;text-transform:uppercase}
+#tut .tutbtns{display:flex;gap:6px;margin-left:auto}#tut .tutbtns button{padding:4px 10px;font-size:12px}
+#tut.nudge .tutb{animation:tutnudge .45s}
+@keyframes tutnudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+#b-endturn.tutglow{animation:tutglow 1s infinite}
+@keyframes tutglow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,210,120,0))}50%{filter:drop-shadow(0 0 12px rgba(255,210,120,.95)) brightness(1.2)}}
+body.paused #tut{pointer-events:none}

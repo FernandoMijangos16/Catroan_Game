@@ -47,12 +47,12 @@ document.querySelectorAll('#dpad button').forEach(b => {
   b.addEventListener('pointerdown', e => { e.preventDefault(); ctl.keys[k] = true; try { b.setPointerCapture(e.pointerId); } catch {} });
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev => b.addEventListener(ev, () => { ctl.keys[k] = false; }));
 });
-$('#b-roll').onclick = () => { if (G.current === 0 && G.phase === 'roll') rollDice(); };
+$('#b-roll').onclick = () => { if (!tutAllow('dados')) return; if (G.current === 0 && G.phase === 'roll') rollDice(); };
 $('#b-road').onclick = () => enterBuild('camino');
 $('#b-set').onclick = () => enterBuild('pueblo');
 $('#b-city').onclick = () => enterBuild('ciudad');
 $('#b-trade').onclick = () => { if (G && G.current === 0 && G.phase === 'main') enterMarket('trade'); };
-$('#b-end').onclick = () => { if (G.current === 0 && G.phase === 'main') endTurn(); };
+$('#b-end').onclick = () => { if (!tutAllow('fin')) return; if (G.current === 0 && G.phase === 'main') endTurn(); };
 $('#b-back').onclick = backToBoard;
 // "back to the board": a brass hex button carrying a tiny tilted model of the island, like the board's action buttons
 function initMapButton(){

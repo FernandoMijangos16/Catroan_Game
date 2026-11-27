@@ -762,6 +762,26 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 #pause .pvol .m3{width:24px;height:24px;margin:0}#pause .pvol b{min-width:52px;color:#ffd890}
 #pause .pvol input{width:240px;accent-color:#c8a040}
 body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}
+/* ---------- tutorial (ui/tutorial-guide.js): Ulises and his note ---------- */
+#tut{position:fixed;left:calc(92px*var(--ui,1));top:calc(96px*var(--ui,1));z-index:45;display:none;flex-direction:column;align-items:flex-start;pointer-events:auto;zoom:var(--ui,1);font-family:'Pixelify Sans',monospace;width:236px}
+#tut.right{left:auto;right:calc(92px*var(--ui,1))}
+#tut.show{display:flex;animation:ofade .3s}
+#tut .tutv canvas{width:130px;height:150px;image-rendering:pixelated;filter:drop-shadow(0 10px 12px rgba(0,0,0,.6));margin-left:6px}
+#tut .tutb{position:relative;width:236px;box-sizing:border-box;margin-top:-6px;padding:8px 11px 8px;background:var(--paperimg,#e8dcc0);color:#2a1e12;box-shadow:0 0 0 2px #5a4028,0 8px 18px rgba(0,0,0,.5)}
+#tut .tutb::before{content:'';position:absolute;left:52px;top:-12px;border:6px solid transparent;border-bottom:7px solid #5a4028}
+#tut .tuth{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;border-bottom:1px dashed rgba(60,40,20,.4);padding-bottom:3px;margin-bottom:5px}
+#tut .tuth b{font-size:14px;letter-spacing:1px}#tut .tuth span{font-size:10px;color:#6a5034}
+#tut .tutc{margin-left:auto;font-style:normal;font-size:9px;color:#7a6044;letter-spacing:1px;text-transform:uppercase}
+#tut .tutt{margin:0;font-size:12.5px;line-height:1.42;min-height:3em}
+#tut .tutt .ri,#tut .tutt .m3{width:18px;height:18px;vertical-align:-4px}
+#tut .tutr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-top:6px;min-height:26px}
+#tut .tuthint{font-size:11px;color:#8a3a2a;letter-spacing:1px;text-transform:uppercase}
+#tut .tutbtns{display:flex;gap:6px;margin-left:auto}#tut .tutbtns button{padding:4px 10px;font-size:12px}
+#tut.nudge .tutb{animation:tutnudge .45s}
+@keyframes tutnudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+#b-endturn.tutglow{animation:tutglow 1s infinite}
+@keyframes tutglow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,210,120,0))}50%{filter:drop-shadow(0 0 12px rgba(255,210,120,.95)) brightness(1.2)}}
+body.paused #tut{pointer-events:none}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -820,6 +840,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
+const APP_VERSION = "0.8.0";   // filled in by build.mjs from package.json
 const NG = { on: false };   // online match state (filled in net/net-game.js); declared first so every hook can read it
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -1828,6 +1849,7 @@ function gossip(s){ G.gossip.push(s); if (G.gossip.length > 8) G.gossip.shift();
 // the dice come out of a bag holding the 36 combinations of two dice: every number shows up in its fair share and there are no long streaks.
 // The bag is refilled when 5 are left, so the last rolls can't be counted out exactly.
 function drawDice(){
+  if (TUT.on && TUT.dice.length) return TUT.dice.shift();   // the tutorial's dice come in a fixed order
   if (!G.bag || G.bag.length <= 5){ G.bag = []; for (let a=1;a<=6;a++) for (let b=1;b<=6;b++) G.bag.push(a*10 + b); G.bag = shuffle(G.bag); }
   const v = G.bag.pop(); return [Math.floor(v/10), v % 10];
 }
@@ -1997,6 +2019,7 @@ async function botTurn(p, fromMain){   // fromMain: the dice were already rolled
   // one bot turn per turn: a second call (a reconnect, a late online state) for the same turn is ignored
   const run = gid + ':' + tid; if (botTurn.running === run) return; botTurn.running = run;
   const alive = () => G.id === gid && G.turnId === tid && !G.over;
+  if (TUT.on) return tutBotTurn(p, alive);   // tutorial bots only roll and pass
   await wait(1500); if (!alive()) return;
   botQuests(p);
   if (!fromMain){
@@ -2347,7 +2370,7 @@ function enterBuild(kind){
   if (G.buildMode === kind){ exitBuild(); refresh(); return; }
   exitBuild(); hidePopup(); G.buildMode = kind;
   markers = new THREE.Group();
-  if (kind === 'camino') validRoads(0).forEach(e => {
+  if (kind === 'camino') tutRoadOnly(validRoads(0)).forEach(e => {
     const a = G.verts[e.a], b = G.verts[e.b];
     const m = new THREE.Mesh(new THREE.BoxGeometry(.55,.07,.16), markerMat);
     m.position.set((a.x+b.x)/2, .25, (a.z+b.z)/2); m.rotation.y = Math.atan2(-(b.z-a.z), b.x-a.x); m.userData.markE = e.id; markers.add(m);
@@ -2413,6 +2436,7 @@ function boardClick(e){
   if (!G || G.over) return;
   if (G.phase === 'setupV' || G.phase === 'setupE'){ setupClick(e); return; }
   if (G.setup) return;
+  if (TUT.on && !(G.buildMode && TUT.allow.has('tablero'))) return;   // tutorial: the board only takes what Ulises asked for
   setRay(e);
   if (G.current === 0 && G.phase === 'robber'){
     const hit = ray.intersectObjects(tileGroups, true)[0];
@@ -3384,6 +3408,8 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
     case 'carpintero': shirt = 0x8a6a48; pants = 0x4a3a2a; apron = 0x7a5a3a; hat = 'paliacate'; tool = 'martillo'; dress = false; longSleeve = rng() < .5; break;
   }
   if (opt.hat !== undefined) hat = opt.hat;
+  if (opt.shirt != null) shirt = opt.shirt;
+  if (opt.pants != null) pants = opt.pants;
   if (opt.dress !== undefined) dress = opt.dress;
   const dressC = role === 'panadero' ? 0xf5f1e8 : role === 'brujo' ? 0x3a2a5a : pick(DRESS, rng);
   const topC = dress ? dressC : shirt, legC = dress ? (old ? 0x4a3a30 : 0x3a2f28) : pants;
@@ -3476,6 +3502,7 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
     case 'pluma': H(PGEO.brim, 0x2b2522, T - .06, .24, .025); H(PGEO.crown, 0x2b2522, T - .06, .14, .13); { const fe = add(head, GEO.box, pick([0xe85d75, 0x5fa8f0, 0xf7d046], rng), .12, T, -.03, .03, .24, .06); fe.rotation.z = -.55; } break;
     case 'yelmo': add(head, PGEO.head, 0x9aa0a8, 0, T - .04, -.005, .15, .13, .158); add(head, GEO.cone7, 0x9aa0a8, 0, T + .05, 0, .05, .1, .05); add(head, GEO.box, 0x9aa0a8, 0, .16, .13, .03, .15, .03); H(PGEO.brim, 0x8a9098, T - .17, .158, .03); break;
     case 'brujo': { H(PGEO.brim, 0x2a1e3a, T - .07, .32, .025); const c1 = add(head, GEO.cone7, 0x2a1e3a, .02, T - .07, -.01, .17, .5, .17); c1.rotation.z = -.18; add(head, GEO.box, 0xc89a40, 0, T - .03, .16, .06, .05, .01); break; }
+    case 'viajero': H(PGEO.brim, 0x6a4a2e, T - .08, .34, .025); H(PGEO.crown, 0x5a3e26, T - .08, .15, .16); H(PGEO.brim, 0x2b2018, T - .05, .153, .035); break;   // worn wide-brimmed leather hat
     case 'paliacate': add(head, PGEO.rbox, 0xc0392b, 0, T - .02, -.012, .262, .12, .272); add(head, PGEO.joint, 0xc0392b, 0, T - .07, -.15, .045, .04, .04); break;
   }
   // ---- tools held in the right hand
@@ -3503,6 +3530,31 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
 }
 // change a person's face on the fly (the front of the head is material 4)
 function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = faceMat(F.skin, F.hair, { ...F, expr });
+}
+// ================= ULISES, THE TRAVELLER: the tutorial's guide =================
+// A villager model (people.js) who has walked the whole board: wide leather hat, grey beard, staff, and a big pack on
+// his back with a bedroll, a rolled map, a pot and a lantern. Fixed seed, so he always looks the same.
+const TRAVELER = { name: 'Ulises', s: 4242, o: { hat: 'viajero', beard: true, must: false, expr: 'sonrisa', skin: 0xc8946a, hair: 0x9a9088, shirt: 0x5a7a96, pants: 0x4e4234 } };
+function travelerModel(){
+  const p = makePerson(mulberry32(TRAVELER.s), 'pastor', 'm', null, TRAVELER.o);
+  const b = p.body, A = (geo, c, x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0) => { const m = mesh(geo, c, x, y, z, sx, sy, sz, true); m.rotation.set(rx, ry, rz); b.add(m); return m; };
+  // the pack: canvas body, a darker flap, side pockets, shoulder straps over the chest
+  A(PGEO.rbox, 0x6e5434, 0, 1.06, -.25, .36, .48, .22);
+  A(PGEO.rbox, 0x54402a, 0, 1.25, -.22, .38, .14, .25);
+  [-1, 1].forEach(s => A(PGEO.rbox, 0x5e472c, s*.2, .96, -.25, .07, .2, .16));
+  [-1, 1].forEach(s => { A(GEO.box, 0x3e2c1c, s*.1, 1.2, .135, .05, .36, .02); A(GEO.box, 0x3e2c1c, s*.1, 1.4, -.03, .05, .04, .3); });
+  A(GEO.box, 0xc8a040, 0, 1.2, -.36, .06, .05, .02);                                   // brass buckle
+  // bedroll on top, tied with two cords
+  A(GEO.cyl, 0x8a3a2a, 0, 1.4, -.24, .1, .4, .1, 0, 0, Math.PI/2);
+  [-.11, .11].forEach(x => A(GEO.cyl, 0x2b2018, x, 1.4, -.24, .107, .025, .107, 0, 0, Math.PI/2));
+  // the rolled map sticking out on one side, the pot and the lantern hanging on the other
+  A(GEO.cyl, 0xe8d8b0, -.22, 1.24, -.32, .035, .34, .035, .25);
+  A(GEO.cyl, 0xb04a3a, -.22, 1.4, -.28, .038, .02, .038, .25);
+  A(GEO.cyl, 0x4a4640, .25, .86, -.24, .075, .09, .075);
+  A(GEO.box, 0x2b2522, .25, .93, -.24, .008, .06, .1);
+  A(GEO.box, 0x3a3632, .24, 1.06, -.36, .07, .1, .07);
+  A(GEO.box, mat(0xffd27a, { emissive: 0xffb040, emissiveIntensity: .8 }), .24, 1.06, -.36, .05, .07, .075);
+  return p;
 }
 // ================= PRODUCTION SITES =================
 const SITE_INFO = {
@@ -5143,7 +5195,7 @@ function initPlates(){
   PLAYER_DEFS.forEach((d, i) => {
     const el = document.createElement('div'); el.className = 'pl'; el.innerHTML = '<canvas></canvas><b class="ordb"></b><b class="fxb"></b><i class="think"><i></i><i></i><i></i></i>'; box.appendChild(el);
     el.style.cursor = 'pointer';
-    if (i === 0) el.addEventListener('click', () => G && !G.amuletPick && !NG.on && chooseAvatar()); else el.addEventListener('click', e => { e.stopPropagation(); if (!G) return; if (G.amuletPick) amuletPlate(i); else plateMenu(i, el); });
+    if (i === 0) el.addEventListener('click', () => G && !G.amuletPick && !NG.on && tutAllow('jugadores') && chooseAvatar()); else el.addEventListener('click', e => { e.stopPropagation(); if (!G || !tutAllow('jugadores')) return; if (G.amuletPick) amuletPlate(i); else plateMenu(i, el); });
     const H = 104, pl = { el, i, last: {} };
     const v = miniView(el.querySelector('canvas'), { w: signW(), h: H, ortho: true, res: 1, fps: 20, tick: (dt, t) => { pl.sign.rotation.z = Math.sin(t*1.25 + i*1.7)*(pl.act ? .035 : .018); pl.items.forEach(s => { s.userData.inner.rotation.y += dt*1.1; s.rotation.z = .22; }); } });
     pl.v = v;
@@ -6390,7 +6442,7 @@ function updEventChip(){
 // It is saved by itself at the end of every turn; "Guardar" in the pause menu saves the moment if it is a calm one
 // (your turn, before or after rolling, nothing open), otherwise that turn's start is what stays saved.
 const SAVE_KEY = 'hexterra-save';
-const canSave = () => !!G && !NG.on && !G.setup && !G.over && G.phase !== 'register';
+const canSave = () => !!G && !NG.on && !TUT.on && !G.setup && !G.over && G.phase !== 'register';
 function snapLocal(){
   const keep = { seat: NG.seat, n: NG.n, ver: NG.ver };
   NG.seat = 0; NG.n = G.players.length; NG.ver = 0;
@@ -6426,6 +6478,155 @@ function continueGame(){
   else notify('Continuaste tu partida · <b>es tu turno</b>', P.color, 'sys');
   return true;
 }
+// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Ulises, the traveller =================
+// Always the same: same map (seed), you play first against two bots, the bots' villages are worked out from that map
+// before the game starts, the dice come out of a list and the bots only roll and pass. Each step lets you use only
+// what Ulises asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
+// Chapters in this first part: welcome, placement, starting resources, dice and production, building.
+const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, chapter: '', bots: ['Rosa', 'Nico'] };
+const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir'];
+// ---------- gates: everything asks here while the tutorial is on ----------
+// k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores'
+function tutAllow(k){
+  if (!TUT.on || TUT.allow.has(k)) return true;
+  tutNudge(); return false;
+}
+const tutRoadOnly = list => TUT.on && TUT.targetE != null ? list.filter(e => e.id === TUT.targetE) : list;
+const tutSpotOnly = list => TUT.on && TUT.targetV != null ? list.filter(v => v.id === TUT.targetV) : list;
+// ---------- the plan: who places where, worked out from the fixed map ----------
+function tutPlan(){
+  const queue = [0, 1, 2, 2, 1, 0], taken = new Set(), roads = new Set(), plan = [];
+  const free = v => !taken.has(v.id) && v.adj.every(a => !taken.has(a)) && v.tiles.some(ti => TERRAIN[G.tiles[ti].type].res && ti !== G.robber);
+  const has = (v, r) => v.tiles.some(ti => TERRAIN[G.tiles[ti].type].res === r && ti !== G.robber);
+  queue.forEach((p, k) => {
+    const second = k >= 3;
+    // your second village touches wood and brick if it can: the road of the last chapter is built with them
+    const score = v => vscore(v) + (p === 0 && second ? (has(v, 'madera') ? 2 : 0) + (has(v, 'ladrillo') ? 2 : 0) : 0) - v.id*1e-6;
+    const v = G.verts.filter(free).sort((a, b) => score(b) - score(a))[0];
+    taken.add(v.id);
+    const e = v.edges.map(id => G.edges[id]).filter(ed => !roads.has(ed.id)).map(ed => ({ ed, s: vscore(G.verts[ed.a === v.id ? ed.b : ed.a]) - ed.id*1e-6 })).sort((a, b) => b.s - a.s)[0].ed;
+    roads.add(e.id); plan.push({ p, v: v.id, e: e.id });
+  });
+  return plan;
+}
+const tutSlot = () => TUT.plan && TUT.plan[SETUP.k];
+// the dice: your rolls pay you wood and then brick (whatever you still lack for a road), the bots' pay them
+function tutDiceFor(p, want){
+  const mine = G.verts.filter(v => v.building && v.building.p === p).flatMap(v => v.tiles).map(ti => G.tiles[ti]).filter(t => t.num && t.i !== G.robber && t.num !== 7);
+  const t = (want && mine.find(t => TERRAIN[t.type].res === want)) || mine.sort((a, b) => pips(b.num) - pips(a.num))[0];
+  const n = t ? t.num : 6, d1 = Math.max(1, n - 6), d2 = n - d1;
+  return [Math.min(d1, d2), Math.max(d1, d2)];
+}
+function tutQueueDice(){
+  const me = G.players[0], lack = r => (me.res[r] || 0) < 1;
+  TUT.dice = [tutDiceFor(0, lack('madera') ? 'madera' : lack('ladrillo') ? 'ladrillo' : null), tutDiceFor(1), tutDiceFor(2)];
+}
+// ---------- start ----------
+function startTutorial(){
+  PAUSE.gen++;
+  Object.assign(GAME_OPTS, { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: false });
+  closeMainMenu(); applyGameOpts();
+  TUT.on = true; document.body.classList.add('tutorial');
+  newGame(3, null, TUT.seed);
+  const me = G.players[0];
+  try { me.name = localStorage.getItem('hexterra-name') || 'Alcalde'; me.avatar = avOk(localStorage.getItem('hexterra-avatar') || me.avatar); } catch {}
+  TUT.bots.forEach((n, i) => { G.players[i + 1].name = n; G.players[i + 1].bot = true; });
+  G.order = [0, 1, 2]; PLATES.forEach(p => p.build()); updatePlates(true);
+  TUT.plan = tutPlan();
+  tutGuideOpen();
+  tutScript();
+}
+// ---------- the script ----------
+const tutMine = k => G.verts.filter(v => v.building && v.building.p === 0).length >= k;
+const tutRoads = () => G.edges.filter(e => e.road === 0).length;
+async function tutScript(){
+  const gen = PAUSE.gen, me = G.players[0], alive = () => TUT.on && PAUSE.gen === gen;
+  const say = (txt, o) => alive() && tutSay(txt, o), act = (txt, until, o) => alive() && tutAct(txt, until, o);
+  // 1 · welcome
+  TUT.chapter = 0;
+  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Ulises</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
+  if (!await say('Gana quien llegue primero a <b>10 puntos</b>. Cada pueblo vale 1 punto y cada ciudad 2.')) return;
+  if (!await say(`Cada hexágono es un bioma y da un recurso: el bosque ${resImg('madera')}, el cerro ${resImg('ladrillo')}, la pradera ${resImg('lana')}, el campo ${resImg('trigo')} y la montaña ${resImg('mineral')}. El desierto no da nada.`)) return;
+  if (!await say('El número de cada hexágono dice con qué tirada de dados produce. El <b>6</b> y el <b>8</b> salen seguido; el <b>2</b> y el <b>12</b>, casi nunca.', { expr: 'serio' })) return;
+  // 2 · placement
+  TUT.chapter = 1; startSetup();
+  const slot = k => TUT.plan[k];
+  TUT.targetV = slot(0).v; focusBoard?.(G.verts[slot(0).v].x, G.verts[slot(0).v].z, me.color);
+  if (!await act('Coloca tu <b>primer pueblo</b> en el cruce que brilla. Toca varios biomas con buenos números: es un buen lugar.', () => tutMine(1))) return;
+  TUT.targetV = null; TUT.targetE = slot(0).e;
+  if (!await act('Ahora pon un <b>camino</b> junto a tu pueblo. Los caminos te llevan a nuevos cruces.', () => tutRoads() >= 1)) return;
+  TUT.targetE = null;
+  if (!await act(`Ahora colocan <b>${TUT.bots[0]}</b> y <b>${TUT.bots[1]}</b>. El orden se regresa: quien puso al último pone dos seguidos.`, () => G.phase === 'setupV' && G.current === 0, { wait: true })) return;
+  TUT.targetV = slot(5).v; focusBoard?.(G.verts[slot(5).v].x, G.verts[slot(5).v].z, me.color);
+  if (!await act('Tu <b>segundo pueblo</b>. Fíjate en sus biomas: de ellos saldrán tus recursos iniciales.', () => tutMine(2))) return;
+  TUT.targetV = null; TUT.targetE = slot(5).e;
+  if (!await act('Y su <b>camino</b>.', () => tutRoads() >= 2)) return;
+  TUT.targetE = null;
+  // 3 · starting resources
+  TUT.chapter = 2;
+  if (!await act(`Tu segundo pueblo te da <b>3 recursos</b> de sus biomas. Te recomiendo ${resImg('madera')} y ${resImg('ladrillo')}: con ellos se hacen caminos.`, () => !G.setup && !(me.startPick > 0), { wait: true, expr: 'duda' })) return;
+  if (!await act('Este letrero te muestra qué biomas tocan tus pueblos. Toca el botón para empezar.', () => !G.setup && G.phase === 'roll' && !document.body.classList.contains('registering') && !($('#reg') && $('#reg').classList.contains('show')), { wait: true })) return;
+  // 4 · dice and production
+  TUT.chapter = 3; tutQueueDice();
+  if (!await say('Cada turno empieza tirando los dados. El número que sale hace producir a todos los hexágonos que lo tienen.')) return;
+  TUT.glow = 'dados';
+  if (!await act('Toca los <b>dados</b>.', () => G.phase === 'main', { allow: ['dados'] })) return;
+  TUT.glow = null; await wait(2600);
+  { const n = G.dice[0] + G.dice[1], got = tutGot(0, n);
+    if (!await say(`Salió <b>${n}</b>. ${got ? `Tu pueblo está junto a un ${got.label} con el ${n}: te dio ${resImg(got.res)}.` : ''} Todos los que tengan pueblo junto a un ${n} cobran, aunque no sea su turno.`, { expr: 'sonrisa' })) return; }
+  if (!await say('Si sale <b>7</b> nadie cobra y aparece el ladrón. Eso lo veremos en la siguiente parte.', { expr: 'serio' })) return;
+  TUT.glow = 'fin';
+  if (!await act('Termina tu turno con el reloj de arena.', () => G.current !== 0, { allow: ['fin'] })) return;
+  TUT.glow = null;
+  if (!await act(`Ahora juegan <b>${TUT.bots[0]}</b> y <b>${TUT.bots[1]}</b>: también tiran y cobran.`, () => G.current === 0 && G.phase === 'roll', { wait: true })) return;
+  TUT.dice.unshift(tutDiceFor(0, (me.res.madera || 0) < 1 ? 'madera' : (me.res.ladrillo || 0) < 1 ? 'ladrillo' : null)); TUT.glow = 'dados';
+  if (!await act('Tu turno otra vez: tira los <b>dados</b>.', () => G.phase === 'main', { allow: ['dados'] })) return;
+  TUT.glow = null; await wait(2600);
+  // 5 · building
+  TUT.chapter = 4;
+  const lack = RES.filter(r => r === 'madera' || r === 'ladrillo').filter(r => (me.res[r] || 0) < 1);
+  if (lack.length){ lack.forEach(r => { me.res[r]++; }); updateInventory?.(); refresh();
+    if (!await say(`Te falta ${lack.map(r => resImg(r)).join(' y ')}: te lo regalo de mi mochila, para que veas cómo se construye.`, { expr: 'guiño' })) return; }
+  if (!await say(`Un <b>camino</b> cuesta ${resImg('madera')} ${resImg('ladrillo')}. Con caminos llegas a cruces nuevos para fundar más pueblos.`)) return;
+  TUT.targetE = tutRoadTarget(); TUT.glow = 'camino';
+  { const e = G.edges[TUT.targetE], a = G.verts[e.a]; focusBoard?.(a.x, a.z, me.color); }
+  if (!await act('Toca <b>Camino</b> y ponlo donde brilla.', () => tutRoads() >= 3, { allow: ['camino', 'tablero'] })) return;
+  TUT.glow = null; TUT.targetE = null;
+  if (!await say(`Un <b>pueblo</b> cuesta ${resImg('madera')} ${resImg('ladrillo')} ${resImg('lana')} ${resImg('trigo')} y va en un cruce con tu camino, a dos tramos de cualquier otro pueblo.`)) return;
+  if (!await say(`Una <b>ciudad</b> mejora uno de tus pueblos con ${resImg('trigo')}×2 ${resImg('mineral')}×3: vale 2 puntos y cobra el doble.`)) return;
+  TUT.chapter = 5;
+  tutFinish();
+}
+// what player p got from tile number n (the first producing tile next to one of its buildings)
+function tutGot(p, n){
+  for (const v of G.verts) if (v.building && v.building.p === p) for (const ti of v.tiles){ const t = G.tiles[ti]; if (t.num === n && ti !== G.robber && TERRAIN[t.type].res) return { res: TERRAIN[t.type].res, label: TERRAIN[t.type].label.toLowerCase() }; }
+  return null;
+}
+// the road of the last chapter: from one of your villages toward the best free crossing
+function tutRoadTarget(){
+  const list = validRoads(0); if (!list.length) return null;
+  const s = e => Math.max(...[e.a, e.b].map(id => { const v = G.verts[id]; return distanceOK(v) ? vscore(v) : 0; })) - e.id*1e-6;
+  return list.sort((a, b) => s(b) - s(a))[0].id;
+}
+// the end of this first part: keep playing freely, or back to the menu
+async function tutFinish(){
+  const r = await tutSay('¡Eso es todo por ahora! Pronto te enseño el ladrón, el comercio, las cartas, las misiones y el pueblo en primera persona. ¿Quieres seguir jugando esta partida?', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['free', 'Seguir jugando']] });
+  if (r === 'menu'){ leaveToMenu(); return; }
+  tutEnd();
+}
+// the tutorial lets go: from here it is a normal game against normal bots
+function tutEnd(){
+  TUT.on = false; TUT.allow.clear(); TUT.glow = null; TUT.targetE = TUT.targetV = null; TUT.dice = [];
+  document.body.classList.remove('tutorial'); tutGuideClose(); refresh();
+  if (G.players[G.current].bot) botTurn(G.current, G.phase !== 'roll');
+}
+// the bots of the tutorial: roll, wait, pass
+async function tutBotTurn(p, alive){
+  await wait(1200); if (!alive()) return;
+  await rollDice();
+  await annIdle(); await wait(mode === 'board' ? 2400 : 1100); if (!alive()) return;
+  endTurn();
+}
 // ================= MISSIONS =================
 const QUEST_TXT = {
   brujo: ['Je, je… para mi caldero necesito {x}. A cambio, te daré algo que pocos han tocado.', 'Las estrellas me dicen que tú puedes traerme {x}. Mi amuleto será tuyo.', 'Mezclo un hechizo viejo… me falta {x}. Te pagaré con magia.'],
@@ -6446,14 +6647,14 @@ function rewardText(r){
   if (r.type === 'road') return `🛤️ ${r.n > 1 ? r.n + ' caminos' : 'Un camino'} de regalo (va a tus objetos)`;
   return '';
 }
-function assignQuestFor0(){ const keep = G.players.map((P, i) => i); assignQuest(0); }
+function assignQuestFor0(){ if (TUT.on) return; const keep = G.players.map((P, i) => i); assignQuest(0); }
 // ---------- every town makes its own missions: a random timer per town, 3 to 5 an hour of play ----------
 // G.playT: seconds of play (advanced by whoever is acting); G.qAt: { vid: playT when that town posts its next one }.
 // A town keeps posting on its timer even while earlier ones are still open.
 const QUEST_GAP = () => 720 + Math.random()*480;   // 12-20 minutes
 function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register' && netAuth()) G.playT = (G.playT || 0) + dt; }
 function villageQuests(){
-  if (!G || G.over || G.setup || isClassic()) return;
+  if (!G || G.over || G.setup || isClassic() || TUT.on) return;
   const now = G.playT || 0; G.qAt ||= {};
   // towns keep posting, so finished missions would pile up forever (and travel in every online state): keep the last 10
   if (G.quests){ const done = G.quests.filter(q => q.state === 'done'); if (done.length > 10){ const drop = new Set(done.slice(0, done.length - 10)); G.quests = G.quests.filter(q => !drop.has(q)); } }
@@ -6927,7 +7128,7 @@ function initHexbar(){
   const end = document.createElement('button'); end.id = 'b-endturn';
   end.innerHTML = '<svg viewBox="0 0 12 16" width="18" height="24" shape-rendering="crispEdges"><path fill="#2a1a0c" d="M1 0h10v2H1zM1 14h10v2H1z"/><path fill="#e9c46a" d="M2 2h8v1H2zM3 3h6v2H3zM4 5h4v2H4zM5 7h2v2H5zM4 9h4v2H4zM3 11h6v2H3zM2 13h8v1H2z"/><path fill="#f6e7c1" d="M4 3h4v1H4zM5 10h2v1H5zM4 11h4v2H4z"/></svg><span>Terminar turno</span>';
   document.body.appendChild(end);
-  end.onclick = () => { if (G && G.current === 0 && G.phase === 'main'){ SFX.click?.(); endTurn(); } };
+  end.onclick = () => { if (!tutAllow('fin')) return; if (G && G.current === 0 && G.phase === 'main'){ SFX.click?.(); endTurn(); } };
   HB.end = end;
   const cv = wrap.querySelector('canvas');
   let r; try { r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch { return; }
@@ -7019,7 +7220,7 @@ function buildTokenModel(T){
   }
 }
 function hbAction(k){
-  if (!G) return;
+  if (!G || !tutAllow(k)) return;
   switch (k){
     case 'dados': if (G.current === 0 && G.phase === 'roll') rollDice(); break;
     case 'camino': enterBuild('camino'); break;
@@ -7083,9 +7284,10 @@ function stepHexbar(dt){
   if (!HB.r || mode !== 'board' || !G) return;
   HB.t += dt;
   HB.tokens.forEach((T, i) => {
-    const want = (T === HB.hover && T.enabled ? .09 : 0) + (T.active ? .07 : 0) + (T.press > 0 ? -.05*Math.sin(T.press*Math.PI) : 0);
+    const shine = TUT.glow === T.k;   // the tutorial points at this token
+    const want = (shine ? .08 + Math.sin(HB.t*6)*.05 : 0) + (T === HB.hover && T.enabled ? .09 : 0) + (T.active ? .07 : 0) + (T.press > 0 ? -.05*Math.sin(T.press*Math.PI) : 0);
     T.lift += (want - T.lift)*Math.min(1, dt*10); T.press = Math.max(0, (T.press || 0) - dt*3);
-    T.g.position.y = T.lift; if (T.brass) T.brass.emissive.setHex(T === HB.hover && T.enabled || T.active ? 0x3a2808 : 0);
+    T.g.position.y = T.lift; if (T.brass) T.brass.emissive.setHex(shine ? (Math.sin(HB.t*6) > 0 ? 0x6a4810 : 0x3a2808) : T === HB.hover && T.enabled || T.active ? 0x3a2808 : 0);
     const sp = T.enabled ? 1 : .35;
     if (T.k === 'dados') T.items.forEach((d, j) => { d.rotation.x += dt*(.5 + j*.15)*sp; d.rotation.y += dt*(.7 - j*.2)*sp; d.rotation.z = .42; d.position.y = .32 + Math.sin(HB.t*1.6 + j*2)*.04; });
     else if (T.k === 'carta') T.items.forEach((c, j) => { c.rotation.set(-1.1, Math.sin(HB.t*.9*sp + j*2)*.35, c.userData.r + Math.sin(HB.t*1.1 + j)*.08); c.position.y = .3 + Math.sin(HB.t*1.4 + j*1.5)*.04; });
@@ -7341,7 +7543,7 @@ function renderFan(newIdx = -1){
   const hand = G.players[0].cards || [];
   while (f.children.length > hand.length) f.lastChild.remove();
   while (f.children.length < hand.length){ const el = document.createElement('div'); el.className = 'card'; el.innerHTML = '<div class="cin"><img class="face"><img class="back"></div>'; f.appendChild(el);
-    el.addEventListener('click', e => { e.stopPropagation(); if (document.body.classList.contains('boxfront')){ swapDeck(false); return; } openHand(); }); }
+    el.addEventListener('click', e => { e.stopPropagation(); if (!tutAllow('cartas')) return; if (document.body.classList.contains('boxfront')){ swapDeck(false); return; } openHand(); }); }
   f.style.setProperty('--pc', G.players[0].color); document.body.classList.toggle('nocards', !hand.length); if (!hand.length) document.body.classList.remove('boxfront');
   // a compact fan that never reaches the action buttons: measure the room left of them
   const n = hand.length, hb = $('#hexbar canvas'), Z = UI_S || 1, room = hb && hb.getBoundingClientRect().width ? hb.getBoundingClientRect().left/Z + 30 - 60 - 10 : 240;
@@ -8421,12 +8623,12 @@ document.querySelectorAll('#dpad button').forEach(b => {
   b.addEventListener('pointerdown', e => { e.preventDefault(); ctl.keys[k] = true; try { b.setPointerCapture(e.pointerId); } catch {} });
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev => b.addEventListener(ev, () => { ctl.keys[k] = false; }));
 });
-$('#b-roll').onclick = () => { if (G.current === 0 && G.phase === 'roll') rollDice(); };
+$('#b-roll').onclick = () => { if (!tutAllow('dados')) return; if (G.current === 0 && G.phase === 'roll') rollDice(); };
 $('#b-road').onclick = () => enterBuild('camino');
 $('#b-set').onclick = () => enterBuild('pueblo');
 $('#b-city').onclick = () => enterBuild('ciudad');
 $('#b-trade').onclick = () => { if (G && G.current === 0 && G.phase === 'main') enterMarket('trade'); };
-$('#b-end').onclick = () => { if (G.current === 0 && G.phase === 'main') endTurn(); };
+$('#b-end').onclick = () => { if (!tutAllow('fin')) return; if (G.current === 0 && G.phase === 'main') endTurn(); };
 $('#b-back').onclick = backToBoard;
 // "back to the board": a brass hex button carrying a tiny tilted model of the island, like the board's action buttons
 function initMapButton(){
@@ -8660,17 +8862,17 @@ async function nextSetup(){
     SETUP.busy = key;
     setupTip(`<i style="--c:${P.color}"></i><b>${P.name}</b> está colocando su ${round === 1 ? 'primer' : 'segundo'} pueblo…`);
     await wait(900);
-    const v = botBestSpot(p, G.verts.filter(distanceOK), true);
+    const v = TUT.on && tutSlot() ? G.verts[tutSlot().v] : botBestSpot(p, G.verts.filter(distanceOK), true);
     buildSettlement(p, v.id, true); if (round === 2) P.v2 = v.id; focusBoard?.(v.x, v.z, P.color); SFX.build?.(); await wait(700);
     const e = v.edges.map(id => G.edges[id]).map(e => { const o = G.verts[e.a === v.id ? e.b : e.a]; return { e, s: Math.max(0, ...o.adj.filter(x => x !== v.id).map(x => distanceOK(G.verts[x]) ? vscore(G.verts[x]) : 0)) + Math.random() }; }).sort((a, b) => b.s - a.s)[0].e;
-    buildRoad(p, e.id, true); SFX.build?.();
+    buildRoad(p, TUT.on && tutSlot() ? tutSlot().e : e.id, true); SFX.build?.();
     histPush(`${P.name} colocó su ${round === 1 ? 'primer' : 'segundo'} pueblo en <b>${v.name}</b>`, P.color);
     await wait(600); SETUP.busy = null; SETUP.k++; nextSetup(); return;
   }
   // the human chooses
   SETUP.round = round; G.phase = 'setupV';
   setupTip(`<i style="--c:${P.color}"></i>Coloca tu <b>${round === 1 ? 'primer' : 'segundo'} pueblo</b>${round === 2 ? ' · de sus terrenos elegirás tus recursos iniciales' : ''}`);
-  setupMarkers('v', G.verts.filter(distanceOK));
+  setupMarkers('v', TUT.on && tutSlot() ? [G.verts[tutSlot().v]] : G.verts.filter(distanceOK));
   refresh();
 }
 // ---------- starting resources (the original rule, adjusted) ----------
@@ -8728,7 +8930,7 @@ function setupClick(e){
   if (G.phase === 'setupV' && hit.object.userData.setupV !== undefined){
     const v = G.verts[hit.object.userData.setupV]; buildSettlement(0, v.id, true); SFX.build?.(); SETUP.v = v; if (SETUP.round === 2) G.players[0].v2 = v.id; setupPreview(null);
     G.phase = 'setupE'; setupTip(`<i style="--c:${G.players[0].color}"></i>Ahora coloca un <b>camino</b> junto a tu pueblo`);
-    setupMarkers('e', v.edges.map(id => G.edges[id]).filter(ed => ed.road === null)); refresh(); return true;
+    setupMarkers('e', v.edges.map(id => G.edges[id]).filter(ed => ed.road === null && (!TUT.on || !tutSlot() || ed.id === tutSlot().e))); refresh(); return true;
   }
   if (G.phase === 'setupE' && hit.object.userData.setupE !== undefined){
     buildRoad(0, hit.object.userData.setupE, true); SFX.build?.();
@@ -9746,10 +9948,10 @@ function openMainMenu(){
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
-      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
+      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Ulises, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><p class="mnote">Primera parte: colocación, recursos iniciales, dados y construir.</p><div class="mrow"><button data-go="main">◀ Volver</button><button class="primary" data-go="tutorial">Empezar tutorial ▶</button></div></div>
       <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
-      <button class="mdaynight"></button><div class="mver">SwapHolm · v0.2</div>`;
+      <button class="mdaynight"></button><div class="mver">SwapHolm · v${APP_VERSION}</div>`;
     el.addEventListener('click', menuClick);
     el.querySelector('.mdaynight').onclick = e => { e.stopPropagation(); SFX.click?.(); menuSetNight(!MENU.night); };
     el.querySelector('.mname').addEventListener('input', () => { MENU.match = el.querySelector('.mname').value.trim() || 'Partida'; drawMatchCards(); });
@@ -9926,6 +10128,7 @@ async function menuClick(e){
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
   const go = a.dataset.go;
+  if (go === 'tutorial'){ startTutorial(); return; }
   if (go === 'continue'){ if (!continueGame()) menuGo('main'); return; }
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
@@ -10052,13 +10255,14 @@ async function pauseClick(e){
 }
 // a new game with the same options: the page starts over (like leaving) and start.js opens it straight away
 function restartGame(){
-  try { sessionStorage.setItem('hexterra-restart', JSON.stringify({ opts: { ...GAME_OPTS, online: false }, n: G.players.length })); } catch {}
+  try { sessionStorage.setItem('hexterra-restart', JSON.stringify({ opts: { ...GAME_OPTS, online: false }, n: G.players.length, tut: TUT.on })); } catch {}
   leaveToMenu();
 }
 // called once at startup (main/start.js): true if a restart was asked for and the game is already open
 function restartPending(){
   let d = null; try { d = JSON.parse(sessionStorage.getItem('hexterra-restart') || 'null'); sessionStorage.removeItem('hexterra-restart'); } catch {}
   if (!d || !d.opts) return false;
+  if (d.tut){ startTutorial(); return true; }
   Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts(); newGame(d.n > 4 ? d.n : undefined); startRegistration();
   return true;
 }
@@ -10072,6 +10276,85 @@ async function leaveToMenu(){
 function pauseToggle(){ if (PAUSE.on) pauseClose(); else pauseOpen(); }
 $('#b-pause').innerHTML = ic('engrane');
 $('#b-pause').onclick = e => { e.stopPropagation(); pauseOpen(); };
+// ================= TUTORIAL: Ulises' panel (core/tutorial.js runs the script) =================
+// Ulises stands in a little 3D view facing you (he does not spin: he is talking to you), next to a paper note with
+// his words. "Siguiente" moves on; when he asks for something, the note says so and only that can be used.
+const TG = { el: null, v: null, p: null, talk: 0, res: null, typing: null };
+function tutGuideOpen(){
+  if (!TG.el){
+    const el = TG.el = document.createElement('div'); el.id = 'tut';
+    el.innerHTML = `<div class="tutv"><canvas></canvas></div><div class="tutb"><div class="tuth"><b>Ulises</b><span>el viajero</span><em class="tutc"></em></div><p class="tutt"></p><div class="tutr"><span class="tuthint"></span><span class="tutbtns"></span></div></div>`;
+    document.body.appendChild(el);
+    el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-tut]'); if (TG.typing) TG.typing(); if (b && TG.res){ SFX.click?.(); const r = TG.res; TG.res = null; r(b.dataset.tut); } });   // a button answers at once; elsewhere a click shows the whole text
+  }
+  TG.el.classList.add('show');
+  if (!TG.v && miniInit()){
+    const p = TG.p = travelerModel(); p.g.rotation.y = .35;
+    const v = TG.v = miniView(TG.el.querySelector('canvas'), { w: 130, h: 150, res: 1, fov: 24, fps: 30, tick: (dt, t) => {
+      TG.talk = Math.max(0, TG.talk - dt);
+      const k = TG.talk > 0 ? 1 : 0;
+      p.body.position.y = Math.sin(t*1.8)*.008;                                       // breathing
+      p.head.rotation.y = Math.sin(t*.7)*.12 + k*Math.sin(t*5)*.05; p.head.rotation.x = k*Math.sin(t*7)*.04;
+      if (p.armL){ p.armL.rotation.x = -(.2 + k*(.5 + Math.sin(t*4)*.25)); p.armL.rotation.z = k*.25; }   // the free hand explains while he talks
+    } });
+    v.sc.add(p.g); v.cam.position.set(.15, 1.7, 2.7); v.cam.lookAt(0, 1.36, 0);
+    const key = new THREE.DirectionalLight(0xfff0d8, 1.4); key.position.set(.5, 1.8, 3); v.sc.add(key);   // light on his face, under the brim
+  }
+}
+function tutGuideClose(){ if (TG.el) TG.el.classList.remove('show'); if (TG.res){ const r = TG.res; TG.res = null; r(false); } }
+// his words appear quickly letter by letter (a click shows them all)
+function tutWrite(html, o = {}){
+  const el = TG.el, t = el.querySelector('.tutt'); TG.talk = 2.2;
+  if (TG.p) setFaceExpr(TG.p, o.expr || 'sonrisa');
+  el.querySelector('.tutc').textContent = TUT_CHAPTERS[TUT.chapter] ? `${TUT.chapter + 1}/${TUT_CHAPTERS.length} · ${TUT_CHAPTERS[TUT.chapter]}` : '';
+  t.innerHTML = deEmo(html);
+  const nodes = []; const walk = n => n.childNodes.forEach(c => c.nodeType === 3 ? nodes.push([c, c.textContent]) : walk(c)); walk(t);
+  nodes.forEach(([c]) => c.textContent = '');
+  let i = 0, ni = 0, done = false;
+  const all = () => { done = true; nodes.forEach(([c, s]) => c.textContent = s); TG.typing = null; };
+  TG.typing = all;
+  (async () => { while (!done && ni < nodes.length){ const [c, s] = nodes[ni]; c.textContent = s.slice(0, ++i); if (i >= s.length){ ni++; i = 0; } if (i % 2 === 0) await new Promise(r => setTimeout(r, 12)); } if (!done) all(); })();
+  el.classList.remove('nudge');
+}
+// a line with "Siguiente" (or other buttons): resolves with the button's key, false if the tutorial was closed
+function tutSay(html, o = {}){
+  if (!TUT.on) return Promise.resolve(false);
+  TUT.allow.clear(); tutGlow(null);
+  tutWrite(html, o);
+  const btns = o.buttons || [['next', 'Siguiente ▶']];
+  TG.el.querySelector('.tuthint').textContent = '';
+  TG.el.querySelector('.tutbtns').innerHTML = btns.map(([k, n], i) => `<button data-tut="${k}" class="${i === btns.length - 1 ? 'primary' : ''}">${n}</button>`).join('');
+  return new Promise(r => { TG.res = r; });
+}
+// a line that waits for something to happen in the game; o.allow = what can be used meanwhile, o.wait = nothing to do
+async function tutAct(html, until, o = {}){
+  if (!TUT.on) return false;
+  TUT.allow = new Set(o.allow || []); tutGlow(TUT.glow);
+  tutWrite(html, o);
+  TG.el.querySelector('.tuthint').textContent = o.wait ? 'Espera un momento…' : 'Hazlo para seguir';
+  TG.el.querySelector('.tutbtns').innerHTML = '';
+  const gen = PAUSE.gen;
+  while (!until()){ tutDodge(); await wait(250); if (!TUT.on || PAUSE.gen !== gen) return false; }
+  TG.el.classList.remove('right');
+  TUT.allow.clear(); tutGlow(null);
+  return true;
+}
+// you tried something else: Ulises reminds you
+function tutNudge(){ if (!TG.el) return; const el = TG.el; el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); TG.talk = .8; if (TG.p) setFaceExpr(TG.p, 'duda'); SFX.click?.(); }
+// the button he is talking about shines (the action bar's tokens shine in stepHexbar)
+function tutGlow(k){ document.querySelectorAll('.tutglow').forEach(x => x.classList.remove('tutglow')); if (k === 'fin') $('#b-endturn')?.classList.add('tutglow'); }
+// the spot he asks for must never be under his note: if it is, he moves to the other side of the screen
+function tutDodge(){
+  const el = TG.el; if (!el || mode !== 'board') return;
+  let x = null, z = null;
+  const slot = G.setup ? tutSlot() : null;
+  if (slot){ if (G.phase === 'setupV'){ const v = G.verts[slot.v]; x = v.x; z = v.z; } else if (G.phase === 'setupE'){ const e = G.edges[slot.e], a = G.verts[e.a], b = G.verts[e.b]; x = (a.x + b.x)/2; z = (a.z + b.z)/2; } }
+  else if (TUT.targetE != null){ const e = G.edges[TUT.targetE], a = G.verts[e.a], b = G.verts[e.b]; x = (a.x + b.x)/2; z = (a.z + b.z)/2; }
+  if (x === null) return;
+  const p = new THREE.Vector3(x, .3, z).project(camera), r = canvas.getBoundingClientRect(), sx = r.left + (p.x + 1)/2*r.width, sy = r.top + (1 - p.y)/2*r.height;
+  const box = el.getBoundingClientRect(), over = sx > box.left - 30 && sx < box.right + 30 && sy > box.top - 30 && sy < box.bottom + 30;
+  if (over) el.classList.toggle('right', sx < innerWidth/2);   // to the half of the screen the spot is not in
+}
 // ================= START =================
 function newGame(n, board, seed){
   disposeCtx(); exitBuild(); hidePopup(); highlightPieces(null); DICE3D.length = 0;

@@ -42,10 +42,10 @@ function openMainMenu(){
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
-      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
+      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Ulises, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><p class="mnote">Primera parte: colocación, recursos iniciales, dados y construir.</p><div class="mrow"><button data-go="main">◀ Volver</button><button class="primary" data-go="tutorial">Empezar tutorial ▶</button></div></div>
       <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
-      <button class="mdaynight"></button><div class="mver">SwapHolm · v0.2</div>`;
+      <button class="mdaynight"></button><div class="mver">SwapHolm · v${APP_VERSION}</div>`;
     el.addEventListener('click', menuClick);
     el.querySelector('.mdaynight').onclick = e => { e.stopPropagation(); SFX.click?.(); menuSetNight(!MENU.night); };
     el.querySelector('.mname').addEventListener('input', () => { MENU.match = el.querySelector('.mname').value.trim() || 'Partida'; drawMatchCards(); });
@@ -222,6 +222,7 @@ async function menuClick(e){
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
   const go = a.dataset.go;
+  if (go === 'tutorial'){ startTutorial(); return; }
   if (go === 'continue'){ if (!continueGame()) menuGo('main'); return; }
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');

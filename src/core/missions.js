@@ -18,14 +18,14 @@ function rewardText(r){
   if (r.type === 'road') return `🛤️ ${r.n > 1 ? r.n + ' caminos' : 'Un camino'} de regalo (va a tus objetos)`;
   return '';
 }
-function assignQuestFor0(){ const keep = G.players.map((P, i) => i); assignQuest(0); }
+function assignQuestFor0(){ if (TUT.on) return; const keep = G.players.map((P, i) => i); assignQuest(0); }
 // ---------- every town makes its own missions: a random timer per town, 3 to 5 an hour of play ----------
 // G.playT: seconds of play (advanced by whoever is acting); G.qAt: { vid: playT when that town posts its next one }.
 // A town keeps posting on its timer even while earlier ones are still open.
 const QUEST_GAP = () => 720 + Math.random()*480;   // 12-20 minutes
 function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register' && netAuth()) G.playT = (G.playT || 0) + dt; }
 function villageQuests(){
-  if (!G || G.over || G.setup || isClassic()) return;
+  if (!G || G.over || G.setup || isClassic() || TUT.on) return;
   const now = G.playT || 0; G.qAt ||= {};
   // towns keep posting, so finished missions would pile up forever (and travel in every online state): keep the last 10
   if (G.quests){ const done = G.quests.filter(q => q.state === 'done'); if (done.length > 10){ const drop = new Set(done.slice(0, done.length - 10)); G.quests = G.quests.filter(q => !drop.has(q)); } }

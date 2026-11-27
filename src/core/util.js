@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
+const APP_VERSION = '__APP_VERSION__';   // filled in by build.mjs from package.json
 const NG = { on: false };   // online match state (filled in net/net-game.js); declared first so every hook can read it
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));

@@ -22,7 +22,7 @@
  "models/props-buildings.js",
  "models/trees.js",
  "models/animals.js",
- "models/people.js",
+ "models/people.js", "models/traveler.js",
  "scenes/production-sites.js",
  "scenes/day-night.js",
  "audio/sound.js",
@@ -56,7 +56,7 @@
  "scenes/pier-trade.js",
  "scenes/market-core.js",
  "core/specials.js",
- "core/events.js", "core/save.js",
+ "core/events.js", "core/save.js", "core/tutorial.js",
  "core/missions.js",
  "core/trades.js",
  "ui/inventory.js",
@@ -80,6 +80,6 @@
  "net/net-hub.js",
  "net/net-game.js",
  "ui/menu-title.js",
- "ui/menu.js", "ui/pause.js",
+ "ui/menu.js", "ui/pause.js", "ui/tutorial-guide.js",
  "main/start.js"
 ]
