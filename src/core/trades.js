@@ -6,6 +6,7 @@ function botNeeds(q){
 }
 function botAcceptTrade(q, gets, gives){
   const P = G.players[q]; if ([...RES, ...SPK].some(r => (gives[r] || 0) > haveOf(q, r))) return false;
+  if (TUT.on) return true;   // the tutorial's bots say yes to what they can give
   if (RES.some(r => (gets[r] || gives[r]) && (tradeBlocked(q, r) || tradeBlocked(0, r)))) return false;
   if (vp(0) >= 8) return false;
   const { tgt, need } = botNeeds(q);

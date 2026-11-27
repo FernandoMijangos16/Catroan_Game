@@ -773,3 +773,4 @@ body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:no
 #b-endturn.tutglow{animation:tutglow 1s infinite}
 @keyframes tutglow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,210,120,0))}50%{filter:drop-shadow(0 0 12px rgba(255,210,120,.95)) brightness(1.2)}}
 body.paused #tut{pointer-events:none}
+#menu .mtparts button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:420px}#menu .mtparts small{font-size:11px;opacity:.8;letter-spacing:0;text-transform:none}
