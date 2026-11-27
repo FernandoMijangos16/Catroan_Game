@@ -729,6 +729,39 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 .fwin .ibar button.flip{background:linear-gradient(#e8c870,#b8902e 55%,#94701e);color:#2a1a0c;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,6px 100%,0 50%);border-radius:0;box-shadow:inset 0 1px 0 #fff2c0;font:700 10.5px 'Pixelify Sans',monospace;letter-spacing:.5px;padding:3px 10px 4px}
 .fwin .ibar button.flip::before{display:none}
 .fwin .ibar button.flip:hover{filter:brightness(1.12)}
+
+/* ---------- pause menu (ui/pause.js): only a dark layer over the game, lettering like the main menu ---------- */
+#pause .mview{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;zoom:calc(var(--ui,1)*var(--fit,1))}
+#pause .mview.on{display:flex;animation:ofade .35s}
+#pause [data-v=main]{justify-content:flex-start;padding-top:1vh}
+#pause .mtitle canvas{width:860px;height:250px;max-width:96vw;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,.8))}
+#pause .mopts{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px}
+#pause .mopts a{font:700 30px 'Pixelify Sans',monospace;letter-spacing:3px;text-transform:uppercase;color:#e8e2d4;cursor:pointer;text-shadow:0 3px 0 #000,0 0 14px rgba(0,0,0,.9);transition:color .12s,letter-spacing .15s}
+#pause .mopts a:hover{color:#ffd890;letter-spacing:5px}
+#pause .mopts a:hover::before{content:'▸ '}
+#pause h2{margin:0;font:700 30px 'Pixelify Sans',monospace;letter-spacing:3px;text-transform:uppercase;text-shadow:0 3px 0 #000}
+#pause h3{margin:4px 0;font:700 15px 'Pixelify Sans',monospace;letter-spacing:2px;text-transform:uppercase;color:#c8b898}
+#pause .mrow{display:flex;gap:12px;justify-content:center}
+#pause .mtoggle.off b{color:#ff9a7a}
+#pause .mnote{font-size:13px;color:#d8b8a0;max-width:520px;text-align:center;min-height:1em;margin:0}
+#pause .msoon{font-size:22px;color:#b8a888}
+#pause{position:fixed;inset:0;z-index:160;display:none;color:#f2ece0;font-family:'Pixelify Sans',monospace;user-select:none}
+#pause.show{display:block}
+#pause .pdark{position:absolute;inset:0;background:rgba(3,2,1,.74);animation:ofade .25s}
+#pause .mopts a.dis{opacity:.35;cursor:default}#pause .mopts a.dis:hover{color:#e8e2d4;letter-spacing:3px}#pause .mopts a.dis:hover::before{content:none}
+#pause .pnote{margin-top:4px;color:#e8d0a0}
+#pause .psum{margin-top:10px;min-width:300px;padding:8px 18px 6px;text-align:center;background:rgba(0,0,0,.45);border-top:2px solid #6a5434;border-bottom:2px solid #6a5434}
+#pause .psum:empty{display:none}
+#pause .psum h3{display:flex;gap:6px;align-items:center;justify-content:center}#pause .psum h3 .m3{width:18px;height:18px;margin:0}
+#pause .psum ul{list-style:none;margin:4px 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;font-size:15px}
+#pause .psum li{display:flex;align-items:center;gap:6px}#pause .psum li b{color:#ffd890;margin-left:4px}
+#pause .psum li i{width:11px;height:11px;background:var(--c);display:inline-block;box-shadow:0 0 0 2px #000}
+#pause .psum li.cur{text-decoration:underline;text-underline-offset:4px}
+#pause .psum small{font-size:11px;color:#a89878;letter-spacing:1px}
+#pause .pvol{display:flex;align-items:center;gap:10px;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:#d8c8a0}
+#pause .pvol .m3{width:24px;height:24px;margin:0}#pause .pvol b{min-width:52px;color:#ffd890}
+#pause .pvol input{width:240px;accent-color:#c8a040}
+body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -737,7 +770,7 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 <body data-mode="board">
 <canvas id="c" tabindex="0"></canvas>
 
-<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-event" class="panel" style="display:none"></button><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-sound" class="panel" title="Sonido"></button></div></div>
+<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-event" class="panel" style="display:none"></button><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-sound" class="panel" title="Sonido"></button><button id="b-pause" class="panel" title="Pausa (Esc)"></button></div></div>
 <div id="toasts"></div>
 <div id="announce" class="panel"></div>
 
@@ -794,7 +827,14 @@ const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 // Nothing is decided for the player — only the waiting is cut.
 const SKIP = { until: 0, timers: new Set() };
 const skipping = () => performance.now() < SKIP.until;
-const wait = ms => new Promise(r => { if (skipping()) ms = Math.min(ms, 40); const t = { r }; t.id = setTimeout(() => { SKIP.timers.delete(t); r(); }, ms); SKIP.timers.add(t); });
+// pause (ui/pause.js): a wait that ends while paused is held until the game resumes; PAUSE.gen changes when the game is
+// thrown away (restart, continue, exit), and waits from the old game then never end, so nothing stale runs on the new one
+const PAUSE = { on: false, frozen: false, q: [], gen: 0, at: 0 };
+const PREFS = { fast: false };
+try { PREFS.fast = localStorage.getItem('hexterra-fast') === '1'; } catch {}
+const wait = ms => new Promise(res => { if (skipping()) ms = Math.min(ms, 40); else if (PREFS.fast) ms *= .5;
+  const gen = PAUSE.gen, r = () => { if (gen !== PAUSE.gen) return; if (PAUSE.frozen) PAUSE.q.push(res); else res(); };
+  const t = { r }; t.id = setTimeout(() => { SKIP.timers.delete(t); r(); }, ms); SKIP.timers.add(t); });
 function skipAnims(){
   SKIP.until = performance.now() + 1200;
   SKIP.timers.forEach(t => { clearTimeout(t.id); t.r(); }); SKIP.timers.clear();
@@ -1876,7 +1916,7 @@ function botRobber(p){
   moveRobber(best, p);
 }
 function checkWin(p){
-  if (vp(p) >= 10 && !G.over){ G.over = true; G.winner = p; G.phase = 'over'; refresh(); if (NG.on) netFlush(true); showWin(p); }
+  if (vp(p) >= 10 && !G.over){ G.over = true; G.winner = p; G.phase = 'over'; if (!NG.on) clearSave(); refresh(); if (NG.on) netFlush(true); showWin(p); }
 }
 
 // ================= BOTS =================
@@ -1988,6 +2028,7 @@ function endTurn(){
   }
   refresh();
   if (NG.on){ netFlush(true); netKick(); return; }
+  autoSave();   // solo games keep themselves saved at every turn (core/save.js)
   if (P.bot) botTurn(G.current);
   else { notify('🔔 <b>Es tu turno</b>' + (mode !== 'board' ? ' · vuelve al tablero para jugar' : ''), P.color, 'sys'); SFX.turn(); }
 }
@@ -2062,6 +2103,10 @@ function iconModel(k){
     case 'silla': A(GEO.box, wood, 0, -.1, 0, .5, .06, .5); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => A(GEO.box, wood, x*.2, -.45, z*.2, .05, .7, .05)); A(GEO.box, wood, 0, .2, -.22, .5, .55, .05); break;
     case 'girasol': A(GEO.box, 0x3a8a3a, 0, -.4, 0, .05, .7, .05); for (let i=0;i<8;i++){ const a = i/8*Math.PI*2; A(GEO.sphere, 0xf2c23a, Math.cos(a)*.22, .15 + Math.sin(a)*.22, 0, .1, .1, .04); } A(GEO.sphere, 0x5a3a1a, 0, .15, .03, .14, .14, .05); break;
     case 'olla': A(GEO.sphere, 0x3a3634, 0, -.1, 0, .4, .3, .4); A(GEO.cyl14, 0xd9a050, 0, .14, 0, .32, .04, .32); break;
+    case 'engrane': { const W = new THREE.Group(); W.rotation.x = Math.PI/2; g.add(W); const ring = (geo, c, y, sx, sy, sz, ry = 0) => { const m = mesh(geo, c, 0, y, 0, sx, sy, sz, false); m.rotation.y = ry; W.add(m); };
+      ring(GEO.cyl, gold, 0, .52, .16, .52); ring(GEO.cyl, dark, 0, .17, .18, .17);   // brass wheel with a dark hub hole
+      for (let i=0;i<8;i++){ const a = i*Math.PI/4, m = mesh(GEO.box, gold, Math.cos(a)*.56, 0, Math.sin(a)*.56, .2, .16, .16, false); m.rotation.y = -a; W.add(m); }
+      break; }
     case 'cuerno': case 'cuerno-off': { const h = A(GEO.cone7, gold, 0, -.35, 0, .3, .8, .3, 0, 0, Math.PI/2); if (k === 'cuerno-off'){ A(GEO.box, 0xa82a2a, 0, 0, .2, .9, .08, .04, 0, 0, .7); } break; }
     case 'check': A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .38, .1, 0, 0, .7); A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .7, .1, 0, 0, -.6); break;
     case 'cruz': A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, .78); A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, -.78); break;
@@ -3778,7 +3823,7 @@ function audioInit(){
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   try { SND.ctx = new AC(); } catch { return; }
   const c = SND.ctx;
-  SND.master = c.createGain(); SND.master.gain.value = SND.on ? .8 : 0;
+  SND.master = c.createGain(); SND.master.gain.value = SND.on ? .8*SND.vol : 0;
   const comp = c.createDynamicsCompressor(); SND.master.connect(comp); comp.connect(c.destination);
   const nb = c.createBuffer(1, c.sampleRate*2, c.sampleRate), d = nb.getChannelData(0);
   for (let i=0;i<d.length;i++) d[i] = Math.random()*2 - 1;
@@ -3805,8 +3850,11 @@ function audioInit(){
 }
 function setSound(on){
   SND.on = on; try { localStorage.setItem('hexterra-sound', on ? 'on' : 'off'); } catch {}
-  if (SND.master) SND.master.gain.setTargetAtTime(on ? .8 : 0, SND.ctx.currentTime, .1);
+  if (SND.master) SND.master.gain.setTargetAtTime(on ? .8*SND.vol : 0, SND.ctx.currentTime, .1);
 }
+// overall volume, 0..1 (pause menu → Ajustes)
+SND.vol = 1; try { const v = parseFloat(localStorage.getItem('hexterra-vol')); if (v >= 0 && v <= 1) SND.vol = v; } catch {}
+function setVolume(v){ SND.vol = clamp(v, 0, 1); try { localStorage.setItem('hexterra-vol', String(SND.vol)); } catch {} if (SND.master && SND.on) SND.master.gain.setTargetAtTime(.8*SND.vol, SND.ctx.currentTime, .05); }
 const sndOk = () => SND.ctx && SND.on && SND.ctx.state === 'running';
 function tone(freq, dur, type='sine', vol=.2, o={}){
   if (!sndOk()) return;
@@ -6336,6 +6384,48 @@ function updEventChip(){
   if (b.dataset.k !== k){ b.dataset.k = k; b.innerHTML = ic(E.icon) + '<span></span>'; }
   b.lastChild.textContent = ` ${E.name} · ${left} ${left === 1 ? 'ronda' : 'rondas'}`; b.title = E.desc; b.style.display = '';
 }
+// ================= SAVE AND CONTINUE (solo games only: one slot in localStorage) =================
+// The state is the same one the online game sends (netSnap), taken with this player at seat 0; continuing rebuilds the
+// board from its terrains, numbers and ports and applies that state like an online client would (netApply).
+// It is saved by itself at the end of every turn; "Guardar" in the pause menu saves the moment if it is a calm one
+// (your turn, before or after rolling, nothing open), otherwise that turn's start is what stays saved.
+const SAVE_KEY = 'hexterra-save';
+const canSave = () => !!G && !NG.on && !G.setup && !G.over && G.phase !== 'register';
+function snapLocal(){
+  const keep = { seat: NG.seat, n: NG.n, ver: NG.ver };
+  NG.seat = 0; NG.n = G.players.length; NG.ver = 0;
+  try { return netSnap(); } finally { Object.assign(NG, keep); }
+}
+// a moment that can be picked up again as it is: nobody is halfway through something
+const calmNow = () => G.current === 0 && (G.phase === 'roll' || G.phase === 'main') && !G.buildMode && !G.amuletPick && (mode === 'board' || mode === 'village')
+  && $('#modal').classList.contains('hidden');
+function saveGame(){
+  if (!canSave()) return false;
+  const data = { v: 1, at: Date.now(), opts: { ...GAME_OPTS, online: false }, n: G.players.length, round: gameRound(),
+    board: { types: G.tiles.map(t => t.type), nums: G.tiles.map(t => t.num), ports: G.ports.map(p => [p.type, p.a, p.b]), seed: G.seed },
+    news: HIST.slice(-40), s: snapLocal() };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); return true; } catch { return false; }
+}
+function readSave(){ try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return d && d.v === 1 && d.s && d.board ? d : null; } catch { return null; } }
+const hasSave = () => !!readSave();
+function clearSave(){ try { localStorage.removeItem(SAVE_KEY); } catch {} }
+// end of every turn (core/bots.js endTurn)
+function autoSave(){ if (canSave()) saveGame(); }
+function continueGame(){
+  const d = readSave(); if (!d) return false;
+  PAUSE.gen++;
+  Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts();
+  newGame(d.n, d.board, d.board.seed);
+  Object.assign(NG, { seat: 0, n: d.n, ver: -1, regLocal: false, hold: false, held: null, dice: null });
+  G.quests = (d.s.q || []).map(q => ({ ...q }));   // already known: their "new mission" notes do not pop up again
+  netApply(d.s);
+  if (Array.isArray(d.news)){ HIST.push(...d.news); setTimeout(renderNews, 50); }
+  NG.ver = 0; refresh();
+  const P = G.players[G.current];
+  if (P.bot) botTurn(G.current, G.phase !== 'roll');
+  else notify('Continuaste tu partida · <b>es tu turno</b>', P.color, 'sys');
+  return true;
+}
 // ================= MISSIONS =================
 const QUEST_TXT = {
   brujo: ['Je, je… para mi caldero necesito {x}. A cambio, te daré algo que pocos han tocado.', 'Las estrellas me dicen que tú puedes traerme {x}. Mi amuleto será tuyo.', 'Mezclo un hechizo viejo… me falta {x}. Te pagaré con magia.'],
@@ -8310,10 +8400,20 @@ document.addEventListener('pointerleave', e => { if (e.buttons === 0) releaseStu
 const keyName = e => e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
 addEventListener('keydown', e => {
   const k = keyName(e);
+  if (PAUSE.on){ if (k === 'escape'){ if (PZ.view === 'main') pauseClose(); else pauseGo('main'); } return; }
+  if (k === 'escape' && escOpensPause()){ pauseOpen(); return; }
   if (mode === 'village'){ ctl.keys[k] = true; if (k.startsWith('arrow') || k === ' ') e.preventDefault(); }
   if (k === 'escape' && mode === 'market' && marketCtx && marketCtx.kind !== 'thief' && !marketCtx.busy){ exitMarket(); return; }
   if (k === 'escape'){ if (!modal.classList.contains('hidden') && modal.dataset.dismiss) closeModal(); else if (mode === 'board'){ exitBuild(); hidePopup(); refresh(); } }
 });
+// Esc pauses only when there is nothing to close first (a dialog, the market, a build or a popup on the board, the showcase)
+function escOpensPause(){
+  if (mode === 'menu' || !G || (typeof SHOW !== 'undefined' && SHOW.kind)) return false;
+  if (!modal.classList.contains('hidden') && modal.dataset.dismiss) return false;
+  if (mode === 'market') return false;
+  if (mode === 'board' && (G.buildMode || $('#popup').style.display === 'block')) return false;
+  return mode === 'board' || mode === 'village' || mode === 'anim';
+}
 addEventListener('keyup', e => { ctl.keys[keyName(e)] = false; });
 addEventListener('blur', () => { ctl.keys = {}; });
 document.querySelectorAll('#dpad button').forEach(b => {
@@ -8367,6 +8467,7 @@ function draw(sc){ if (sc.userData.env){ applyEnv(sc.userData.env, 0, clock.elap
 let pulseT = 0;
 renderer.setAnimationLoop(() => {
   const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
+  if (PAUSE.frozen){ stepMini(raw); const sc = mode === 'village' && villageCtx ? villageCtx.sc : mode === 'market' && marketCtx ? marketCtx.sc : boardScene; if (sc) draw(sc); return; }   // paused: the game stands still under the dark layer
   WIND.value = t; stepInventory(raw); stepMini(raw); stepHexbar(raw); stepHighlight(t);
   advanceDay(dt); updateAudio(Math.min(raw, .1), t); tickPlayTime(Math.min(raw, 1)); seasonStep(dt, t);
   if ((uiT += raw) > .5){ uiT = 0; const [ik, tx] = dayLabel(), bt = $('#b-time'); if (bt.dataset.ic !== ik){ bt.dataset.ic = ik; bt.innerHTML = ic(ik) + '<span></span>'; } bt.lastChild.textContent = ' ' + tx; }
@@ -9516,15 +9617,17 @@ const GLYPHS = {
   H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
   L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
   M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
+  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
 };
-// ---------- the SwapHolm wordmark: block letters of brass and wood; the O is a little tile of one of the board's biomes ----------
+// ---------- the SwapHolm wordmark: letters piled out of one resource; the O is a little tile of the biome that gives it ----------
 const LOGO_BIOMES = ['bosque', 'pradera', 'cerro', 'campo', 'montana'];
 function logoHex(biome, rnd = mulberry32(Math.floor(Math.random()*1e6)), town = false){
   // hexTileMesh already sits .2 up: everything on it goes at .2 + the relief, like on the board
   const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => .2 + tileHeight(t, x, z);
   g.add(hexTileMesh(t));
   const side = new THREE.Mesh(GEO.hexSide, mat(0x7a5c40)); side.position.y = .1; g.add(side);   // the earth wall, as on the board
-  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = .03; g.add(rim);
+  // brass rim: a 6-sided cylinder already has its corners where the tile has them (no extra turn, or they stick out)
+  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.position.y = .03; g.add(rim);
   const trees = new TreeBatch(.012), spot = (r0, r1) => { const a = rnd()*6.28, d = r0 + rnd()*(r1 - r0); return [Math.cos(a)*d, Math.sin(a)*d]; };
   const nTrees = { bosque: 12, pradera: 3, cerro: 3, campo: 2, montana: 4 }[biome];
   for (let k=0;k<nTrees;k++){ const [x, z] = spot(town ? .45 : .25, .78); trees.add(treeKindFor(biome, rnd), x, Y(x, z) - .004, z, .045 + rnd()*.02, rnd()*6.28, treeTint(biome === 'montana' || biome === 'cerro' ? 'pino' : 'roble', rnd)); }
@@ -9534,18 +9637,48 @@ function logoHex(biome, rnd = mulberry32(Math.floor(Math.random()*1e6)), town = 
   if (town){ const h = boardHouse('#e0473b', true); h.scale.setScalar(2.1); h.position.set(.05, Y(.05, .05), .05); g.add(h); }
   return g;
 }
-function buildWordmark(biome){
-  const word = 'SWAPHOLM', cells = [], cs = .1, gap = 6, letters = [];
-  [...word].forEach((ch, i) => { if (ch === 'O') return; GLYPHS[ch].forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') cells.push({ i, x: i*gap + x, y }); })); });
+// the item outline, but for InstancedMesh: same look, each copy moved by its own instance matrix
+let OUTLINE_INST = null;
+function outlineInstMat(){
+  if (OUTLINE_INST) return OUTLINE_INST; const A = itemAssets();
+  return OUTLINE_INST = keepMat(new THREE.ShaderMaterial({ uniforms: A.outline.uniforms, side: THREE.BackSide,
+    vertexShader: 'uniform float w; void main(){ vec3 n = normalize(normalMatrix*(mat3(instanceMatrix)*normal)); vec4 mv = modelViewMatrix*instanceMatrix*vec4(position, 1.); mv.xyz += n*w*max(1., -mv.z*.35); gl_Position = projectionMatrix*mv; }',
+    fragmentShader: A.outline.fragmentShader }));
+}
+// one resource model copied into every lit cell of a letter, packed tight and tumbled a little: one InstancedMesh per
+// piece of the model per letter, so ~120 copies cost a few dozen draw calls
+function resourceLetter(res, spots, size, rnd){
+  const proto = makeResourceItem(res); proto.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(proto), c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+  const fit = new THREE.Matrix4().makeScale(...Array(3).fill(size/Math.max(sz.x, sz.y, sz.z))).multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z));
+  // each spot is [x, y, a]: a = direction of the stroke there (long items lie along it), null = any way round
+  const at = spots.map(([x, y, a]) => new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(a == null ? .5 + rnd()*.4 : 1.05 + rnd()*.3, (rnd() - .5)*.5, a == null ? (rnd() - .5)*.7 : a + (rnd() - .5)*.3, 'ZXY')).setPosition(x, y, (rnd() - .5)*.03).multiply(fit));
+  const g = new THREE.Group(), m = new THREE.Matrix4();
+  proto.traverse(o => { if (!o.isMesh || !o.visible) return; const im = new THREE.InstancedMesh(o.geometry, o.userData.outline ? outlineInstMat() : o.material, at.length);
+    at.forEach((a, k) => im.setMatrixAt(k, m.multiplyMatrices(a, o.matrixWorld))); im.frustumCulled = false; g.add(im); });
+  return g;
+}
+// a word of GLYPHS piled out of one resource, centred; letters in `skip` are left empty (the O of the title)
+function resourceWord(word, res, skip = ''){
+  const cs = .1, gap = 6, letters = [], rnd = mulberry32(Math.floor(Math.random()*1e6)), long = ['madera', 'ladrillo', 'mineral'].includes(res);
   const W = (word.length*gap - 1)*cs, g = new THREE.Group();
-  const brass = pxTex(8, 8, c => { for (let y=0;y<8;y++) for (let x=0;x<8;x++){ const k = .86 + hash2(x, y, 9)*.22 - (y > 5 ? .1 : 0); c.fillStyle = '#' + new THREE.Color(0xd8a840).multiplyScalar(k).getHexString(); c.fillRect(x, y, 1, 1); } });
-  const face = keepMat(new THREE.MeshStandardMaterial({ map: brass, color: 0xffffff, metalness: .55, roughness: .45, flatShading: true })), wood = keepMat(new THREE.MeshStandardMaterial({ color: 0x4a2c16, roughness: .9, flatShading: true }));
-  [...word].forEach((ch, i) => { const L = new THREE.Group(); L.position.x = -W/2 + (i*gap + 2)*cs + cs/2; g.add(L); letters.push(L); });
-  // each lit pixel: a brass cube with a dark wooden backing, a little worn so every block reads on its own
-  cells.forEach(({ i, x, y }) => { const L = letters[i], lx = (x - i*gap - 2)*cs, ly = (3 - y)*cs, j = (hash2(x, y, 4) - .5)*.012;
-    const f = new THREE.Mesh(GEO.box, face); f.scale.set(cs*.98, cs*.98, cs*.5); f.position.set(lx, ly - cs*.47 + j, cs*.12); f.castShadow = true; L.add(f);
-    const b = new THREE.Mesh(GEO.box, wood); b.scale.set(cs, cs, cs*.5); b.position.set(lx, ly - cs*.5, -cs*.3); L.add(b); });
-  const O = letters[word.indexOf('O')], hex = spinner(logoHex(biome), cs*8.6); hex.rotation.x = .66; hex.position.y = -cs*.3; O.add(hex);   // tilted toward you, turning on its own axis
+  [...word].forEach((ch, i) => { const L = new THREE.Group(); L.position.x = -W/2 + (i*gap + 2)*cs + cs/2; g.add(L); letters.push(L);
+    if (skip.includes(ch)) return; const spots = [], on = (x, y) => GLYPHS[ch][y] && GLYPHS[ch][y][x] === '#';
+    GLYPHS[ch].forEach((row, y) => [...row].forEach((c, x) => { if (c !== '#') return; const px = (x - 2)*cs, py = (3 - y)*cs - cs*.47;
+      if (!long){ spots.push([px + (rnd() - .5)*cs*.12, py + (rnd() - .5)*cs*.12, null]); return; }
+      // the stroke through this cell: across, down, or the diagonal of the W and the M
+      const h = on(x - 1, y) || on(x + 1, y), v = on(x, y - 1) || on(x, y + 1);
+      const a = h && !v ? 0 : v && !h ? Math.PI/2 : h && v ? (rnd() < .5 ? 0 : Math.PI/2) : (on(x + 1, y + 1) || on(x - 1, y - 1)) ? -Math.PI/4 : Math.PI/4;
+      [-1, 1].forEach(sd => spots.push([px - Math.sin(a)*sd*cs*.22 + (rnd() - .5)*cs*.08, py + Math.cos(a)*sd*cs*.22 + (rnd() - .5)*cs*.08, a])); }));   // two per cell, side by side
+    L.add(resourceLetter(res, spots, long ? cs*1.45 : res === 'lana' ? cs*1.9 : cs*1.7, rnd)); });
+  return { g, letters, cs };
+}
+function buildWordmark(biome){
+  const word = 'SWAPHOLM', { g, letters, cs } = resourceWord(word, TERRAIN[biome].res, 'O');
+  // the O: as tall as the letters, tilted toward you, turning on its own axis
+  const O = letters[word.indexOf('O')], hex = spinner(logoHex(biome), 1); hex.rotation.x = 1.0; hex.updateMatrixWorld(true);
+  const hb = new THREE.Box3().setFromObject(hex), hs = hb.getSize(new THREE.Vector3()); hex.scale.multiplyScalar(Math.min(7*cs/hs.y, 6.4*cs/hs.x));
+  hex.position.y = -cs*.47; O.add(hex);
   return { g, letters, hex, biome };
 }
 function groundTex(base, spots, seed){
@@ -9600,7 +9733,7 @@ function openMainMenu(){
   let el = MENU.el;
   if (!el){ el = MENU.el = document.createElement('div'); el.id = 'menu'; document.body.appendChild(el);
     el.innerHTML = `<div class="mbg"></div><div class="mdark"></div><div class="mfall"><canvas></canvas></div><div class="mdark2"></div>
-      <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
+      <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="continue" class="mcont">Continuar</a><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
       <div class="mview" data-v="play"><h2>Elige el modo</h2><div class="mmodes"></div>
         <div class="mrow"><button class="mtoggle" data-fp="1"></button><button class="mtoggle" data-ev="1"></button></div>
         <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4, 5, 6].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}<button class="mtoggle mbots"></button></div>
@@ -9630,8 +9763,8 @@ function openMainMenu(){
 }
 function closeMainMenu(){ if (!MENU.el) return; MENU.el.classList.remove('show'); document.body.classList.remove('inmenu'); }
 // a view taller than the window shrinks to fit (the title and Volver must always show)
-function fitMenuView(){
-  const el = MENU.el && MENU.el.querySelector('.mview.on'); if (!el) return;
+function fitMenuView(root = MENU.el){
+  const el = root && root.querySelector('.mview.on'); if (!el) return;
   el.style.setProperty('--fit', 1);
   const rs = [...el.children].filter(k => k.offsetParent !== null).map(k => k.getBoundingClientRect()).filter(r => r.height);
   if (!rs.length) return; const h = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), room = innerHeight - 20;
@@ -9643,7 +9776,8 @@ function menuGo(v){
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
   setTimeout(fitMenuView, 0); setTimeout(fitMenuView, 400);   // again once the 3D canvases and notes are in
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
-  if (v === 'main') buildMenuTitle();
+  if (v === 'main'){ buildMenuTitle(); const s = readSave(), c = el.querySelector('.mcont'); c.style.display = s ? '' : 'none';
+    if (s) c.title = `Ronda ${s.round || 1} · ${s.n} jugadores · guardada el ${new Date(s.at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`; }
   if (v === 'play'){ buildModeHexes(); updNp(); updEvToggle(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
   if (v === 'mp') el.querySelector('[data-v=mp] .mnote').textContent = '';
   if (v === 'create'){ updNetToggle(); if (!MENU.key) MENU.key = menuNewKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
@@ -9792,6 +9926,7 @@ async function menuClick(e){
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
   const go = a.dataset.go;
+  if (go === 'continue'){ if (!continueGame()) menuGo('main'); return; }
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
@@ -9810,6 +9945,133 @@ async function menuClick(e){
   else if (go === 'bye'){ menuGo('bye'); try { window.close(); } catch {} }
   else menuGo(go);
 }
+// ================= PAUSE MENU (Esc, or the gear in the top-right corner) =================
+// Only a dark layer over the game, with PAUSA piled out of one resource where the menu has its title, and the options
+// in the menu's lettering. In a solo game everything stops (PAUSE.frozen: waits are held and the loop only draws);
+// online the others keep playing, so it only covers the screen, and Guardar / Reiniciar are not offered.
+const PZ = { el: null, title: null, view: 'main', ask: null };
+function pauseEl(){
+  if (PZ.el) return PZ.el;
+  const el = PZ.el = document.createElement('div'); el.id = 'pause';
+  el.innerHTML = `<div class="pdark"></div>
+    <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div>
+      <nav class="mopts"><a data-p="resume">Reanudar</a><a data-p="save" class="psolo">Guardar</a><a data-p="saveexit" class="psolo">Guardar y salir</a><a data-p="restart" class="psolo">Reiniciar</a><a data-p="settings">Ajustes</a><a data-p="help">Ayuda</a><a data-p="exit">Salir</a></nav>
+      <p class="mnote pnote"></p><div class="psum"></div></div>
+    <div class="mview" data-v="ask"><h2></h2><p class="mnote"></p><div class="mrow"><button class="no" data-p="main">No</button><button class="primary" data-p="yes">Sí</button></div></div>
+    <div class="mview" data-v="settings"><h2>Ajustes</h2>
+      <label class="pvol">${ic('cuerno')} Volumen <input type="range" min="0" max="100" step="5"><b></b></label>
+      <div class="mrow"><button class="mtoggle" data-set="full"></button><button class="mtoggle" data-set="fast"></button></div>
+      <div class="mrow"><button data-p="main">◀ Volver</button></div></div>
+    <div class="mview" data-v="help"><h2>Ayuda</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-p="main">◀ Volver</button></div></div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click', pauseClick);
+  const vol = el.querySelector('.pvol input');
+  vol.addEventListener('input', () => { audioInit(); setVolume(vol.value/100); updSettings(); });
+  addEventListener('fullscreenchange', () => { if (PAUSE.on) updSettings(); });
+  addEventListener('resize', () => { if (PAUSE.on) fitMenuView(el); });
+  return el;
+}
+function pauseOpen(){
+  if (PAUSE.on || mode === 'menu' || !G) return;
+  const el = pauseEl(); PAUSE.on = true; PAUSE.frozen = !NG.on; PAUSE.at = performance.now();
+  ctl.keys = {}; releaseStuck?.(null);
+  el.classList.toggle('online', !!NG.on); el.classList.add('show'); document.body.classList.add('paused');
+  el.querySelector('.pnote').textContent = NG.on ? 'La partida en línea sigue mientras estás en pausa.' : '';
+  pauseGo('main'); SFX.click?.();
+}
+function pauseClose(){
+  if (!PAUSE.on) return;
+  PAUSE.on = false; document.body.classList.remove('paused'); PZ.el.classList.remove('show');
+  if (PZ.title){ PZ.title.alive = false; PZ.title = null; }
+  if (PAUSE.frozen){
+    PAUSE.frozen = false; const gone = performance.now() - PAUSE.at;
+    if (tween) tween.start += gone;   // a camera move picks up where it stopped
+    clock.getDelta();                 // and the loop does not jump by the paused time
+    const q = PAUSE.q; PAUSE.q = []; q.forEach(r => r());
+  }
+}
+function pauseGo(v){
+  PZ.view = v; const el = PZ.el;
+  el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  if (v === 'main'){ pauseTitle(); pauseSummary(); const solo = !NG.on, ok = canSave();
+    el.querySelectorAll('.psolo').forEach(a => a.style.display = solo ? '' : 'none');
+    ['save', 'saveexit'].forEach(k => el.querySelector(`[data-p=${k}]`).classList.toggle('dis', !ok));
+    el.querySelector('[data-p=save]').title = ok ? 'Guarda esta partida (también se guarda sola al terminar cada turno)' : 'Se puede guardar cuando termine la colocación inicial'; }
+  if (v === 'settings') updSettings();
+  setTimeout(() => fitMenuView(PZ.el), 0);   // the summary under the options must fit too (same shrink as the main menu)
+}
+// PAUSA, piled out of a resource picked at random each time, where the menu has its title
+function pauseTitle(){
+  const cv = PZ.el.querySelector('.mtitle canvas'); if (!miniInit()) return;
+  if (PZ.title) PZ.title.alive = false;
+  const T = resourceWord('PAUSA', pick(RES));
+  const v = miniView(cv, { w: 860, h: 250, res: .8, fov: 26, fps: 30, tick: (dt, t) => T.letters.forEach((L, i) => { L.position.y = Math.sin(t*1.6 - i*.55)*.012; }) });
+  v.cam.position.set(0, .34, 3.35); v.cam.lookAt(0, -.02, 0); v.sc.add(T.g); PZ.title = v;
+}
+// round, season event and everyone's points
+function pauseSummary(){
+  const box = PZ.el.querySelector('.psum'); if (!G || G.phase === 'register'){ box.innerHTML = ''; return; }
+  const k = curEvent(), ev = k ? ` · ${ic(EVENTS[k].icon)} ${EVENTS[k].name} (${evRoundsLeft()} ${evRoundsLeft() === 1 ? 'ronda' : 'rondas'})` : '';
+  const head = G.setup ? 'Colocación inicial' : `Ronda ${gameRound()}${ev}`;
+  const rows = G.players.map((P, i) => ({ P, i, pts: vp(i) })).filter(r => !r.P.empty).sort((a, b) => b.pts - a.pts)
+    .map(({ P, i, pts }) => `<li${i === G.current ? ' class="cur"' : ''}><i style="--c:${P.color}"></i>${String(P.name).replace(/[<>&"]/g, '')}${i === 0 ? ' (tú)' : ''}<b>${pts}</b></li>`).join('');
+  box.innerHTML = `<h3>${head}</h3><ul>${rows}</ul><small>Gana quien llega a 10 puntos</small>`;
+}
+function updSettings(){
+  const el = PZ.el, vol = el.querySelector('.pvol input'), pct = Math.round(SND.vol*100);
+  vol.value = pct; el.querySelector('.pvol b').textContent = pct + ' %';
+  const full = !!document.fullscreenElement, fb = el.querySelector('[data-set=full]'), sb = el.querySelector('[data-set=fast]');
+  fb.innerHTML = `${ic('mapa')} Pantalla completa: <b>${full ? 'Sí' : 'No'}</b>`; fb.classList.toggle('off', !full);
+  sb.innerHTML = `${ic('flechas')} Animaciones: <b>${PREFS.fast ? 'Rápidas' : 'Normales'}</b>`; sb.classList.toggle('off', false);
+  sb.title = 'Rápidas: las esperas de los turnos (bots, dados, avisos) duran la mitad';
+}
+// a question before throwing the game away
+function pauseAsk(title, note, fn){ PZ.ask = fn; const v = PZ.el.querySelector('[data-v=ask]'); v.querySelector('h2').textContent = title; v.querySelector('.mnote').textContent = note; pauseGo('ask'); }
+const unsavedNote = () => NG.on ? (NG.seat === 0 ? 'Eres el anfitrión: la partida termina para todos.' : 'Un bot tomará tu lugar; puedes volver con la misma clave.')
+  : 'Lo que pasó desde el último guardado se pierde (se guarda solo al terminar cada turno).';
+function pauseSave(){
+  if (!canSave()) return false;
+  if (calmNow()) return saveGame() ? 'now' : false;
+  return hasSave() ? 'turn' : (saveGame() ? 'now' : false);   // mid-action: the save from the start of this turn stays
+}
+async function pauseClick(e){
+  const a = e.target.closest('[data-p],[data-set]'); if (!a) return; e.stopPropagation();
+  if (a.classList.contains('dis')) return; SFX.click?.();
+  const k = a.dataset.p, note = PZ.el.querySelector('.pnote');
+  if (k === 'resume') pauseClose();
+  else if (k === 'main') pauseGo('main');
+  else if (k === 'settings') pauseGo('settings');
+  else if (k === 'help') pauseGo('help');
+  else if (k === 'save'){ const r = pauseSave(); note.textContent = r === 'now' ? 'Partida guardada.' : r === 'turn' ? 'Guardada como estaba al empezar este turno (hay una acción a medias).' : 'No se pudo guardar.'; }
+  else if (k === 'saveexit'){ const r = pauseSave(); if (r) leaveToMenu(); else note.textContent = 'No se pudo guardar.'; }
+  else if (k === 'restart') pauseAsk('¿Reiniciar la partida?', 'Empieza otra con las mismas opciones y un tablero nuevo. ' + unsavedNote(), restartGame);
+  else if (k === 'exit') pauseAsk('¿Salir al menú?', unsavedNote(), leaveToMenu);
+  else if (k === 'yes'){ const f = PZ.ask; PZ.ask = null; if (f) f(); }
+  else if (a.dataset.set === 'full'){ try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch {} updSettings(); }
+  else if (a.dataset.set === 'fast'){ PREFS.fast = !PREFS.fast; try { localStorage.setItem('hexterra-fast', PREFS.fast ? '1' : '0'); } catch {} updSettings(); }
+}
+// a new game with the same options: the page starts over (like leaving) and start.js opens it straight away
+function restartGame(){
+  try { sessionStorage.setItem('hexterra-restart', JSON.stringify({ opts: { ...GAME_OPTS, online: false }, n: G.players.length })); } catch {}
+  leaveToMenu();
+}
+// called once at startup (main/start.js): true if a restart was asked for and the game is already open
+function restartPending(){
+  let d = null; try { d = JSON.parse(sessionStorage.getItem('hexterra-restart') || 'null'); sessionStorage.removeItem('hexterra-restart'); } catch {}
+  if (!d || !d.opts) return false;
+  Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts(); newGame(d.n > 4 ? d.n : undefined); startRegistration();
+  return true;
+}
+// back to the main menu: the page starts over, so no turn, scene or connection of this game is left running
+async function leaveToMenu(){
+  PAUSE.gen++; PAUSE.q = [];
+  if (NG.on){ try { if (NG.seat === 0) netSend({ t: 'bye' }); await netLeave(); } catch {} }
+  try { window.catroanDesk?.lanClose(); } catch {}
+  location.reload();
+}
+function pauseToggle(){ if (PAUSE.on) pauseClose(); else pauseOpen(); }
+$('#b-pause').innerHTML = ic('engrane');
+$('#b-pause').onclick = e => { e.stopPropagation(); pauseOpen(); };
 // ================= START =================
 function newGame(n, board, seed){
   disposeCtx(); exitBuild(); hidePopup(); highlightPieces(null); DICE3D.length = 0;
@@ -9914,6 +10176,7 @@ $('#b-set small').innerHTML = ['madera','ladrillo','lana','trigo'].map(k => resI
 $('#b-city small').innerHTML = resImg('trigo').repeat(2) + resImg('mineral').repeat(3);
 newGame();
 openMainMenu();
+restartPending();   // "Reiniciar" in the pause menu reloads the page and the new game opens here
 const updSoundBtn = () => { $('#b-sound').innerHTML = ic(SND.on ? 'cuerno' : 'cuerno-off'); $('#b-sound').title = SND.on ? 'Sonido: activado' : 'Sonido: apagado'; };
 const updCycleBtn = () => { const b = $('#b-cycle'); b.innerHTML = ic(DAY.fixed ? 'sol' : 'luna'); b.title = DAY.fixed ? 'Ciclo de día y noche: apagado (siempre de día) · toca para activarlo' : 'Ciclo de día y noche: activado · toca para dejar siempre de día'; document.body.classList.toggle('nocycle', DAY.fixed); };
 updCycleBtn();

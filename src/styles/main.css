@@ -720,3 +720,36 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 .fwin .ibar button.flip{background:linear-gradient(#e8c870,#b8902e 55%,#94701e);color:#2a1a0c;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,6px 100%,0 50%);border-radius:0;box-shadow:inset 0 1px 0 #fff2c0;font:700 10.5px 'Pixelify Sans',monospace;letter-spacing:.5px;padding:3px 10px 4px}
 .fwin .ibar button.flip::before{display:none}
 .fwin .ibar button.flip:hover{filter:brightness(1.12)}
+
+/* ---------- pause menu (ui/pause.js): only a dark layer over the game, lettering like the main menu ---------- */
+#pause .mview{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;zoom:calc(var(--ui,1)*var(--fit,1))}
+#pause .mview.on{display:flex;animation:ofade .35s}
+#pause [data-v=main]{justify-content:flex-start;padding-top:1vh}
+#pause .mtitle canvas{width:860px;height:250px;max-width:96vw;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,.8))}
+#pause .mopts{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px}
+#pause .mopts a{font:700 30px 'Pixelify Sans',monospace;letter-spacing:3px;text-transform:uppercase;color:#e8e2d4;cursor:pointer;text-shadow:0 3px 0 #000,0 0 14px rgba(0,0,0,.9);transition:color .12s,letter-spacing .15s}
+#pause .mopts a:hover{color:#ffd890;letter-spacing:5px}
+#pause .mopts a:hover::before{content:'▸ '}
+#pause h2{margin:0;font:700 30px 'Pixelify Sans',monospace;letter-spacing:3px;text-transform:uppercase;text-shadow:0 3px 0 #000}
+#pause h3{margin:4px 0;font:700 15px 'Pixelify Sans',monospace;letter-spacing:2px;text-transform:uppercase;color:#c8b898}
+#pause .mrow{display:flex;gap:12px;justify-content:center}
+#pause .mtoggle.off b{color:#ff9a7a}
+#pause .mnote{font-size:13px;color:#d8b8a0;max-width:520px;text-align:center;min-height:1em;margin:0}
+#pause .msoon{font-size:22px;color:#b8a888}
+#pause{position:fixed;inset:0;z-index:160;display:none;color:#f2ece0;font-family:'Pixelify Sans',monospace;user-select:none}
+#pause.show{display:block}
+#pause .pdark{position:absolute;inset:0;background:rgba(3,2,1,.74);animation:ofade .25s}
+#pause .mopts a.dis{opacity:.35;cursor:default}#pause .mopts a.dis:hover{color:#e8e2d4;letter-spacing:3px}#pause .mopts a.dis:hover::before{content:none}
+#pause .pnote{margin-top:4px;color:#e8d0a0}
+#pause .psum{margin-top:10px;min-width:300px;padding:8px 18px 6px;text-align:center;background:rgba(0,0,0,.45);border-top:2px solid #6a5434;border-bottom:2px solid #6a5434}
+#pause .psum:empty{display:none}
+#pause .psum h3{display:flex;gap:6px;align-items:center;justify-content:center}#pause .psum h3 .m3{width:18px;height:18px;margin:0}
+#pause .psum ul{list-style:none;margin:4px 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;font-size:15px}
+#pause .psum li{display:flex;align-items:center;gap:6px}#pause .psum li b{color:#ffd890;margin-left:4px}
+#pause .psum li i{width:11px;height:11px;background:var(--c);display:inline-block;box-shadow:0 0 0 2px #000}
+#pause .psum li.cur{text-decoration:underline;text-underline-offset:4px}
+#pause .psum small{font-size:11px;color:#a89878;letter-spacing:1px}
+#pause .pvol{display:flex;align-items:center;gap:10px;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:#d8c8a0}
+#pause .pvol .m3{width:24px;height:24px;margin:0}#pause .pvol b{min-width:52px;color:#ffd890}
+#pause .pvol input{width:240px;accent-color:#c8a040}
+body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}

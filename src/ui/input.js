@@ -26,10 +26,20 @@ document.addEventListener('pointerleave', e => { if (e.buttons === 0) releaseStu
 const keyName = e => e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
 addEventListener('keydown', e => {
   const k = keyName(e);
+  if (PAUSE.on){ if (k === 'escape'){ if (PZ.view === 'main') pauseClose(); else pauseGo('main'); } return; }
+  if (k === 'escape' && escOpensPause()){ pauseOpen(); return; }
   if (mode === 'village'){ ctl.keys[k] = true; if (k.startsWith('arrow') || k === ' ') e.preventDefault(); }
   if (k === 'escape' && mode === 'market' && marketCtx && marketCtx.kind !== 'thief' && !marketCtx.busy){ exitMarket(); return; }
   if (k === 'escape'){ if (!modal.classList.contains('hidden') && modal.dataset.dismiss) closeModal(); else if (mode === 'board'){ exitBuild(); hidePopup(); refresh(); } }
 });
+// Esc pauses only when there is nothing to close first (a dialog, the market, a build or a popup on the board, the showcase)
+function escOpensPause(){
+  if (mode === 'menu' || !G || (typeof SHOW !== 'undefined' && SHOW.kind)) return false;
+  if (!modal.classList.contains('hidden') && modal.dataset.dismiss) return false;
+  if (mode === 'market') return false;
+  if (mode === 'board' && (G.buildMode || $('#popup').style.display === 'block')) return false;
+  return mode === 'board' || mode === 'village' || mode === 'anim';
+}
 addEventListener('keyup', e => { ctl.keys[keyName(e)] = false; });
 addEventListener('blur', () => { ctl.keys = {}; });
 document.querySelectorAll('#dpad button').forEach(b => {

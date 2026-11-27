@@ -105,6 +105,6 @@ function botRobber(p){
   moveRobber(best, p);
 }
 function checkWin(p){
-  if (vp(p) >= 10 && !G.over){ G.over = true; G.winner = p; G.phase = 'over'; refresh(); if (NG.on) netFlush(true); showWin(p); }
+  if (vp(p) >= 10 && !G.over){ G.over = true; G.winner = p; G.phase = 'over'; if (!NG.on) clearSave(); refresh(); if (NG.on) netFlush(true); showWin(p); }
 }
 

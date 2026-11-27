@@ -102,6 +102,7 @@ $('#b-set small').innerHTML = ['madera','ladrillo','lana','trigo'].map(k => resI
 $('#b-city small').innerHTML = resImg('trigo').repeat(2) + resImg('mineral').repeat(3);
 newGame();
 openMainMenu();
+restartPending();   // "Reiniciar" in the pause menu reloads the page and the new game opens here
 const updSoundBtn = () => { $('#b-sound').innerHTML = ic(SND.on ? 'cuerno' : 'cuerno-off'); $('#b-sound').title = SND.on ? 'Sonido: activado' : 'Sonido: apagado'; };
 const updCycleBtn = () => { const b = $('#b-cycle'); b.innerHTML = ic(DAY.fixed ? 'sol' : 'luna'); b.title = DAY.fixed ? 'Ciclo de día y noche: apagado (siempre de día) · toca para activarlo' : 'Ciclo de día y noche: activado · toca para dejar siempre de día'; document.body.classList.toggle('nocycle', DAY.fixed); };
 updCycleBtn();

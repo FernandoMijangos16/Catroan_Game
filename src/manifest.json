@@ -56,7 +56,7 @@
  "scenes/pier-trade.js",
  "scenes/market-core.js",
  "core/specials.js",
- "core/events.js",
+ "core/events.js", "core/save.js",
  "core/missions.js",
  "core/trades.js",
  "ui/inventory.js",
@@ -80,6 +80,6 @@
  "net/net-hub.js",
  "net/net-game.js",
  "ui/menu-title.js",
- "ui/menu.js",
+ "ui/menu.js", "ui/pause.js",
  "main/start.js"
 ]

@@ -29,7 +29,7 @@ function openMainMenu(){
   let el = MENU.el;
   if (!el){ el = MENU.el = document.createElement('div'); el.id = 'menu'; document.body.appendChild(el);
     el.innerHTML = `<div class="mbg"></div><div class="mdark"></div><div class="mfall"><canvas></canvas></div><div class="mdark2"></div>
-      <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
+      <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="continue" class="mcont">Continuar</a><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
       <div class="mview" data-v="play"><h2>Elige el modo</h2><div class="mmodes"></div>
         <div class="mrow"><button class="mtoggle" data-fp="1"></button><button class="mtoggle" data-ev="1"></button></div>
         <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4, 5, 6].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}<button class="mtoggle mbots"></button></div>
@@ -59,8 +59,8 @@ function openMainMenu(){
 }
 function closeMainMenu(){ if (!MENU.el) return; MENU.el.classList.remove('show'); document.body.classList.remove('inmenu'); }
 // a view taller than the window shrinks to fit (the title and Volver must always show)
-function fitMenuView(){
-  const el = MENU.el && MENU.el.querySelector('.mview.on'); if (!el) return;
+function fitMenuView(root = MENU.el){
+  const el = root && root.querySelector('.mview.on'); if (!el) return;
   el.style.setProperty('--fit', 1);
   const rs = [...el.children].filter(k => k.offsetParent !== null).map(k => k.getBoundingClientRect()).filter(r => r.height);
   if (!rs.length) return; const h = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), room = innerHeight - 20;
@@ -72,7 +72,8 @@ function menuGo(v){
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
   setTimeout(fitMenuView, 0); setTimeout(fitMenuView, 400);   // again once the 3D canvases and notes are in
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
-  if (v === 'main') buildMenuTitle();
+  if (v === 'main'){ buildMenuTitle(); const s = readSave(), c = el.querySelector('.mcont'); c.style.display = s ? '' : 'none';
+    if (s) c.title = `Ronda ${s.round || 1} · ${s.n} jugadores · guardada el ${new Date(s.at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`; }
   if (v === 'play'){ buildModeHexes(); updNp(); updEvToggle(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
   if (v === 'mp') el.querySelector('[data-v=mp] .mnote').textContent = '';
   if (v === 'create'){ updNetToggle(); if (!MENU.key) MENU.key = menuNewKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
@@ -221,6 +222,7 @@ async function menuClick(e){
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
   const go = a.dataset.go;
+  if (go === 'continue'){ if (!continueGame()) menuGo('main'); return; }
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
