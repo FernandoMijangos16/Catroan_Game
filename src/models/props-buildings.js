@@ -112,7 +112,7 @@ function clouds(sc, anims, rng, cx, cz, spread){
   for (let i=0;i<14;i++){
     const g = new THREE.Group(); const n = 3 + Math.floor(rng()*3);
     for (let j=0;j<n;j++){ const m = mesh(pick(GEO.blobs, rng), cm, j*4 - n*2, rng()*1.5, rng()*3, 4 + rng()*3, 2.4 + rng()*1.5, 3.5 + rng()*2, false); m.rotation.y = rng()*6; g.add(m); }
-    g.position.set(cx + (rng() - .5)*spread, 55 + rng()*25, cz + (rng() - .5)*spread); sc.add(g);
+    g.position.set(cx + (rng() - .5)*spread, 55 + rng()*25, cz + (rng() - .5)*spread); g.userData.cloud = cm; sc.add(g);
     anims.push(dt => { g.position.x += dt*1.3; });
   }
 }

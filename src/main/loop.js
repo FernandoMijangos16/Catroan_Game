@@ -1,12 +1,12 @@
 // ================= LOOP =================
 const clock = new THREE.Clock();
 let uiT = 1;
-function draw(sc){ if (sc.userData.env) applyEnv(sc.userData.env, 0, clock.elapsedTime); if (sc.userData.sky) sc.userData.sky.position.copy(camera.position); renderScene(sc); }
+function draw(sc){ if (sc.userData.env){ applyEnv(sc.userData.env, 0, clock.elapsedTime); seasonEnv(sc); } if (sc.userData.sky) sc.userData.sky.position.copy(camera.position); renderScene(sc); }
 let pulseT = 0;
 renderer.setAnimationLoop(() => {
   const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
   WIND.value = t; stepInventory(raw); stepMini(raw); stepHexbar(raw); stepHighlight(t);
-  advanceDay(dt); updateAudio(Math.min(raw, .1), t); tickPlayTime(Math.min(raw, 1));
+  advanceDay(dt); updateAudio(Math.min(raw, .1), t); tickPlayTime(Math.min(raw, 1)); seasonStep(dt, t);
   if ((uiT += raw) > .5){ uiT = 0; const [ik, tx] = dayLabel(), bt = $('#b-time'); if (bt.dataset.ic !== ik){ bt.dataset.ic = ik; bt.innerHTML = ic(ik) + '<span></span>'; } bt.lastChild.textContent = ' ' + tx; }
   if (tween) stepTween();
   if (mode === 'board' || mode === 'anim'){

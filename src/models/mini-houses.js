@@ -283,7 +283,7 @@ function buildBoardScene(){
   CUR_TREES.build(sc); CUR_TREES = null; GH = prevGH;
   { const cm = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true, transparent: true, opacity: .7, emissive: 0xfff4e8, emissiveIntensity: .35 }), cr = mulberry32(3);
     for (let i=0;i<5;i++){ const cg = new THREE.Group(), n = 3 + Math.floor(cr()*3), cmi = cm.clone(); cmi.depthWrite = false; for (let j=0;j<n;j++){ const m = new THREE.Mesh(pick(GEO.blobs, cr), cmi); m.position.set(j*.32 - n*.16, cr()*.1, cr()*.2); m.scale.set(.28 + cr()*.2, .16 + cr()*.08, .24 + cr()*.12); m.castShadow = true; cg.add(m); }
-      cg.position.set((cr() - .5)*16, 3.6 + cr()*.7, (cr() - .5)*12); sc.add(cg);
+      cg.position.set((cr() - .5)*16, 3.6 + cr()*.7, (cr() - .5)*12); cg.userData.cloud = cmi; sc.add(cg);
       banims.push(dt => { cg.position.x += dt*.12; if (cg.position.x > 9) cg.position.x = -9; const over = Math.abs(cg.position.x) < 6.8 && Math.abs(cg.position.z) < 6.2, to = over ? .16 : .72; cmi.opacity += (to - cmi.opacity)*Math.min(1, dt*2); const sh = cmi.opacity > .5; cg.children.forEach(m => m.castShadow = sh); }); } }
   { const bc = new THREE.Group(); bc.scale.setScalar(.045); sc.add(bc); const br = mulberry32(8); birdFlock(bc, banims, br, 0, 0, { n: 6, r: 50, h: 45, speed: .2 }); birdFlock(bc, banims, br, 30, -20, { n: 4, r: 35, h: 55, speed: -.25 }); }
   robberMesh = new THREE.Group();
