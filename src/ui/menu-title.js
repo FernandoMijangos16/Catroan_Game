@@ -11,9 +11,11 @@ const GLYPHS = {
 // ---------- the SwapHolm wordmark: block letters of brass and wood; the O is a little tile of one of the board's biomes ----------
 const LOGO_BIOMES = ['bosque', 'pradera', 'cerro', 'campo', 'montana'];
 function logoHex(biome, rnd = mulberry32(Math.floor(Math.random()*1e6)), town = false){
-  const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => tileHeight(t, x, z);
+  // hexTileMesh already sits .2 up: everything on it goes at .2 + the relief, like on the board
+  const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => .2 + tileHeight(t, x, z);
   g.add(hexTileMesh(t));
-  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = -.06; g.add(rim);
+  const side = new THREE.Mesh(GEO.hexSide, mat(0x7a5c40)); side.position.y = .1; g.add(side);   // the earth wall, as on the board
+  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = .03; g.add(rim);
   const trees = new TreeBatch(.012), spot = (r0, r1) => { const a = rnd()*6.28, d = r0 + rnd()*(r1 - r0); return [Math.cos(a)*d, Math.sin(a)*d]; };
   const nTrees = { bosque: 12, pradera: 3, cerro: 3, campo: 2, montana: 4 }[biome];
   for (let k=0;k<nTrees;k++){ const [x, z] = spot(town ? .45 : .25, .78); trees.add(treeKindFor(biome, rnd), x, Y(x, z) - .004, z, .045 + rnd()*.02, rnd()*6.28, treeTint(biome === 'montana' || biome === 'cerro' ? 'pino' : 'roble', rnd)); }

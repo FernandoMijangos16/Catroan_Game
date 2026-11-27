@@ -40,7 +40,7 @@ window.__exp = (() => {
   add('objetos-escena', 'barril', () => into(g => barrel(g, 0, 0, R(5)))); add('objetos-escena', 'banca', () => into(g => bench(g, 0, 0, 0)));
   add('objetos-escena', 'farol', () => into(g => lantern(g, 0, 0))); add('objetos-escena', 'carreta', () => into(g => cart(g, 0, 0, 0, R(6), true)));
   add('objetos-escena', 'lena', () => into(g => woodPile(g, 0, 0, 0))); add('objetos-escena', 'bandera', () => into(g => flag(g, 0, 0, BLACK, [], 3)));
-  add('objetos-escena', 'ladrillos', () => into(g => brickStack(g, 0, 0, R(8))));
+  add('objetos-escena', 'ladrillos', () => into(g => { const r = R(8); for (let y=0;y<3;y++) for (let i=0;i<4 - y;i++) for (let j=0;j<2;j++) g.add(mesh(GEO.box, jc(0xb5523b, r(), .1), (i - (3 - y)/2)*.34 + (y % 2)*.02, y*.16, (j - .5)*.18, .32, .15, .16)); }));   // a pile like the ones at the brickworks
   add('objetos-escena', 'caja-recursos', () => crateModel()); add('objetos-escena', 'caja-amuletos', () => chestModel());
   add('objetos-escena', 'sello', () => stampModel(0x2a7a3a, 'SÍ')); add('objetos-escena', 'tintero-sello', () => inkPadModel(0x2a7a3a));
   add('objetos-escena', 'campana', () => bellModel()); add('objetos-escena', 'costal', () => sackModel());

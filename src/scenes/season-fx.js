@@ -46,7 +46,7 @@ const fxFade = (m, e) => { m.material.opacity = (m.userData.op ?? 1)*e; m.visibl
 // a small bee: striped body, two wings that flicker
 function beeModel(){
   const g = new THREE.Group();
-  g.add(mesh(GEO.sphere, 0xf2c23a, 0, 0, 0, .05, .04, .07)); g.add(mesh(GEO.box, 0x1a1208, 0, -.04, -.012, .1, .08, .025, false)); g.add(mesh(GEO.sphere, 0x1a1208, 0, .005, .065, .03, .03, .03));
+  g.add(mesh(GEO.sphere, 0xf2c23a, 0, 0, 0, .05, .04, .07)); g.add(mesh(GEO.sphere, 0x1a1208, 0, 0, -.012, .052, .042, .02, false)); g.add(mesh(GEO.sphere, 0x1a1208, 0, .005, .065, .03, .03, .03));
   const wm = keepMat(new THREE.MeshBasicMaterial({ color: 0xeaf6ff, transparent: true, opacity: .7, side: THREE.DoubleSide }));
   g.userData.wings = [-1, 1].map(s => { const w = new THREE.Mesh(sg(new THREE.PlaneGeometry(.07, .045)), wm); w.position.set(s*.045, .04, 0); w.rotation.x = -Math.PI/2; g.add(w); return w; });
   return g;
@@ -60,6 +60,7 @@ function fairWagon(rng){
   [[-1, -.6], [1, -.6], [-1, .6], [1, .6]].forEach(([sx, sz]) => { const w = mesh(GEO.cyl, 0x4a3020, sx*.58, .3, sz, .3, .08, .3); w.rotation.z = Math.PI/2; cart.add(w); });
   [[.25, 1.2, 0xd9a520], [-.2, 1.15, 0x8a3a2a]].forEach(([x, y, c]) => cart.add(mesh(GEO.box, c, x, y, -.7, .3, .25, .3)));   // crates on the back
   const H = horseModel(rng, 0x8a3a2a); H.g.position.set(0, 0, 1.9); g.add(H.g); g.userData.horse = H;
+  [-1, 1].forEach(s => { const sh = mesh(GEO.box, 0x5a3b26, s*.42, 1.15, .95, .07, .07, 1.7); sh.position.z = 1.8; cart.add(sh); });   // the shafts that harness the horse to the cart
   const P = makePerson(rng, 'comerciante', rng() < .5 ? 'm' : 'f', '#7a6a5a'); P.g.position.set(.95, 0, .6); P.g.scale.setScalar(1.05); g.add(P.g); g.userData.walker = P;
   return g;
 }
@@ -140,9 +141,12 @@ function seasonVillage(k, ctx){
   else if (k === 'feria'){
     // pennant strings across the plaza
     const R = (ctx.V && ctx.V.plazaR) || 9, cols = ['#c0392b', '#d9a520', '#2f6b8a', '#3a8a4a', '#efe4c8'];
-    for (let s2=0;s2<5;s2++){ const a = s2/5*Math.PI, x0 = Math.cos(a)*R, z0 = Math.sin(a)*R, line = new THREE.Group();
-      for (let q=0;q<=14;q++){ const f = q/14, x = x0 + (-2*x0)*f, z = z0 + (-2*z0)*f, y = 4.2 - Math.sin(f*Math.PI)*1.1 + (ctx.gh ? ctx.gh(x, z) : 0);
-        const fl = new THREE.Mesh(sg(new THREE.ConeGeometry(.22, .45, 3)), mat(cols[(q + s2) % cols.length])); fl.position.set(x, y - .25, z); fl.rotation.x = Math.PI; fl.rotation.y = a; line.add(fl); }
+    const rope = mat(0x6a5a40), wood = mat(0x5a3b26), gh = (x, z) => ctx.gh ? ctx.gh(x, z) : 0;
+    for (let s2=0;s2<5;s2++){ const a = s2/5*Math.PI, x0 = Math.cos(a)*R, z0 = Math.sin(a)*R, line = new THREE.Group(), pts = [];
+      for (let q=0;q<=14;q++){ const f = q/14, x = x0 + (-2*x0)*f, z = z0 + (-2*z0)*f; pts.push(new THREE.Vector3(x, 4.2 - Math.sin(f*Math.PI)*1.1 + (gh(x0, z0) + gh(-x0, -z0))/2, z)); }
+      pts.forEach((P, q) => { if (q){ const A2 = pts[q - 1], d = P.distanceTo(A2), seg = new THREE.Mesh(GEO.box, rope); seg.scale.set(.04, .04, d); seg.position.copy(A2).add(P).multiplyScalar(.5); seg.position.y -= .02; seg.lookAt(P.x, P.y - .02, P.z); line.add(seg); }
+        if (q && q < 14){ const fl = new THREE.Mesh(sg(new THREE.ConeGeometry(.22, .45, 3)), mat(cols[(q + s2) % cols.length])); fl.position.set(P.x, P.y - .24, P.z); fl.rotation.x = Math.PI; fl.rotation.y = a; line.add(fl); } });
+      [pts[0], pts[14]].forEach(P => line.add(mesh(GEO.box, wood, P.x, gh(P.x, P.z), P.z, .14, P.y - gh(P.x, P.z) + .1, .14)));   // a pole at each end, holding the string
       sc.add(line); parts.push(line); }
   }
   // the sky and the light of the season (applied after the day/night cycle each frame)

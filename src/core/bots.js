@@ -73,6 +73,8 @@ function botAct(p, st){
 }
 async function botTurn(p, fromMain){   // fromMain: the dice were already rolled (a bot taking over a player who left)
   const gid = G.id, tid = G.turnId;
+  // one bot turn per turn: a second call (a reconnect, a late online state) for the same turn is ignored
+  const run = gid + ':' + tid; if (botTurn.running === run) return; botTurn.running = run;
   const alive = () => G.id === gid && G.turnId === tid && !G.over;
   await wait(1500); if (!alive()) return;
   botQuests(p);

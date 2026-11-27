@@ -58,9 +58,19 @@ function openMainMenu(){
   menuGo('main');
 }
 function closeMainMenu(){ if (!MENU.el) return; MENU.el.classList.remove('show'); document.body.classList.remove('inmenu'); }
+// a view taller than the window shrinks to fit (the title and Volver must always show)
+function fitMenuView(){
+  const el = MENU.el && MENU.el.querySelector('.mview.on'); if (!el) return;
+  el.style.setProperty('--fit', 1);
+  const rs = [...el.children].filter(k => k.offsetParent !== null).map(k => k.getBoundingClientRect()).filter(r => r.height);
+  if (!rs.length) return; const h = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), room = innerHeight - 20;
+  if (h > room) el.style.setProperty('--fit', Math.max(.55, room/h).toFixed(3));
+}
+addEventListener('resize', () => setTimeout(fitMenuView, 60));
 function menuGo(v){
   MENU.view = v; const el = MENU.el; el.dataset.view = v;
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  setTimeout(fitMenuView, 0); setTimeout(fitMenuView, 400);   // again once the 3D canvases and notes are in
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
   if (v === 'main') buildMenuTitle();
   if (v === 'play'){ buildModeHexes(); updNp(); updEvToggle(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
@@ -118,6 +128,7 @@ function updNp(){ const el = MENU.el, ch = npChoices(); if (ch.length && !ch.inc
   el.querySelector('.mlvl').style.display = MENU.online && !MENU.bots ? 'none' : '';   // no bots, nothing to tune
   const bt = el.querySelector('.mbots'); bt.style.display = MENU.online ? '' : 'none';
   bt.innerHTML = `Bots: <b>${MENU.bots ? 'Sí' : 'No'}</b>`; bt.classList.toggle('off', !MENU.bots);
+  setTimeout(fitMenuView, 0);
   bt.title = MENU.bots ? 'El anfitrión puede comenzar antes: los lugares libres los ocupan bots' : 'Sin bots: la partida empieza cuando se ocupen todos los lugares'; }
 // season events: only in SwapHolm mode (Clásico never has them)
 function updEvToggle(){ const b = MENU.el.querySelector('.mtoggle[data-ev]'); if (!b) return; b.style.display = MENU.sel === 'catroan' ? '' : 'none';

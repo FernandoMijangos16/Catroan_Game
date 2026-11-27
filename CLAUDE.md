@@ -134,6 +134,8 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
 - **No agregues:** diseño plano moderno, efectos de vidrio, degradados llamativos, texturas realistas en alta
   resolución, sombreado suave, modelos de otro estilo, íconos de librerías ni texto en inglés.
 - Las animaciones son suaves (con aceleración y frenado) y los avisos se mantienen cortos.
+- **Las vistas del menú se encogen solas si no caben** en la altura de la ventana (`fitMenuView` en `ui/menu.js`); si
+  agregas o muestras filas en una vista, llama `fitMenuView()` después.
 - **Doble clic omite animaciones** (`skipAnims` en `core/util.js`): usa `wait()` para esperar (se puede interrumpir) y
   las escenas avanzan con `dt` en el bucle; así todo lo nuevo también se puede omitir.
 

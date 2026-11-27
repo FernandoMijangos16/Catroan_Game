@@ -586,7 +586,7 @@ body.inmenu #hud-top,body.inmenu #hexbar,body.inmenu #b-endturn,body.inmenu .fwi
 #menu .mfall{position:absolute;inset:0;pointer-events:none;filter:brightness(.55) saturate(.8)}
 #menu .mdark2{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,.18) 30%,rgba(0,0,0,.42) 100%)}
 #menu .mfall canvas{position:absolute;left:0;top:0;image-rendering:pixelated}
-#menu .mview{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;zoom:var(--ui,1)}
+#menu .mview{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;zoom:calc(var(--ui,1)*var(--fit,1))}
 #menu .mview.on{display:flex;animation:ofade .35s}
 #menu [data-v=main]{justify-content:flex-start;padding-top:1vh}
 #menu .mtitle canvas{width:860px;height:250px;max-width:96vw;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,.8))}
@@ -1799,6 +1799,7 @@ function rollDice(){
       if (await cloverAsk(p, d1, d2)){ const [e1, e2] = drawDice(); G.dice = [e1, e2]; if (NG.on) netSend({ t: 'dice', d: [e1, e2], tid: G.turnId, f: NG.seat }); await new Promise(r2 => throwDice(e1, e2, r2)); if (G.id === gid) await applyRoll(e1, e2); res(); return; }
       await applyRoll(d1, d2); res(); }));
   }
+  G.phase = 'rolling';   // no second roll while this one resolves (off the board there is no dice animation to wait for)
   return cloverAsk(p, d1, d2).then(use => { if (!use) return applyRoll(d1, d2); const [e1, e2] = drawDice(); G.dice = [e1, e2]; return applyRoll(e1, e2); });
 }
 async function applyRoll(d1, d2){
@@ -1949,6 +1950,8 @@ function botAct(p, st){
 }
 async function botTurn(p, fromMain){   // fromMain: the dice were already rolled (a bot taking over a player who left)
   const gid = G.id, tid = G.turnId;
+  // one bot turn per turn: a second call (a reconnect, a late online state) for the same turn is ignored
+  const run = gid + ':' + tid; if (botTurn.running === run) return; botTurn.running = run;
   const alive = () => G.id === gid && G.turnId === tid && !G.over;
   await wait(1500); if (!alive()) return;
   botQuests(p);
@@ -4258,7 +4261,7 @@ const fxFade = (m, e) => { m.material.opacity = (m.userData.op ?? 1)*e; m.visibl
 // a small bee: striped body, two wings that flicker
 function beeModel(){
   const g = new THREE.Group();
-  g.add(mesh(GEO.sphere, 0xf2c23a, 0, 0, 0, .05, .04, .07)); g.add(mesh(GEO.box, 0x1a1208, 0, -.04, -.012, .1, .08, .025, false)); g.add(mesh(GEO.sphere, 0x1a1208, 0, .005, .065, .03, .03, .03));
+  g.add(mesh(GEO.sphere, 0xf2c23a, 0, 0, 0, .05, .04, .07)); g.add(mesh(GEO.sphere, 0x1a1208, 0, 0, -.012, .052, .042, .02, false)); g.add(mesh(GEO.sphere, 0x1a1208, 0, .005, .065, .03, .03, .03));
   const wm = keepMat(new THREE.MeshBasicMaterial({ color: 0xeaf6ff, transparent: true, opacity: .7, side: THREE.DoubleSide }));
   g.userData.wings = [-1, 1].map(s => { const w = new THREE.Mesh(sg(new THREE.PlaneGeometry(.07, .045)), wm); w.position.set(s*.045, .04, 0); w.rotation.x = -Math.PI/2; g.add(w); return w; });
   return g;
@@ -4272,6 +4275,7 @@ function fairWagon(rng){
   [[-1, -.6], [1, -.6], [-1, .6], [1, .6]].forEach(([sx, sz]) => { const w = mesh(GEO.cyl, 0x4a3020, sx*.58, .3, sz, .3, .08, .3); w.rotation.z = Math.PI/2; cart.add(w); });
   [[.25, 1.2, 0xd9a520], [-.2, 1.15, 0x8a3a2a]].forEach(([x, y, c]) => cart.add(mesh(GEO.box, c, x, y, -.7, .3, .25, .3)));   // crates on the back
   const H = horseModel(rng, 0x8a3a2a); H.g.position.set(0, 0, 1.9); g.add(H.g); g.userData.horse = H;
+  [-1, 1].forEach(s => { const sh = mesh(GEO.box, 0x5a3b26, s*.42, 1.15, .95, .07, .07, 1.7); sh.position.z = 1.8; cart.add(sh); });   // the shafts that harness the horse to the cart
   const P = makePerson(rng, 'comerciante', rng() < .5 ? 'm' : 'f', '#7a6a5a'); P.g.position.set(.95, 0, .6); P.g.scale.setScalar(1.05); g.add(P.g); g.userData.walker = P;
   return g;
 }
@@ -4352,9 +4356,12 @@ function seasonVillage(k, ctx){
   else if (k === 'feria'){
     // pennant strings across the plaza
     const R = (ctx.V && ctx.V.plazaR) || 9, cols = ['#c0392b', '#d9a520', '#2f6b8a', '#3a8a4a', '#efe4c8'];
-    for (let s2=0;s2<5;s2++){ const a = s2/5*Math.PI, x0 = Math.cos(a)*R, z0 = Math.sin(a)*R, line = new THREE.Group();
-      for (let q=0;q<=14;q++){ const f = q/14, x = x0 + (-2*x0)*f, z = z0 + (-2*z0)*f, y = 4.2 - Math.sin(f*Math.PI)*1.1 + (ctx.gh ? ctx.gh(x, z) : 0);
-        const fl = new THREE.Mesh(sg(new THREE.ConeGeometry(.22, .45, 3)), mat(cols[(q + s2) % cols.length])); fl.position.set(x, y - .25, z); fl.rotation.x = Math.PI; fl.rotation.y = a; line.add(fl); }
+    const rope = mat(0x6a5a40), wood = mat(0x5a3b26), gh = (x, z) => ctx.gh ? ctx.gh(x, z) : 0;
+    for (let s2=0;s2<5;s2++){ const a = s2/5*Math.PI, x0 = Math.cos(a)*R, z0 = Math.sin(a)*R, line = new THREE.Group(), pts = [];
+      for (let q=0;q<=14;q++){ const f = q/14, x = x0 + (-2*x0)*f, z = z0 + (-2*z0)*f; pts.push(new THREE.Vector3(x, 4.2 - Math.sin(f*Math.PI)*1.1 + (gh(x0, z0) + gh(-x0, -z0))/2, z)); }
+      pts.forEach((P, q) => { if (q){ const A2 = pts[q - 1], d = P.distanceTo(A2), seg = new THREE.Mesh(GEO.box, rope); seg.scale.set(.04, .04, d); seg.position.copy(A2).add(P).multiplyScalar(.5); seg.position.y -= .02; seg.lookAt(P.x, P.y - .02, P.z); line.add(seg); }
+        if (q && q < 14){ const fl = new THREE.Mesh(sg(new THREE.ConeGeometry(.22, .45, 3)), mat(cols[(q + s2) % cols.length])); fl.position.set(P.x, P.y - .24, P.z); fl.rotation.x = Math.PI; fl.rotation.y = a; line.add(fl); } });
+      [pts[0], pts[14]].forEach(P => line.add(mesh(GEO.box, wood, P.x, gh(P.x, P.z), P.z, .14, P.y - gh(P.x, P.z) + .1, .14)));   // a pole at each end, holding the string
       sc.add(line); parts.push(line); }
   }
   // the sky and the light of the season (applied after the day/night cycle each frame)
@@ -5955,7 +5962,7 @@ function buildPier(opts){
   // your tray at the end of the pier
   const camP = new THREE.Vector3(0, 2.2, -5.0), tw = hmat('mkplank', () => new THREE.MeshStandardMaterial({ map: A.tex.plank.plain, color: 0xb08a60, roughness: .9 }));
   const tray = new THREE.Mesh(GEO.box, tw); tray.scale.set(1.5, .035, .26); tray.position.set(0, 1.76, -5.92); tray.visible = false; sc.add(tray);
-  const port = pt.type, rate = port === '3:1' ? 3 : 2;
+  const port = pt.type, rate = eventRate(port === '3:1' ? 3 : 2);   // the fair also lowers the 3:1 ports
   const ctx = { bSlots, fis, dog, cat, sc, kind: 'pier', pier: true, items: [], t: 0, sel: { give: null, want: null }, busy: true, opts, hover: null, TOP: 1.8, ph: 'walk', pt: 0, port, rate, ship, pirate: pir, npc: pir, bubble, bubbleT, tray, water, wp, w0, camP, thrown: [], line: '', DY,
     cam0: [[0, 2.1, 6.5], [0, 1.9, -6]] };
   GH = prevGH; CUR_COLL = prevColl;
@@ -6023,7 +6030,7 @@ function updatePier(C, dt, t){
   const holdOut = () => { pr.armL.rotation.x += (-1.2 - pr.armL.rotation.x)*Math.min(1, dt*5); pr.elbowL.rotation.x += (-.3 - pr.elbowL.rotation.x)*Math.min(1, dt*5); };
   switch (C.ph){
     case 'walk': if (C.pt > 2.4){ C.ph = 'greet'; C.pt = 0; } break;
-    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? 'Dame 3 cartas, aunque sean distintas, y te doy 1. ¿Qué quieres?' : `Solo ${RES_NAME[C.port].toLowerCase()}: 2 por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
+    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? `Dame ${C.rate} cartas, aunque sean distintas, y te doy 1. ¿Qué quieres?` : `Solo ${RES_NAME[C.port].toLowerCase()}: ${C.rate} por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
     case 'want': case 'pay': holdOut(); break;
     case 'catch': holdOut(); if (C.pt > .7 && C.thrown.every(p => p.t >= 1)){ C.ph = 'throwback'; C.pt = 0; C.throwing = true; pierSay(C, pick(['Trato justo. ¡Ahí va!', 'Un placer, alcalde. ¡Atrapa!', 'Palabra de marino. ¡Ahí te va!'])); } break;
     case 'throwback': {
@@ -6045,8 +6052,8 @@ function pierScene(pi){
   const mine = [pt.a, pt.b].some(v => G.verts[v].building && G.verts[v].building.p === 0);
   if (!mine){ notify(`Para comerciar en este puerto (${pt.type === '3:1' ? '3:1' : '2:1 ' + RES_NAME[pt.type]}) necesitas un pueblo junto a él.`, P.color, 'sys'); return; }
   if (G.current !== 0 || G.phase !== 'main'){ notify('Puedes comerciar en el puerto durante tu turno, después de tirar los dados.', P.color, 'sys'); return; }
-  const rate = pt.type === '3:1' ? 3 : 2;
-  if (pt.type === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) < rate : P.res[pt.type] < rate){ notify(pt.type === '3:1' ? 'El pirata acepta 3 cartas, aunque sean distintas: aún no tienes suficientes.' : `El pirata solo acepta 2 de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
+  const rate = eventRate(pt.type === '3:1' ? 3 : 2);
+  if (pt.type === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) < rate : P.res[pt.type] < rate){ notify(pt.type === '3:1' ? `El pirata acepta ${rate} cartas, aunque sean distintas: aún no tienes suficientes.` : `El pirata solo acepta ${rate} de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
   if (!scenesOn()){ openTrade('banco'); return; }
   enterMarket('pier', { port: pi });
 }
@@ -6354,6 +6361,8 @@ function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register
 function villageQuests(){
   if (!G || G.over || G.setup || isClassic()) return;
   const now = G.playT || 0; G.qAt ||= {};
+  // towns keep posting, so finished missions would pile up forever (and travel in every online state): keep the last 10
+  if (G.quests){ const done = G.quests.filter(q => q.state === 'done'); if (done.length > 10){ const drop = new Set(done.slice(0, done.length - 10)); G.quests = G.quests.filter(q => !drop.has(q)); } }
   G.verts.forEach(v => { if (!v.building) return;
     if (G.qAt[v.id] === undefined){ G.qAt[v.id] = now + 300 + Math.random()*900; return; }   // a new town: its first one in 5-20 min
     if (now < G.qAt[v.id] || gameRound() <= 4) return;
@@ -9258,7 +9267,7 @@ function netPersp(h, A){
     [/Tenías más de 7 cartas: descartaste/g, `${A} tenía más de 7 cartas y descartó`], [/\bSacaste\b/g, `${A} sacó`], [/\bMoviste\b/g, `${A} movió`], [/\bLe robaste\b/g, `${A} le robó`], [/\ble robaste\b/g, 'le robó'],
     [/\bJugaste\b/g, `${A} jugó`], [/\bCompraste\b/g, `${A} compró`], [/\bFundaste\b/g, `${A} fundó`], [/\bConstruiste\b/g, `${A} construyó`], [/\bColocaste tu\b/g, `${A} colocó su`], [/\bCambiaste\b/g, `${A} cambió`], [/en tu puerto/g, 'en su puerto'],
     [/\bLanzaste\b/g, `${A} lanzó`], [/Demoliste uno de tus caminos y recuperaste/g, `${A} demolió uno de sus caminos y recuperó`], [/\bDemoliste\b/g, `${A} demolió`], [/\brecuperaste\b/g, 'se quedó con'],
-    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`], [/\bTienes la\b/g, `${A} tiene la`],
+    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`], [/\bTienes la\b/g, `${A} tiene la`], [/se te echó a perder/g, `a ${A} se le echó a perder`], [/tu construcción falló/g, `la construcción de ${A} falló`], [/rechazó tu carta de trueque/g, `rechazó la carta de trueque de ${A}`], [/\bte regaló/g, `le regaló a ${A}`], [/\ben tu puerto\b/g, 'en su puerto'], [/\bPropusiste un trueque: das\b/g, `${A} propuso un trueque: da`], [/aceptó tu trueque/g, `aceptó el trueque de ${A}`], [/¡Ganaste la partida!/g, `¡${A} ganó la partida!`],
     [/Propusiste un trueque: das/g, `${A} propuso un trueque: da`], [/Rechazaste el trueque de/g, `${A} rechazó el trueque de`], [/Nadie aceptó tu trueque/g, `Nadie aceptó el trueque de ${A}`],
     [/aceptó tu trueque/g, `aceptó el trueque de ${A}`], [/rechazó tu carta de trueque/g, `rechazó la carta de trueque de ${A}`], [/rechazó tu trueque/g, `rechazó el trueque de ${A}`],
     [/hizo un trueque contigo: te dio/g, `hizo un trueque con ${A}: le dio`], [/\bte cambió\b/g, `le cambió a ${A}`], [/Trueque con ([^:]+): diste (.+?) y recibiste/g, `${A} hizo un trueque con $1: dio $2 y recibió`],
@@ -9507,9 +9516,11 @@ const GLYPHS = {
 // ---------- the SwapHolm wordmark: block letters of brass and wood; the O is a little tile of one of the board's biomes ----------
 const LOGO_BIOMES = ['bosque', 'pradera', 'cerro', 'campo', 'montana'];
 function logoHex(biome, rnd = mulberry32(Math.floor(Math.random()*1e6)), town = false){
-  const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => tileHeight(t, x, z);
+  // hexTileMesh already sits .2 up: everything on it goes at .2 + the relief, like on the board
+  const g = new THREE.Group(), t = { type: biome, x: 0, z: 0, i: Math.floor(rnd()*900) }, Y = (x, z) => .2 + tileHeight(t, x, z);
   g.add(hexTileMesh(t));
-  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = -.06; g.add(rim);
+  const side = new THREE.Mesh(GEO.hexSide, mat(0x7a5c40)); side.position.y = .1; g.add(side);   // the earth wall, as on the board
+  const rim = new THREE.Mesh(sg(new THREE.CylinderGeometry(TILE_R*1.02, TILE_R*1.06, .1, 6)), icm(0xa8823a, { m: .55, r: .45 })); rim.rotation.y = Math.PI/6; rim.position.y = .03; g.add(rim);
   const trees = new TreeBatch(.012), spot = (r0, r1) => { const a = rnd()*6.28, d = r0 + rnd()*(r1 - r0); return [Math.cos(a)*d, Math.sin(a)*d]; };
   const nTrees = { bosque: 12, pradera: 3, cerro: 3, campo: 2, montana: 4 }[biome];
   for (let k=0;k<nTrees;k++){ const [x, z] = spot(town ? .45 : .25, .78); trees.add(treeKindFor(biome, rnd), x, Y(x, z) - .004, z, .045 + rnd()*.02, rnd()*6.28, treeTint(biome === 'montana' || biome === 'cerro' ? 'pino' : 'roble', rnd)); }
@@ -9614,9 +9625,19 @@ function openMainMenu(){
   menuGo('main');
 }
 function closeMainMenu(){ if (!MENU.el) return; MENU.el.classList.remove('show'); document.body.classList.remove('inmenu'); }
+// a view taller than the window shrinks to fit (the title and Volver must always show)
+function fitMenuView(){
+  const el = MENU.el && MENU.el.querySelector('.mview.on'); if (!el) return;
+  el.style.setProperty('--fit', 1);
+  const rs = [...el.children].filter(k => k.offsetParent !== null).map(k => k.getBoundingClientRect()).filter(r => r.height);
+  if (!rs.length) return; const h = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), room = innerHeight - 20;
+  if (h > room) el.style.setProperty('--fit', Math.max(.55, room/h).toFixed(3));
+}
+addEventListener('resize', () => setTimeout(fitMenuView, 60));
 function menuGo(v){
   MENU.view = v; const el = MENU.el; el.dataset.view = v;
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  setTimeout(fitMenuView, 0); setTimeout(fitMenuView, 400);   // again once the 3D canvases and notes are in
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
   if (v === 'main') buildMenuTitle();
   if (v === 'play'){ buildModeHexes(); updNp(); updEvToggle(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
@@ -9674,6 +9695,7 @@ function updNp(){ const el = MENU.el, ch = npChoices(); if (ch.length && !ch.inc
   el.querySelector('.mlvl').style.display = MENU.online && !MENU.bots ? 'none' : '';   // no bots, nothing to tune
   const bt = el.querySelector('.mbots'); bt.style.display = MENU.online ? '' : 'none';
   bt.innerHTML = `Bots: <b>${MENU.bots ? 'Sí' : 'No'}</b>`; bt.classList.toggle('off', !MENU.bots);
+  setTimeout(fitMenuView, 0);
   bt.title = MENU.bots ? 'El anfitrión puede comenzar antes: los lugares libres los ocupan bots' : 'Sin bots: la partida empieza cuando se ocupen todos los lugares'; }
 // season events: only in SwapHolm mode (Clásico never has them)
 function updEvToggle(){ const b = MENU.el.querySelector('.mtoggle[data-ev]'); if (!b) return; b.style.display = MENU.sel === 'catroan' ? '' : 'none';

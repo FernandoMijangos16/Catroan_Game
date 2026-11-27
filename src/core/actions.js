@@ -32,6 +32,7 @@ function rollDice(){
       if (await cloverAsk(p, d1, d2)){ const [e1, e2] = drawDice(); G.dice = [e1, e2]; if (NG.on) netSend({ t: 'dice', d: [e1, e2], tid: G.turnId, f: NG.seat }); await new Promise(r2 => throwDice(e1, e2, r2)); if (G.id === gid) await applyRoll(e1, e2); res(); return; }
       await applyRoll(d1, d2); res(); }));
   }
+  G.phase = 'rolling';   // no second roll while this one resolves (off the board there is no dice animation to wait for)
   return cloverAsk(p, d1, d2).then(use => { if (!use) return applyRoll(d1, d2); const [e1, e2] = drawDice(); G.dice = [e1, e2]; return applyRoll(e1, e2); });
 }
 async function applyRoll(d1, d2){
