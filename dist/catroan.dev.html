@@ -22,11 +22,11 @@ button small{display:block;font-weight:500;font-size:11px;opacity:.75;margin-top
 .muted{color:var(--muted)}
 #hud-top{position:fixed;top:10px;left:10px;right:10px;display:flex;gap:10px;align-items:center;pointer-events:none;flex-wrap:wrap;z-index:10}
 .brand{font-family:'Pixelify Sans',monospace;font-weight:800;font-size:22px;letter-spacing:.3px;text-shadow:0 2px 10px rgba(0,0,0,.55);padding:2px 6px}
-.fwin{position:fixed;left:12px;top:62px;z-index:12;padding:12px;border-radius:16px;border:1.5px solid transparent;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;--s:58px;transition:background .15s,border-color .15s}
-.fwin.hov,.fwin.drag{border-color:rgba(240,180,41,.8);background:rgba(18,22,27,.3);box-shadow:0 8px 24px rgba(0,0,0,.25)}
-.fwin.drag{cursor:grabbing}
+.fwin{position:fixed;left:12px;top:62px;z-index:12;padding:12px;border-radius:16px;border:1.5px solid transparent;touch-action:none;user-select:none;-webkit-user-select:none;--s:58px;transition:background .15s,border-color .15s}
+body.editing .fwin.hov,body.editing .fwin.drag{border-color:rgba(240,180,41,.8);background:rgba(18,22,27,.3);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+body.editing .fwin.drag{cursor:grabbing}
 .fwin .ibar{position:absolute;left:50%;top:-17px;transform:translateX(-50%);display:flex;gap:4px;opacity:0;pointer-events:none;transition:opacity .15s}
-.fwin.hov .ibar,.fwin.drag .ibar{opacity:1;pointer-events:auto}
+body.editing .fwin.hov .ibar,body.editing .fwin.drag .ibar{opacity:1;pointer-events:auto}
 .fwin .ibar button{display:flex;align-items:center;gap:5px;padding:4px 9px;font-size:11.5px;line-height:1;border-radius:8px;background:var(--accent);color:#1d1606;border-color:transparent;box-shadow:0 3px 10px rgba(0,0,0,.35)}
 .fwin .ibar button:hover{background:#ffc845}
 .fwin .slots{display:flex;flex-direction:column;gap:calc(var(--s)*-.02)}
@@ -45,7 +45,7 @@ button small{display:block;font-weight:500;font-size:11px;opacity:.75;margin-top
 .islot.pulse .dia{animation:ipulse .6s ease}
 @keyframes ipulse{35%{transform:rotate(45deg) scale(1.22);border-color:#f0b429;background:rgba(240,180,41,.38)}}
 .fwin .rs{position:absolute;width:16px;height:16px;opacity:0;pointer-events:none;border:0 solid var(--accent);transition:opacity .15s}
-.fwin.hov .rs,.fwin.drag .rs{opacity:1;pointer-events:auto}
+body.editing .fwin.hov .rs,body.editing .fwin.drag .rs{opacity:1;pointer-events:auto}
 .fwin .rs.tl{left:-5px;top:-5px;border-width:3px 0 0 3px;border-radius:7px 0 0 0;cursor:nwse-resize}
 .fwin .rs.tr{right:-5px;top:-5px;border-width:3px 3px 0 0;border-radius:0 7px 0 0;cursor:nesw-resize}
 .fwin .rs.bl{left:-5px;bottom:-5px;border-width:0 0 3px 3px;border-radius:0 0 0 7px;cursor:nesw-resize}
@@ -707,22 +707,24 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 /* ---------- the shared edit frame (players, actions, resources, buildings, items) ---------- */
 .edfr{--edc:#d6a84a}
 .edfr::after{content:'';position:absolute;inset:-6px;border:2px dashed transparent;border-radius:12px;pointer-events:none;transition:border-color .15s,background .15s}
-.edfr.hov::after,.edfr.edit::after,.fwin.hov::after,.fwin.drag::after{border-color:rgba(214,168,74,.85);background:rgba(20,14,8,.22)}
-.fwin.hov,.fwin.drag{border-color:transparent!important;background:transparent!important;box-shadow:none!important}
+body.editing .edfr.hov::after,body.editing .edfr.edit::after,body.editing .fwin.hov::after,body.editing .fwin.drag::after{border-color:rgba(214,168,74,.85);background:rgba(20,14,8,.22)}
+body.editing .fwin.hov,body.editing .fwin.drag{border-color:transparent!important;background:transparent!important;box-shadow:none!important}
 .edc,.fwin .rs{position:absolute;width:18px;height:18px;z-index:6;opacity:0;pointer-events:none;transition:opacity .15s;border:0 solid var(--edc);filter:drop-shadow(0 1px 0 #2a1a0c) drop-shadow(0 0 3px rgba(0,0,0,.6))}
 .edc::before,.fwin .rs::before{content:'';position:absolute;width:5px;height:5px;border-radius:50%;background:#f6dc8a;box-shadow:inset -1px -1px 0 #8a6420}
-.edfr.hov>.edc,.edfr.edit>.edc,.fwin.hov .rs,.fwin.drag .rs{opacity:1;pointer-events:auto}
+body.editing .edfr.hov>.edc,body.editing .edfr.edit>.edc,body.editing .fwin.hov .rs,body.editing .fwin.drag .rs{opacity:1;pointer-events:auto}
 .edc.tl,.fwin .rs.tl{left:-11px;top:-11px;border-width:4px 0 0 4px;border-radius:6px 0 0 0;cursor:nwse-resize}.edc.tl::before,.fwin .rs.tl::before{left:1px;top:1px}
 .edc.tr,.fwin .rs.tr{right:-11px;top:-11px;border-width:4px 4px 0 0;border-radius:0 6px 0 0;cursor:nesw-resize}.edc.tr::before,.fwin .rs.tr::before{right:1px;top:1px}
 .edc.bl,.fwin .rs.bl{left:-11px;bottom:-11px;border-width:0 0 4px 4px;border-radius:0 0 0 6px;cursor:nesw-resize}.edc.bl::before,.fwin .rs.bl::before{left:1px;bottom:1px}
 .edc.br,.fwin .rs.br{right:-11px;bottom:-11px;border-width:0 4px 4px 0;border-radius:0 0 6px 0;cursor:nwse-resize}.edc.br::before,.fwin .rs.br::before{right:1px;bottom:1px}
 .edtag{position:absolute;left:50%;top:-24px;transform:translateX(-50%);z-index:6;white-space:nowrap;padding:3px 12px 4px;font:700 11px 'Pixelify Sans',monospace;letter-spacing:1px;text-transform:uppercase;color:#2a1a0c;
   background:linear-gradient(#f2d27a,#c8a040 55%,#a8822a);clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,6px 100%,0 50%);box-shadow:inset 0 1px 0 #fff2c0;cursor:grab;opacity:0;pointer-events:none;transition:opacity .15s;text-shadow:0 1px 0 rgba(255,240,190,.5)}
-.edfr.hov>.edtag,.edfr.edit>.edtag{opacity:1;pointer-events:auto}
-.edfr.drag>.edtag,.fwin.drag .edtag{cursor:grabbing}
-.fwin .ibar .edtag{position:static;transform:none;opacity:1;pointer-events:auto}
+body.editing .edfr.hov>.edtag,body.editing .edfr.edit>.edtag{opacity:1;pointer-events:auto}
+body.editing .edfr.drag>.edtag,body.editing .fwin.drag .edtag{cursor:grabbing}
+.fwin .ibar .edtag{position:static;transform:none;opacity:1}
 .fwin .ibar{top:-26px;align-items:center}
-#hexbar.edfr>.edc,#hexbar.edfr>.edtag{pointer-events:auto}
+body.editing #hexbar.edfr>.edc,body.editing #hexbar.edfr>.edtag{pointer-events:auto}
+body.editing .fwin{cursor:grab}body.editing .fwin .ibar .edtag{pointer-events:auto}
+:root #hud-right #b-edit.on{--cloth:var(--cloth-y);filter:brightness(1.12) drop-shadow(0 0 5px rgba(255,200,100,.55))}   /* on: the yellow cloth of every active button */
 #corner.edfr>.edtag{top:auto;bottom:-26px}
 #corner.edfr>.edc.tl,#corner.edfr>.edc.tr{top:-2px}#corner.edfr>.edc.tr,#corner.edfr>.edc.br{right:-4px}
 #corner.edfr::after{inset:-2px -4px -6px -6px}
@@ -791,7 +793,7 @@ body.paused #tut{pointer-events:none}
 <body data-mode="board">
 <canvas id="c" tabindex="0"></canvas>
 
-<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-event" class="panel" style="display:none"></button><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-sound" class="panel" title="Sonido"></button><button id="b-pause" class="panel" title="Pausa (Esc)"></button></div></div>
+<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-event" class="panel" style="display:none"></button><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-edit" class="panel" title="Editar paneles"></button><button id="b-sound" class="panel" title="Sonido"></button><button id="b-pause" class="panel" title="Pausa (Esc)"></button></div></div>
 <div id="toasts"></div>
 <div id="announce" class="panel"></div>
 
@@ -2131,6 +2133,17 @@ function iconModel(k){
     case 'engrane': { const W = new THREE.Group(); W.rotation.x = Math.PI/2; g.add(W); const ring = (geo, c, y, sx, sy, sz, ry = 0) => { const m = mesh(geo, c, 0, y, 0, sx, sy, sz, false); m.rotation.y = ry; W.add(m); };
       ring(GEO.cyl, gold, 0, .52, .16, .52); ring(GEO.cyl, dark, 0, .17, .18, .17);   // brass wheel with a dark hub hole
       for (let i=0;i<8;i++){ const a = i*Math.PI/4, m = mesh(GEO.box, gold, Math.cos(a)*.56, 0, Math.sin(a)*.56, .2, .16, .16, false); m.rotation.y = -a; W.add(m); }
+      break; }
+    case 'escuadra': case 'escuadra-on': {   // carpenter's square and pencil: panel editing (brass glows while it is on)
+      const on = k === 'escuadra-on', blade = on ? icm(0xd8a23a, { m: .45, r: .4, e: 0x6a4a08, ei: .7 }) : icm(0xb8b4ac, { m: .5, r: .45 });
+      A(GEO.box, wood, -.05, -.5, 0, .8, .18, .16);                                   // wooden stock
+      A(GEO.box, blade, -.36, -.32, 0, .12, .82, .05);                                // blade
+      for (let i=0;i<5;i++) A(GEO.box, dark, -.33, -.2 + i*.14, .03, .06, .015, .01);  // marks
+      [-.2, 0, .2].forEach(x => A(GEO.sphere, on ? icm(0xf2c860, { e: 0x8a6008, ei: .9 }) : gold, x, -.41, .085, .03, .03, .02));   // rivets
+      const r = -.686, sn = Math.sin(-r), cs = Math.cos(-r);
+      A(GEO.box, 0xe8b830, -.1, -.2, .07, .08, .6, .08, 0, 0, r);                     // pencil
+      A(GEO.cone4, 0xe0c090, -.1 + .6*sn, -.2 + .6*cs, .07, .05, .14, .05, 0, 0, r);  // its sharpened tip
+      A(GEO.box, 0xd88a8a, -.1 - .1*sn, -.2 - .1*cs, .07, .085, .1, .085, 0, 0, r);   // eraser
       break; }
     case 'cuerno': case 'cuerno-off': { const h = A(GEO.cone7, gold, 0, -.35, 0, .3, .8, .3, 0, 0, Math.PI/2); if (k === 'cuerno-off'){ A(GEO.box, 0xa82a2a, 0, 0, .2, .9, .08, .04, 0, 0, .7); } break; }
     case 'check': A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .38, .1, 0, 0, .7); A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .7, .1, 0, 0, -.6); break;
@@ -6491,7 +6504,8 @@ function continueGame(){
 const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, robTile: null, chapter: '', part: 1, bots: ['Rosa', 'Nico'] };
 const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas'];
 // ---------- gates: everything asks here while the tutorial is on ----------
-// k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores'
+// k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores',
+// 'editar' (the panel-editing button: never in a step, so it stays locked; starting the tutorial turns editing off)
 function tutAllow(k){
   if (!TUT.on || TUT.allow.has(k)) return true;
   tutNudge(); return false;
@@ -6532,6 +6546,7 @@ function startTutorial(part = 1){
   Object.assign(GAME_OPTS, { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: false });
   closeMainMenu(); applyGameOpts();
   TUT.on = true; document.body.classList.add('tutorial');
+  if (editOn()) setEditPanels(false, true);   // no panel editing while Ulises points at things (the saved choice stays)
   newGame(3, null, TUT.seed);
   const me = G.players[0];
   try { me.name = localStorage.getItem('hexterra-name') || 'Alcalde'; me.avatar = avOk(localStorage.getItem('hexterra-avatar') || me.avatar); } catch {}
@@ -7066,12 +7081,13 @@ function floatWin(o){
   W.apply();
   W.save = () => { try { localStorage.setItem(KEY, JSON.stringify({ S: W.S, h: W.h, y: W.y, side: W.side })); } catch {} };
   el.querySelector('.flip').addEventListener('click', e => { e.stopPropagation(); W.h = !W.h; W.apply(); W.save(); SFX.click?.(); });
-  el.querySelector('.edtag').addEventListener('dblclick', e => { e.stopPropagation(); W.S = o.S || 58; W.side = o.side || 'l'; W.apply(); dockWins(W); W.save(); SFX.click?.(); });
+  el.querySelector('.edtag').addEventListener('dblclick', e => { if (!editOn()) return; e.stopPropagation(); W.S = o.S || 58; W.side = o.side || 'l'; W.apply(); dockWins(W); W.save(); SFX.click?.(); });
   let op = null;
   el.addEventListener('pointerdown', e => {
     if (e.target.closest('.ibar') && !e.target.closest('.edtag')) return;   // the name plate moves the window like the rest of the frame
     e.preventDefault(); e.stopPropagation();
     if (W.payTo){ op = { kind: 'move', x0: e.clientX, y0: e.clientY, moved: 0 }; return; }   // the thief bar: a tap, never a drag
+    if (!editOn()){ op = { kind: 'tap', x0: e.clientX, y0: e.clientY, moved: 0 }; return; }   // not editing: the slots can be tapped, the window stays put
     const rs = e.target.closest('.rs'), r0 = el.getBoundingClientRect();
     W.x = r0.left; W.y = r0.top; W.drag = true;
     op = { kind: rs ? 'resize' : 'move', c: rs?.dataset.c, x0: e.clientX, y0: e.clientY, X: W.x, Y: W.y, S: W.S, r0, moved: 0 };
@@ -7080,6 +7096,7 @@ function floatWin(o){
   el.addEventListener('pointermove', e => {
     if (!op) return;
     const dx = e.clientX - op.x0, dy = e.clientY - op.y0; op.moved = Math.max(op.moved, Math.hypot(dx, dy));
+    if (op.kind === 'tap') return;
     if (op.moved > 4) el.classList.add('drag');
     if (W.payTo) return;
     if (op.kind === 'move'){ W.x = op.X + dx; W.y = op.Y + dy; }
@@ -7094,13 +7111,14 @@ function floatWin(o){
   });
   const end = e => {
     if (!op) return;
+    if (op.kind === 'tap'){ const tap = op.moved < 5; op = null; if (tap && o.onSlot){ const k = o.keys.find(k => { const r = W.slots[k].getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }); if (k) o.onSlot(k); } return; }
     const click = op.moved < 5 && op.kind === 'move'; op = null; el.classList.remove('drag');
     if (W.payTo){ if (click){ const k = o.keys.find(k => { const r = W.slots[k].getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }); if (k) W.payTo(k); } return; }   // the thief bar: taps only
     { const r = el.getBoundingClientRect(); W.side = r.left + r.width/2 < innerWidth/2 ? 'l' : 'r'; W.drag = false; W.apply(); dockWins(W); } W.save();
     if (click && (W.payTo || o.onSlot)){ const k = o.keys.find(k => { const r = W.slots[k].getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }); if (k) (W.payTo || o.onSlot)(k); }
   };
   el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
-  el.addEventListener('pointerenter', () => el.classList.add('hov')); el.addEventListener('pointerleave', () => el.classList.remove('hov'));
+  el.addEventListener('pointerenter', () => { if (editOn()) el.classList.add('hov'); }); el.addEventListener('pointerleave', () => el.classList.remove('hov'));
   addEventListener('resize', () => { W.apply(); dockWins(); });
   W.update = () => { if (!G) return; o.keys.forEach(k => { const n = o.count(k), s = W.slots[k]; s.querySelector('b').textContent = n; s.classList.toggle('zero', n === 0); s.classList.toggle('active', W.active === k); }); };
   W.setNeeds = cost => { o.keys.forEach(k => { const s = W.slots[k], need = cost && cost[k], em = s.querySelector('.need'); s.classList.toggle('want', !!need); if (need){ em.textContent = '×' + need; em.classList.toggle('ok', o.count(k) >= need); } }); };
@@ -10493,24 +10511,34 @@ applyK(); addEventListener('resize', () => setTimeout(cornerBottom, 50));
 function edCorners(el, onDown, onMove, onEnd){
   ['tl', 'tr', 'bl', 'br'].forEach(c => { const h = document.createElement('i'); h.className = 'edc ' + c; h.dataset.c = c; h.title = 'Arrastra para cambiar el tamaño'; el.appendChild(h);
     let op = null;
-    h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; onDown(); el.classList.add('edit'); try { h.setPointerCapture(e.pointerId); } catch {} });
+    h.addEventListener('pointerdown', e => { if (!editOn()) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; onDown(); el.classList.add('edit'); try { h.setPointerCapture(e.pointerId); } catch {} });
     h.addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x, dy = e.clientY - op.y; onMove((c[1] === 'r' ? dx : -dx) + (c[0] === 'b' ? dy : -dy)); });
     const end = () => { if (!op) return; op = null; el.classList.remove('edit'); onEnd(); }; h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
     h.addEventListener('click', e => e.stopPropagation(), true); });
 }
 function edTag(el, name, onReset){ const t = document.createElement('b'); t.className = 'edtag'; t.textContent = name; t.title = 'Arrastra para mover · doble clic: tamaño y lugar normales'; el.appendChild(t);
-  t.addEventListener('dblclick', e => { e.stopPropagation(); onReset(); SFX.click?.(); }); return t; }
+  t.addEventListener('dblclick', e => { if (!editOn()) return; e.stopPropagation(); onReset(); SFX.click?.(); }); return t; }
+// ---------- panel editing: moving and resizing the panels exists only while the 3D square button (#b-edit) is on ----------
+function editOn(){ return document.body.classList.contains('editing'); }
+function setEditPanels(on, quiet){
+  document.body.classList.toggle('editing', !!on);
+  if (!on) document.querySelectorAll('.hov, .edfr.edit, .edfr.drag').forEach(el => el.classList.remove('hov', 'edit', 'drag'));
+  if (!quiet){ try { localStorage.setItem('hexterra-editpanels', on ? 'on' : 'off'); } catch {} }
+  updEditBtn();
+}
+function updEditBtn(){ const b = $('#b-edit'); if (!b) return; const on = editOn(); b.innerHTML = ic(on ? 'escuadra-on' : 'escuadra'); b.classList.toggle('on', on);
+  b.title = on ? 'Editar paneles: activado · toca para terminar' : 'Editar paneles: apagado · toca para mover y cambiar el tamaño de los paneles'; }
 function addGrip(el, key, name, move){
   if (!el || el.querySelector(':scope > .edc')) return; el.classList.add('edfr');
   // hover by position: these panels let clicks through (pointer-events:none) and other layers may sit on top of them
-  addEventListener('pointermove', e => { if (e.buttons) return; const r = el.getBoundingClientRect(), m = 14, on = r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - 30 && e.clientY < r.bottom + m; el.classList.toggle('hov', on); }, { passive: true });
+  addEventListener('pointermove', e => { if (e.buttons || !editOn()) return; const r = el.getBoundingClientRect(), m = 14, on = r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - 30 && e.clientY < r.bottom + m; el.classList.toggle('hov', on); }, { passive: true });
   let k0 = 1;
   edCorners(el, () => { k0 = KSIZE[key]; }, d => { const L = KLIM[key], prev = KSIZE[key]; KSIZE[key] = clamp(k0*(1 + d/260), L[0], L[1]); applyK();
       const r = el.getBoundingClientRect(); if (KSIZE[key] > prev && (r.width > innerWidth*L[2] || r.height > innerHeight*L[3])){ KSIZE[key] = prev; applyK(); } },
     () => { try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
   const t = edTag(el, name, () => { KSIZE[key] = 1; applyK(); if (move && move.reset) move.reset(); try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
   if (move && move.drag){ let op = null;
-    t.addEventListener('pointerdown', e => { if (e.button) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; move.start(); el.classList.add('edit', 'drag'); try { t.setPointerCapture(e.pointerId); } catch {} });
+    t.addEventListener('pointerdown', e => { if (e.button || !editOn()) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; move.start(); el.classList.add('edit', 'drag'); try { t.setPointerCapture(e.pointerId); } catch {} });
     t.addEventListener('pointermove', e => { if (op) move.drag(e.clientX - op.x, e.clientY - op.y); });
     const end = () => { if (!op) return; op = null; el.classList.remove('edit', 'drag'); move.end(); }; t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); }
 }
@@ -10534,7 +10562,7 @@ function layoutCorner(){
 // the whole group of signs can be dragged; it sticks to the closest side (board / missions icons always face the center)
 function cornerDrag(c){
   let op = null, block = false;
-  c.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.edc')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
+  c.addEventListener('pointerdown', e => { if (e.button || !editOn() || e.target.closest('.edc')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
   addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x0; op.moved = Math.max(op.moved, Math.abs(dx) + Math.abs(e.clientY - op.y0));
     if (op.moved > 8){ c.classList.add('drag'); c.style.right = 'auto'; c.style.left = (op.l + dx) + 'px'; c.style.transformOrigin = 'top left'; } });
   addEventListener('pointerup', () => { if (!op) return; const moved = op.moved > 8; op = null; if (!moved) return;
@@ -10558,6 +10586,8 @@ initSpecialWin();
 initQuestPanel();
 initHexbar();
 addGrip($('#hexbar'), 'hex', 'Acciones', HB_MOVE); applyHbPos();
+// the corner is taller in the village (the clock sits on top of the buttons): re-dock the side windows under it on every change of view
+new MutationObserver(() => setTimeout(() => { cornerBottom(); dockWins(); }, 60)).observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
 initCardFan(); initAmuletBox();
 renderCardArt();
 (document.fonts?.ready || Promise.resolve()).then(() => { renderCardArt(); renderFan(); });
@@ -10572,6 +10602,9 @@ const updCycleBtn = () => { const b = $('#b-cycle'); b.innerHTML = ic(DAY.fixed 
 updCycleBtn();
 $('#b-cycle').onclick = () => { DAY.fixed = !DAY.fixed; try { localStorage.setItem('hexterra-cycle', DAY.fixed ? 'off' : 'on'); } catch {} updCycleBtn(); SFX.click?.(); };
 updSoundBtn();
+$('#b-edit').onclick = e => { e.stopPropagation(); const on = !editOn(); if (on && !tutAllow('editar')) return; setEditPanels(on); SFX.click?.();
+  if (on) sysNote('Arrastra la placa de cada panel para moverlo y sus esquinas para cambiar el tamaño'); };
+setEditPanels((() => { try { return localStorage.getItem('hexterra-editpanels') === 'on'; } catch { return false; } })(), true);
 $('#b-sound').onclick = () => { audioInit(); setSound(!SND.on); updSoundBtn(); };
 $('#b-time').onclick = () => skipToNextPhase();
 setRetro(true);   // the pixel look is always on

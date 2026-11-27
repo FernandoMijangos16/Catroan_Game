@@ -32,12 +32,13 @@ function floatWin(o){
   W.apply();
   W.save = () => { try { localStorage.setItem(KEY, JSON.stringify({ S: W.S, h: W.h, y: W.y, side: W.side })); } catch {} };
   el.querySelector('.flip').addEventListener('click', e => { e.stopPropagation(); W.h = !W.h; W.apply(); W.save(); SFX.click?.(); });
-  el.querySelector('.edtag').addEventListener('dblclick', e => { e.stopPropagation(); W.S = o.S || 58; W.side = o.side || 'l'; W.apply(); dockWins(W); W.save(); SFX.click?.(); });
+  el.querySelector('.edtag').addEventListener('dblclick', e => { if (!editOn()) return; e.stopPropagation(); W.S = o.S || 58; W.side = o.side || 'l'; W.apply(); dockWins(W); W.save(); SFX.click?.(); });
   let op = null;
   el.addEventListener('pointerdown', e => {
     if (e.target.closest('.ibar') && !e.target.closest('.edtag')) return;   // the name plate moves the window like the rest of the frame
     e.preventDefault(); e.stopPropagation();
     if (W.payTo){ op = { kind: 'move', x0: e.clientX, y0: e.clientY, moved: 0 }; return; }   // the thief bar: a tap, never a drag
+    if (!editOn()){ op = { kind: 'tap', x0: e.clientX, y0: e.clientY, moved: 0 }; return; }   // not editing: the slots can be tapped, the window stays put
     const rs = e.target.closest('.rs'), r0 = el.getBoundingClientRect();
     W.x = r0.left; W.y = r0.top; W.drag = true;
     op = { kind: rs ? 'resize' : 'move', c: rs?.dataset.c, x0: e.clientX, y0: e.clientY, X: W.x, Y: W.y, S: W.S, r0, moved: 0 };
@@ -46,6 +47,7 @@ function floatWin(o){
   el.addEventListener('pointermove', e => {
     if (!op) return;
     const dx = e.clientX - op.x0, dy = e.clientY - op.y0; op.moved = Math.max(op.moved, Math.hypot(dx, dy));
+    if (op.kind === 'tap') return;
     if (op.moved > 4) el.classList.add('drag');
     if (W.payTo) return;
     if (op.kind === 'move'){ W.x = op.X + dx; W.y = op.Y + dy; }
@@ -60,13 +62,14 @@ function floatWin(o){
   });
   const end = e => {
     if (!op) return;
+    if (op.kind === 'tap'){ const tap = op.moved < 5; op = null; if (tap && o.onSlot){ const k = o.keys.find(k => { const r = W.slots[k].getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }); if (k) o.onSlot(k); } return; }
     const click = op.moved < 5 && op.kind === 'move'; op = null; el.classList.remove('drag');
     if (W.payTo){ if (click){ const k = o.keys.find(k => { const r = W.slots[k].getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }); if (k) W.payTo(k); } return; }   // the thief bar: taps only
     { const r = el.getBoundingClientRect(); W.side = r.left + r.width/2 < innerWidth/2 ? 'l' : 'r'; W.drag = false; W.apply(); dockWins(W); } W.save();
     if (click && (W.payTo || o.onSlot)){ const k = o.keys.find(k => { const r = W.slots[k].getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }); if (k) (W.payTo || o.onSlot)(k); }
   };
   el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
-  el.addEventListener('pointerenter', () => el.classList.add('hov')); el.addEventListener('pointerleave', () => el.classList.remove('hov'));
+  el.addEventListener('pointerenter', () => { if (editOn()) el.classList.add('hov'); }); el.addEventListener('pointerleave', () => el.classList.remove('hov'));
   addEventListener('resize', () => { W.apply(); dockWins(); });
   W.update = () => { if (!G) return; o.keys.forEach(k => { const n = o.count(k), s = W.slots[k]; s.querySelector('b').textContent = n; s.classList.toggle('zero', n === 0); s.classList.toggle('active', W.active === k); }); };
   W.setNeeds = cost => { o.keys.forEach(k => { const s = W.slots[k], need = cost && cost[k], em = s.querySelector('.need'); s.classList.toggle('want', !!need); if (need){ em.textContent = '×' + need; em.classList.toggle('ok', o.count(k) >= need); } }); };

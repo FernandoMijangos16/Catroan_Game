@@ -72,6 +72,17 @@ function iconModel(k){
       ring(GEO.cyl, gold, 0, .52, .16, .52); ring(GEO.cyl, dark, 0, .17, .18, .17);   // brass wheel with a dark hub hole
       for (let i=0;i<8;i++){ const a = i*Math.PI/4, m = mesh(GEO.box, gold, Math.cos(a)*.56, 0, Math.sin(a)*.56, .2, .16, .16, false); m.rotation.y = -a; W.add(m); }
       break; }
+    case 'escuadra': case 'escuadra-on': {   // carpenter's square and pencil: panel editing (brass glows while it is on)
+      const on = k === 'escuadra-on', blade = on ? icm(0xd8a23a, { m: .45, r: .4, e: 0x6a4a08, ei: .7 }) : icm(0xb8b4ac, { m: .5, r: .45 });
+      A(GEO.box, wood, -.05, -.5, 0, .8, .18, .16);                                   // wooden stock
+      A(GEO.box, blade, -.36, -.32, 0, .12, .82, .05);                                // blade
+      for (let i=0;i<5;i++) A(GEO.box, dark, -.33, -.2 + i*.14, .03, .06, .015, .01);  // marks
+      [-.2, 0, .2].forEach(x => A(GEO.sphere, on ? icm(0xf2c860, { e: 0x8a6008, ei: .9 }) : gold, x, -.41, .085, .03, .03, .02));   // rivets
+      const r = -.686, sn = Math.sin(-r), cs = Math.cos(-r);
+      A(GEO.box, 0xe8b830, -.1, -.2, .07, .08, .6, .08, 0, 0, r);                     // pencil
+      A(GEO.cone4, 0xe0c090, -.1 + .6*sn, -.2 + .6*cs, .07, .05, .14, .05, 0, 0, r);  // its sharpened tip
+      A(GEO.box, 0xd88a8a, -.1 - .1*sn, -.2 - .1*cs, .07, .085, .1, .085, 0, 0, r);   // eraser
+      break; }
     case 'cuerno': case 'cuerno-off': { const h = A(GEO.cone7, gold, 0, -.35, 0, .3, .8, .3, 0, 0, Math.PI/2); if (k === 'cuerno-off'){ A(GEO.box, 0xa82a2a, 0, 0, .2, .9, .08, .04, 0, 0, .7); } break; }
     case 'check': A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .38, .1, 0, 0, .7); A(GEO.box, 0x3a9a3a, -.04, -.3, 0, .12, .7, .1, 0, 0, -.6); break;
     case 'cruz': A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, .78); A(GEO.box, 0xa82a2a, 0, -.3, 0, .12, .7, .1, 0, 0, -.78); break;

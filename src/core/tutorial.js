@@ -7,7 +7,8 @@
 const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, robTile: null, chapter: '', part: 1, bots: ['Rosa', 'Nico'] };
 const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas'];
 // ---------- gates: everything asks here while the tutorial is on ----------
-// k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores'
+// k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores',
+// 'editar' (the panel-editing button: never in a step, so it stays locked; starting the tutorial turns editing off)
 function tutAllow(k){
   if (!TUT.on || TUT.allow.has(k)) return true;
   tutNudge(); return false;
@@ -48,6 +49,7 @@ function startTutorial(part = 1){
   Object.assign(GAME_OPTS, { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: false });
   closeMainMenu(); applyGameOpts();
   TUT.on = true; document.body.classList.add('tutorial');
+  if (editOn()) setEditPanels(false, true);   // no panel editing while Ulises points at things (the saved choice stays)
   newGame(3, null, TUT.seed);
   const me = G.players[0];
   try { me.name = localStorage.getItem('hexterra-name') || 'Alcalde'; me.avatar = avOk(localStorage.getItem('hexterra-avatar') || me.avatar); } catch {}

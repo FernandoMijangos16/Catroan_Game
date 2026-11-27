@@ -155,6 +155,13 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
   - En línea solo oscurece (los demás siguen) y no hay Guardar ni Reiniciar.
   - Salir y Reiniciar recargan la página (`PAUSE.gen` corta las esperas viejas); Reiniciar deja sus opciones en
     `sessionStorage` y `restartPending` abre la partida nueva al arrancar.
+- **Edición de paneles** (mover y cambiar el tamaño de inventario, barra de acciones, letreros y botones): **solo existe
+  con el botón de la escuadra activado** (`#b-edit` en `#hud-right`, ícono `escuadra` / `escuadra-on`). Apagado por
+  defecto y guardado en `hexterra-editpanels`; encendido pone `body.editing`, y todo el CSS y la lógica de edición
+  (`.hov`, esquinas, placa, arrastrar, cambiar tamaño, doble clic para volver a lo normal) dependen de esa clase
+  (`editOn()`, `setEditPanels()` en `main/start.js`). Apagado, pasar el mouse o picar no oscurece nada ni muestra marcos,
+  y los tamaños y lugares guardados se siguen aplicando. En el tutorial se apaga y el botón queda bloqueado
+  (`tutAllow('editar')`).
 - **Doble clic omite animaciones** (`skipAnims` en `core/util.js`): usa `wait()` para esperar (se puede interrumpir) y
   las escenas avanzan con `dt` en el bucle; así todo lo nuevo también se puede omitir.
 
@@ -179,7 +186,8 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
   - Trueques entre jugadores: máximo `TRADE_MAX` (2) por pareja y turno (`tradeCount`, `G.trades`, va en `netSnap`).
   - Al entrar, cada quien pone su nombre y tira sus dados.
   - El chat con T.
-- **Tablero:** el inventario en la orilla izquierda, los letreros de jugadores arriba a la derecha, la barra de
+- **Tablero:** el inventario en la orilla izquierda, los letreros de jugadores arriba a la derecha con los botones 3D
+  de herramientas (paso del día, ciclo de día y noche, editar paneles, sonido y pausa), la barra de
   acciones en hexágonos abajo, "Terminar turno", el abanico de cartas abajo a la izquierda y la caja de amuletos
   detrás de la baraja.
 - **Escenas:** el pueblo en primera persona, el mercado, el muelle con el pirata, la oficina, el mensajero y el

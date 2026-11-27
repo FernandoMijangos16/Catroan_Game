@@ -29,24 +29,34 @@ applyK(); addEventListener('resize', () => setTimeout(cornerBottom, 50));
 function edCorners(el, onDown, onMove, onEnd){
   ['tl', 'tr', 'bl', 'br'].forEach(c => { const h = document.createElement('i'); h.className = 'edc ' + c; h.dataset.c = c; h.title = 'Arrastra para cambiar el tamaño'; el.appendChild(h);
     let op = null;
-    h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; onDown(); el.classList.add('edit'); try { h.setPointerCapture(e.pointerId); } catch {} });
+    h.addEventListener('pointerdown', e => { if (!editOn()) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; onDown(); el.classList.add('edit'); try { h.setPointerCapture(e.pointerId); } catch {} });
     h.addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x, dy = e.clientY - op.y; onMove((c[1] === 'r' ? dx : -dx) + (c[0] === 'b' ? dy : -dy)); });
     const end = () => { if (!op) return; op = null; el.classList.remove('edit'); onEnd(); }; h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
     h.addEventListener('click', e => e.stopPropagation(), true); });
 }
 function edTag(el, name, onReset){ const t = document.createElement('b'); t.className = 'edtag'; t.textContent = name; t.title = 'Arrastra para mover · doble clic: tamaño y lugar normales'; el.appendChild(t);
-  t.addEventListener('dblclick', e => { e.stopPropagation(); onReset(); SFX.click?.(); }); return t; }
+  t.addEventListener('dblclick', e => { if (!editOn()) return; e.stopPropagation(); onReset(); SFX.click?.(); }); return t; }
+// ---------- panel editing: moving and resizing the panels exists only while the 3D square button (#b-edit) is on ----------
+function editOn(){ return document.body.classList.contains('editing'); }
+function setEditPanels(on, quiet){
+  document.body.classList.toggle('editing', !!on);
+  if (!on) document.querySelectorAll('.hov, .edfr.edit, .edfr.drag').forEach(el => el.classList.remove('hov', 'edit', 'drag'));
+  if (!quiet){ try { localStorage.setItem('hexterra-editpanels', on ? 'on' : 'off'); } catch {} }
+  updEditBtn();
+}
+function updEditBtn(){ const b = $('#b-edit'); if (!b) return; const on = editOn(); b.innerHTML = ic(on ? 'escuadra-on' : 'escuadra'); b.classList.toggle('on', on);
+  b.title = on ? 'Editar paneles: activado · toca para terminar' : 'Editar paneles: apagado · toca para mover y cambiar el tamaño de los paneles'; }
 function addGrip(el, key, name, move){
   if (!el || el.querySelector(':scope > .edc')) return; el.classList.add('edfr');
   // hover by position: these panels let clicks through (pointer-events:none) and other layers may sit on top of them
-  addEventListener('pointermove', e => { if (e.buttons) return; const r = el.getBoundingClientRect(), m = 14, on = r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - 30 && e.clientY < r.bottom + m; el.classList.toggle('hov', on); }, { passive: true });
+  addEventListener('pointermove', e => { if (e.buttons || !editOn()) return; const r = el.getBoundingClientRect(), m = 14, on = r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - 30 && e.clientY < r.bottom + m; el.classList.toggle('hov', on); }, { passive: true });
   let k0 = 1;
   edCorners(el, () => { k0 = KSIZE[key]; }, d => { const L = KLIM[key], prev = KSIZE[key]; KSIZE[key] = clamp(k0*(1 + d/260), L[0], L[1]); applyK();
       const r = el.getBoundingClientRect(); if (KSIZE[key] > prev && (r.width > innerWidth*L[2] || r.height > innerHeight*L[3])){ KSIZE[key] = prev; applyK(); } },
     () => { try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
   const t = edTag(el, name, () => { KSIZE[key] = 1; applyK(); if (move && move.reset) move.reset(); try { localStorage.setItem('hexterra-ksize', JSON.stringify(KSIZE)); } catch {} if (typeof dockWins === 'function') dockWins(); });
   if (move && move.drag){ let op = null;
-    t.addEventListener('pointerdown', e => { if (e.button) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; move.start(); el.classList.add('edit', 'drag'); try { t.setPointerCapture(e.pointerId); } catch {} });
+    t.addEventListener('pointerdown', e => { if (e.button || !editOn()) return; e.preventDefault(); e.stopPropagation(); op = { x: e.clientX, y: e.clientY }; move.start(); el.classList.add('edit', 'drag'); try { t.setPointerCapture(e.pointerId); } catch {} });
     t.addEventListener('pointermove', e => { if (op) move.drag(e.clientX - op.x, e.clientY - op.y); });
     const end = () => { if (!op) return; op = null; el.classList.remove('edit', 'drag'); move.end(); }; t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); }
 }
@@ -70,7 +80,7 @@ function layoutCorner(){
 // the whole group of signs can be dragged; it sticks to the closest side (board / missions icons always face the center)
 function cornerDrag(c){
   let op = null, block = false;
-  c.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.edc')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
+  c.addEventListener('pointerdown', e => { if (e.button || !editOn() || e.target.closest('.edc')) return; const r = c.getBoundingClientRect(); op = { x0: e.clientX, y0: e.clientY, l: r.left, moved: 0, id: e.pointerId }; }, true);
   addEventListener('pointermove', e => { if (!op) return; const dx = e.clientX - op.x0; op.moved = Math.max(op.moved, Math.abs(dx) + Math.abs(e.clientY - op.y0));
     if (op.moved > 8){ c.classList.add('drag'); c.style.right = 'auto'; c.style.left = (op.l + dx) + 'px'; c.style.transformOrigin = 'top left'; } });
   addEventListener('pointerup', () => { if (!op) return; const moved = op.moved > 8; op = null; if (!moved) return;
@@ -94,6 +104,8 @@ initSpecialWin();
 initQuestPanel();
 initHexbar();
 addGrip($('#hexbar'), 'hex', 'Acciones', HB_MOVE); applyHbPos();
+// the corner is taller in the village (the clock sits on top of the buttons): re-dock the side windows under it on every change of view
+new MutationObserver(() => setTimeout(() => { cornerBottom(); dockWins(); }, 60)).observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
 initCardFan(); initAmuletBox();
 renderCardArt();
 (document.fonts?.ready || Promise.resolve()).then(() => { renderCardArt(); renderFan(); });
@@ -108,6 +120,9 @@ const updCycleBtn = () => { const b = $('#b-cycle'); b.innerHTML = ic(DAY.fixed 
 updCycleBtn();
 $('#b-cycle').onclick = () => { DAY.fixed = !DAY.fixed; try { localStorage.setItem('hexterra-cycle', DAY.fixed ? 'off' : 'on'); } catch {} updCycleBtn(); SFX.click?.(); };
 updSoundBtn();
+$('#b-edit').onclick = e => { e.stopPropagation(); const on = !editOn(); if (on && !tutAllow('editar')) return; setEditPanels(on); SFX.click?.();
+  if (on) sysNote('Arrastra la placa de cada panel para moverlo y sus esquinas para cambiar el tamaño'); };
+setEditPanels((() => { try { return localStorage.getItem('hexterra-editpanels') === 'on'; } catch { return false; } })(), true);
 $('#b-sound').onclick = () => { audioInit(); setSound(!SND.on); updSoundBtn(); };
 $('#b-time').onclick = () => skipToNextPhase();
 setRetro(true);   // the pixel look is always on
