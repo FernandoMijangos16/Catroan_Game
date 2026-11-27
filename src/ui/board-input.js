@@ -15,6 +15,7 @@ function boardClick(e){
   if (!G || G.over) return;
   if (G.phase === 'setupV' || G.phase === 'setupE'){ setupClick(e); return; }
   if (G.setup) return;
+  if (TUT.on && !(G.buildMode && TUT.allow.has('tablero'))) return;   // tutorial: the board only takes what Ulises asked for
   setRay(e);
   if (G.current === 0 && G.phase === 'robber'){
     const hit = ray.intersectObjects(tileGroups, true)[0];

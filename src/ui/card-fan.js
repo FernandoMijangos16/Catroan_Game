@@ -15,7 +15,7 @@ function renderFan(newIdx = -1){
   const hand = G.players[0].cards || [];
   while (f.children.length > hand.length) f.lastChild.remove();
   while (f.children.length < hand.length){ const el = document.createElement('div'); el.className = 'card'; el.innerHTML = '<div class="cin"><img class="face"><img class="back"></div>'; f.appendChild(el);
-    el.addEventListener('click', e => { e.stopPropagation(); if (document.body.classList.contains('boxfront')){ swapDeck(false); return; } openHand(); }); }
+    el.addEventListener('click', e => { e.stopPropagation(); if (!tutAllow('cartas')) return; if (document.body.classList.contains('boxfront')){ swapDeck(false); return; } openHand(); }); }
   f.style.setProperty('--pc', G.players[0].color); document.body.classList.toggle('nocards', !hand.length); if (!hand.length) document.body.classList.remove('boxfront');
   // a compact fan that never reaches the action buttons: measure the room left of them
   const n = hand.length, hb = $('#hexbar canvas'), Z = UI_S || 1, room = hb && hb.getBoundingClientRect().width ? hb.getBoundingClientRect().left/Z + 30 - 60 - 10 : 240;

@@ -31,7 +31,7 @@ function initHexbar(){
   const end = document.createElement('button'); end.id = 'b-endturn';
   end.innerHTML = '<svg viewBox="0 0 12 16" width="18" height="24" shape-rendering="crispEdges"><path fill="#2a1a0c" d="M1 0h10v2H1zM1 14h10v2H1z"/><path fill="#e9c46a" d="M2 2h8v1H2zM3 3h6v2H3zM4 5h4v2H4zM5 7h2v2H5zM4 9h4v2H4zM3 11h6v2H3zM2 13h8v1H2z"/><path fill="#f6e7c1" d="M4 3h4v1H4zM5 10h2v1H5zM4 11h4v2H4z"/></svg><span>Terminar turno</span>';
   document.body.appendChild(end);
-  end.onclick = () => { if (G && G.current === 0 && G.phase === 'main'){ SFX.click?.(); endTurn(); } };
+  end.onclick = () => { if (!tutAllow('fin')) return; if (G && G.current === 0 && G.phase === 'main'){ SFX.click?.(); endTurn(); } };
   HB.end = end;
   const cv = wrap.querySelector('canvas');
   let r; try { r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch { return; }
@@ -123,7 +123,7 @@ function buildTokenModel(T){
   }
 }
 function hbAction(k){
-  if (!G) return;
+  if (!G || !tutAllow(k)) return;
   switch (k){
     case 'dados': if (G.current === 0 && G.phase === 'roll') rollDice(); break;
     case 'camino': enterBuild('camino'); break;
@@ -187,9 +187,10 @@ function stepHexbar(dt){
   if (!HB.r || mode !== 'board' || !G) return;
   HB.t += dt;
   HB.tokens.forEach((T, i) => {
-    const want = (T === HB.hover && T.enabled ? .09 : 0) + (T.active ? .07 : 0) + (T.press > 0 ? -.05*Math.sin(T.press*Math.PI) : 0);
+    const shine = TUT.glow === T.k;   // the tutorial points at this token
+    const want = (shine ? .08 + Math.sin(HB.t*6)*.05 : 0) + (T === HB.hover && T.enabled ? .09 : 0) + (T.active ? .07 : 0) + (T.press > 0 ? -.05*Math.sin(T.press*Math.PI) : 0);
     T.lift += (want - T.lift)*Math.min(1, dt*10); T.press = Math.max(0, (T.press || 0) - dt*3);
-    T.g.position.y = T.lift; if (T.brass) T.brass.emissive.setHex(T === HB.hover && T.enabled || T.active ? 0x3a2808 : 0);
+    T.g.position.y = T.lift; if (T.brass) T.brass.emissive.setHex(shine ? (Math.sin(HB.t*6) > 0 ? 0x6a4810 : 0x3a2808) : T === HB.hover && T.enabled || T.active ? 0x3a2808 : 0);
     const sp = T.enabled ? 1 : .35;
     if (T.k === 'dados') T.items.forEach((d, j) => { d.rotation.x += dt*(.5 + j*.15)*sp; d.rotation.y += dt*(.7 - j*.2)*sp; d.rotation.z = .42; d.position.y = .32 + Math.sin(HB.t*1.6 + j*2)*.04; });
     else if (T.k === 'carta') T.items.forEach((c, j) => { c.rotation.set(-1.1, Math.sin(HB.t*.9*sp + j*2)*.35, c.userData.r + Math.sin(HB.t*1.1 + j)*.08); c.position.y = .3 + Math.sin(HB.t*1.4 + j*1.5)*.04; });

@@ -55,7 +55,7 @@ function enterBuild(kind){
   if (G.buildMode === kind){ exitBuild(); refresh(); return; }
   exitBuild(); hidePopup(); G.buildMode = kind;
   markers = new THREE.Group();
-  if (kind === 'camino') validRoads(0).forEach(e => {
+  if (kind === 'camino') tutRoadOnly(validRoads(0)).forEach(e => {
     const a = G.verts[e.a], b = G.verts[e.b];
     const m = new THREE.Mesh(new THREE.BoxGeometry(.55,.07,.16), markerMat);
     m.position.set((a.x+b.x)/2, .25, (a.z+b.z)/2); m.rotation.y = Math.atan2(-(b.z-a.z), b.x-a.x); m.userData.markE = e.id; markers.add(m);

@@ -17,6 +17,7 @@ function gossip(s){ G.gossip.push(s); if (G.gossip.length > 8) G.gossip.shift();
 // the dice come out of a bag holding the 36 combinations of two dice: every number shows up in its fair share and there are no long streaks.
 // The bag is refilled when 5 are left, so the last rolls can't be counted out exactly.
 function drawDice(){
+  if (TUT.on && TUT.dice.length) return TUT.dice.shift();   // the tutorial's dice come in a fixed order
   if (!G.bag || G.bag.length <= 5){ G.bag = []; for (let a=1;a<=6;a++) for (let b=1;b<=6;b++) G.bag.push(a*10 + b); G.bag = shuffle(G.bag); }
   const v = G.bag.pop(); return [Math.floor(v/10), v % 10];
 }

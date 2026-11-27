@@ -10,7 +10,7 @@ function initPlates(){
   PLAYER_DEFS.forEach((d, i) => {
     const el = document.createElement('div'); el.className = 'pl'; el.innerHTML = '<canvas></canvas><b class="ordb"></b><b class="fxb"></b><i class="think"><i></i><i></i><i></i></i>'; box.appendChild(el);
     el.style.cursor = 'pointer';
-    if (i === 0) el.addEventListener('click', () => G && !G.amuletPick && !NG.on && chooseAvatar()); else el.addEventListener('click', e => { e.stopPropagation(); if (!G) return; if (G.amuletPick) amuletPlate(i); else plateMenu(i, el); });
+    if (i === 0) el.addEventListener('click', () => G && !G.amuletPick && !NG.on && tutAllow('jugadores') && chooseAvatar()); else el.addEventListener('click', e => { e.stopPropagation(); if (!G || !tutAllow('jugadores')) return; if (G.amuletPick) amuletPlate(i); else plateMenu(i, el); });
     const H = 104, pl = { el, i, last: {} };
     const v = miniView(el.querySelector('canvas'), { w: signW(), h: H, ortho: true, res: 1, fps: 20, tick: (dt, t) => { pl.sign.rotation.z = Math.sin(t*1.25 + i*1.7)*(pl.act ? .035 : .018); pl.items.forEach(s => { s.userData.inner.rotation.y += dt*1.1; s.rotation.z = .22; }); } });
     pl.v = v;

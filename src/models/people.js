@@ -141,6 +141,8 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
     case 'carpintero': shirt = 0x8a6a48; pants = 0x4a3a2a; apron = 0x7a5a3a; hat = 'paliacate'; tool = 'martillo'; dress = false; longSleeve = rng() < .5; break;
   }
   if (opt.hat !== undefined) hat = opt.hat;
+  if (opt.shirt != null) shirt = opt.shirt;
+  if (opt.pants != null) pants = opt.pants;
   if (opt.dress !== undefined) dress = opt.dress;
   const dressC = role === 'panadero' ? 0xf5f1e8 : role === 'brujo' ? 0x3a2a5a : pick(DRESS, rng);
   const topC = dress ? dressC : shirt, legC = dress ? (old ? 0x4a3a30 : 0x3a2f28) : pants;
@@ -233,6 +235,7 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
     case 'pluma': H(PGEO.brim, 0x2b2522, T - .06, .24, .025); H(PGEO.crown, 0x2b2522, T - .06, .14, .13); { const fe = add(head, GEO.box, pick([0xe85d75, 0x5fa8f0, 0xf7d046], rng), .12, T, -.03, .03, .24, .06); fe.rotation.z = -.55; } break;
     case 'yelmo': add(head, PGEO.head, 0x9aa0a8, 0, T - .04, -.005, .15, .13, .158); add(head, GEO.cone7, 0x9aa0a8, 0, T + .05, 0, .05, .1, .05); add(head, GEO.box, 0x9aa0a8, 0, .16, .13, .03, .15, .03); H(PGEO.brim, 0x8a9098, T - .17, .158, .03); break;
     case 'brujo': { H(PGEO.brim, 0x2a1e3a, T - .07, .32, .025); const c1 = add(head, GEO.cone7, 0x2a1e3a, .02, T - .07, -.01, .17, .5, .17); c1.rotation.z = -.18; add(head, GEO.box, 0xc89a40, 0, T - .03, .16, .06, .05, .01); break; }
+    case 'viajero': H(PGEO.brim, 0x6a4a2e, T - .08, .34, .025); H(PGEO.crown, 0x5a3e26, T - .08, .15, .16); H(PGEO.brim, 0x2b2018, T - .05, .153, .035); break;   // worn wide-brimmed leather hat
     case 'paliacate': add(head, PGEO.rbox, 0xc0392b, 0, T - .02, -.012, .262, .12, .272); add(head, PGEO.joint, 0xc0392b, 0, T - .07, -.15, .045, .04, .04); break;
   }
   // ---- tools held in the right hand

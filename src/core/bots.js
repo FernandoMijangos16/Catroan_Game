@@ -76,6 +76,7 @@ async function botTurn(p, fromMain){   // fromMain: the dice were already rolled
   // one bot turn per turn: a second call (a reconnect, a late online state) for the same turn is ignored
   const run = gid + ':' + tid; if (botTurn.running === run) return; botTurn.running = run;
   const alive = () => G.id === gid && G.turnId === tid && !G.over;
+  if (TUT.on) return tutBotTurn(p, alive);   // tutorial bots only roll and pass
   await wait(1500); if (!alive()) return;
   botQuests(p);
   if (!fromMain){
