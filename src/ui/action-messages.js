@@ -14,7 +14,9 @@ function actionSpec(html, color){
   let victim = others.length ? others[0] : (p > 0 && /\b(te |ti\b|contigo)/i.test(txt) ? 0 : -1);
   const S = { p, items, victim, txt, act: 'globo', model: null, cap: '' };
   const am = AMK.find(k => txt.toLowerCase().includes(AMULETS[k].name.toLowerCase()));
-  if (/ganó la partida|Ganaste/.test(txt)){ S.act = 'trofeo'; S.cap = '¡Ganó la partida!'; S.items = {}; }
+  const evk = /Llegó|Empezó|Terminó|Dejó de|se fue/.test(txt) ? EVK.find(k => ({ feria: /feria/i, lluvia: /lluvia|llover/i, polen: /polinizaci/i, sequia: /sequía/i, invierno: /invierno/i })[k].test(txt)) : null;
+  if (evk){ S.act = EVENTS[evk].icon; S.cap = EVENTS[evk].name; S.items = {}; S.victim = -1; }
+  else if (/ganó la partida|Ganaste/.test(txt)){ S.act = 'trofeo'; S.cap = '¡Ganó la partida!'; S.items = {}; }
   else if (/Guardia más poderosa/.test(txt)){ S.model = 'trofeo:army'; S.cap = 'Guardia más poderosa'; }
   else if (/Camino más largo/.test(txt)){ S.model = 'trofeo:road'; S.cap = 'Camino más largo'; }
   else if (/demol/i.test(txt)){ S.act = 'bomba'; S.cap = 'demolió un camino'; if (/sus caminos|tus caminos/.test(txt)) S.victim = -1; }

@@ -98,6 +98,7 @@ function endTurn(){
   const P = G.players[G.current];
   if (NG.on) G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } });
   villageQuests();   // each town posts missions on its own timer (core/missions.js)
+  eventsTick();      // season events start and end with the rounds (core/events.js)
   if (P.buffs){
     if (P.buffs.randomItem){ P.buffs.randomItem = false; if (Math.random() < .5){ const r = pick(RES); P.res[r]++; notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: 1 ${resImg(r)}`, P.color); } else { const k = pick(SPK); giveSpecial(G.current, k); notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: ${specImg(k)} ${SPECIAL[k].name}`, P.color); } }
     if (P.buffs.extraRes){ P.buffs.extraRes = false; P.extraTurn = G.turnId; }

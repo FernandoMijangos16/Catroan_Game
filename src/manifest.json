@@ -55,6 +55,7 @@
  "scenes/pier-trade.js",
  "scenes/market-core.js",
  "core/specials.js",
+ "core/events.js",
  "core/missions.js",
  "core/trades.js",
  "ui/inventory.js",

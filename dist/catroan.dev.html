@@ -733,7 +733,7 @@ body.netwaiting #hexbar,body.netwaiting #b-endturn,body.netwaiting #cards,body.n
 <body data-mode="board">
 <canvas id="c" tabindex="0"></canvas>
 
-<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-sound" class="panel" title="Sonido"></button></div></div>
+<div id="hud-top"><div id="players"></div><div id="hud-right"><button id="b-event" class="panel" style="display:none"></button><button id="b-time" class="panel" title="Avanzar a la siguiente parte del día"></button><button id="b-cycle" class="panel" title="Ciclo de día y noche"></button><button id="b-sound" class="panel" title="Sonido"></button></div></div>
 <div id="toasts"></div>
 <div id="announce" class="panel"></div>
 
@@ -1610,7 +1610,7 @@ function tradeRate(p, r){
 function tradeRateBase(p, r){
   let k = 4;
   G.verts.forEach(v => { if (v.building && v.building.p === p && v.port){ if (v.port === '3:1') k = Math.min(k, 3); else if (v.port === r) k = 2; } });
-  return k;
+  return eventRate(k);   // the fair makes it cheaper
 }
 function portSign(type){
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
@@ -1817,7 +1817,7 @@ async function applyRoll(d1, d2){
     G.tiles.forEach(t => {
       if (t.num !== s || t.i === G.robber) return;
       const r = TERRAIN[t.type].res, to = [];
-      t.verts.forEach(vid => { const v = G.verts[vid], b = v.building; if (!b) return; bioTick(b.p, t.type, s); const n = amuletYield(b.p, r, s, (b.type === 'ciudad' ? 2 : 1) + (b.p === G.current && G.players[b.p].extraTurn === G.turnId ? 1 : 0), RY); if (n <= 0) return; G.players[b.p].res[r] += n; gains[b.p][r] = (gains[b.p][r] || 0) + n; const tok = b.p === 0 && INV.el ? invExpect(r, n) : null; to.push({ x: v.x, z: v.z, p: b.p, n, tok }); fest.add(vid); });
+      t.verts.forEach(vid => { const v = G.verts[vid], b = v.building; if (!b) return; bioTick(b.p, t.type, s); const n = eventYield(r, amuletYield(b.p, r, s, (b.type === 'ciudad' ? 2 : 1) + (b.p === G.current && G.players[b.p].extraTurn === G.turnId ? 1 : 0), RY)); if (n <= 0) return; G.players[b.p].res[r] += n; gains[b.p][r] = (gains[b.p][r] || 0) + n; const tok = b.p === 0 && INV.el ? invExpect(r, n) : null; to.push({ x: v.x, z: v.z, p: b.p, n, tok }); fest.add(vid); });
       if (to.length) shows.push({ tile: t, res: r, to });
     });
     if (mode === 'board' && shows.length) revealProduction(shows);
@@ -1974,6 +1974,7 @@ function endTurn(){
   const P = G.players[G.current];
   if (NG.on) G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } });
   villageQuests();   // each town posts missions on its own timer (core/missions.js)
+  eventsTick();      // season events start and end with the rounds (core/events.js)
   if (P.buffs){
     if (P.buffs.randomItem){ P.buffs.randomItem = false; if (Math.random() < .5){ const r = pick(RES); P.res[r]++; notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: 1 ${resImg(r)}`, P.color); } else { const k = pick(SPK); giveSpecial(G.current, k); notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: ${specImg(k)} ${SPECIAL[k].name}`, P.color); } }
     if (P.buffs.extraRes){ P.buffs.extraRes = false; P.extraTurn = G.turnId; }
@@ -2255,6 +2256,7 @@ function addLog(html, color){
 }
 function refresh(){
   if (!G) return;
+  updEventChip();
   if (NG.on) netDirty();
   updatePlates();
   const me = G.players[0], my = G.current === 0 && !G.over;
@@ -4600,7 +4602,9 @@ function actionSpec(html, color){
   let victim = others.length ? others[0] : (p > 0 && /\b(te |ti\b|contigo)/i.test(txt) ? 0 : -1);
   const S = { p, items, victim, txt, act: 'globo', model: null, cap: '' };
   const am = AMK.find(k => txt.toLowerCase().includes(AMULETS[k].name.toLowerCase()));
-  if (/ganó la partida|Ganaste/.test(txt)){ S.act = 'trofeo'; S.cap = '¡Ganó la partida!'; S.items = {}; }
+  const evk = /Llegó|Empezó|Terminó|Dejó de|se fue/.test(txt) ? EVK.find(k => ({ feria: /feria/i, lluvia: /lluvia|llover/i, polen: /polinizaci/i, sequia: /sequía/i, invierno: /invierno/i })[k].test(txt)) : null;
+  if (evk){ S.act = EVENTS[evk].icon; S.cap = EVENTS[evk].name; S.items = {}; S.victim = -1; }
+  else if (/ganó la partida|Ganaste/.test(txt)){ S.act = 'trofeo'; S.cap = '¡Ganó la partida!'; S.items = {}; }
   else if (/Guardia más poderosa/.test(txt)){ S.model = 'trofeo:army'; S.cap = 'Guardia más poderosa'; }
   else if (/Camino más largo/.test(txt)){ S.model = 'trofeo:road'; S.cap = 'Camino más largo'; }
   else if (/demol/i.test(txt)){ S.act = 'bomba'; S.cap = 'demolió un camino'; if (/sus caminos|tus caminos/.test(txt)) S.victim = -1; }
@@ -6092,22 +6096,75 @@ const gameRound = () => G ? Math.floor(Math.max(0, G.turnId - 1)/G.players.lengt
 function bioTick(p, biome, num){
   if (isClassic()) return;
   const P = G.players[p]; P.numCount = P.numCount || {}; P.numCount[num] = (P.numCount[num] || 0) + 1;
-  if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= .45) return;
+  if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= eventFindChance(.45)) return;
   P.bioRoll = G.turnId;
   // the land's object, or now and then one of its flowers (the herbs the missions ask for)
   const obj = SPK.find(k => SPECIAL[k].kind === 'objeto' && SPECIAL[k].biome === biome), flor = SPK.find(k => SPECIAL[k].kind === 'flor' && SPECIAL[k].biome === biome);
-  const k = Math.random() < .35 ? (flor || pick(['margarita', 'amapola'])) : obj; if (!k) return; const n = dropQty(k);
+  const k = Math.random() < .35 ? (flor || pick(['margarita', 'amapola'])) : obj; if (!k) return; const n = eventFindQty(dropQty(k));
   setTimeout(() => { giveSpecial(p, k, n); notify(`${p === 0 ? 'Encontraste' : P.name + ' encontró'} ${foundStr(k, n)} en ${TERRAIN[biome].label.toLowerCase()}`, P.color); }, 2600);
 }
 function roadFind(p, eid){
   if (G.setup || isClassic()) return;
   const e = G.edges[eid], tiles = G.verts[e.a].tiles.filter(t => G.verts[e.b].tiles.includes(t)).map(t => G.tiles[t]);
   if (!tiles.length) return; const t = pick(tiles), P = G.players[p];
-  if (Math.random() < .5){
+  if (Math.random() < eventFindChance(.5)){
     const uniq = SPK.find(k => SPECIAL[k].kind === 'flor' && SPECIAL[k].biome === t.type);
-    const k = uniq && Math.random() < .5 ? uniq : pick(['margarita', 'amapola']), n = dropQty(k);
+    const k = uniq && Math.random() < .5 ? uniq : pick(['margarita', 'amapola']), n = eventFindQty(dropQty(k));
     giveSpecial(p, k, n); notify(`${p === 0 ? 'Encontraste' : P.name + ' encontró'} ${foundStr(k, n)} junto al camino`, P.color);
   }
+}
+// ================= SEASON EVENTS (SwapHolm mode only, and only if "Eventos: Sí" in Jugar) =================
+// Every 4-6 rounds an event starts and lasts 2-3 rounds. Favoured resources: 68 % chance of 1 extra each time a tile
+// gives you one; harmed: 40 % chance of 1 less. The state (G.event, G.evNext, G.evLast, G.evOn) travels in netSnap, and
+// the rolls are made by whoever is acting (the rules always run there).
+const EVENTS = {
+  feria:    { name: 'Feria', icon: 'moneda', start: 'Llegó la <b>feria</b>: el comercio cambia 3:1', end: 'La feria se fue de la isla',
+              desc: 'El comercio cambia 3:1 y los puertos 3:1 cambian 2:1.' },
+  lluvia:   { name: 'Lluvia', icon: 'gota', up: ['madera', 'trigo', 'lana'], start: 'Empezó la <b>lluvia</b>: crecen la madera, el trigo y la lana', end: 'Dejó de llover',
+              desc: 'Madera, trigo y lana: 68 % de recibir 1 extra.' },
+  polen:    { name: 'Polinización', icon: 'girasol', start: 'Llegó la <b>polinización</b>: hay más flores y objetos', end: 'Terminó la polinización',
+              desc: 'Se encuentran más flores y objetos, y al encontrarlos: 68 % de 1 extra.' },
+  sequia:   { name: 'Sequía', icon: 'sol', down: ['trigo', 'lana'], start: 'Llegó la <b>sequía</b>: escasean el trigo y la lana', end: 'Terminó la sequía',
+              desc: 'Trigo y lana: 40 % de recibir 1 menos.' },
+  invierno: { name: 'Invierno', icon: 'nube', down: ['madera', 'mineral'], start: 'Llegó el <b>invierno</b>: escasean la madera y el metal', end: 'Terminó el invierno',
+              desc: 'Madera y metal: 40 % de recibir 1 menos.' },
+};
+const EVK = Object.keys(EVENTS);
+const eventsOn = () => !!G && !isClassic() && G.evOn !== false;
+const curEvent = () => eventsOn() && G.event && EVENTS[G.event.k] ? G.event.k : null;
+const evRoundsLeft = () => G.event ? Math.max(1, G.event.until - gameRound()) : 0;
+// called when a turn passes (endTurn): starts and ends events on their schedule
+function eventsTick(){
+  if (!eventsOn() || G.setup || G.over) return;
+  const round = gameRound();
+  if (G.evNext == null) G.evNext = 4 + Math.floor(Math.random()*3);   // the first one never before round 4
+  if (G.event && round >= G.event.until){
+    const E = EVENTS[G.event.k]; G.event = null; G.evNext = round + 4 + Math.floor(Math.random()*3);
+    if (E) notify(`${E.end}`, '#c8a040');
+  } else if (!G.event && round >= G.evNext){
+    const k = pick(EVK.filter(x => x !== G.evLast)); G.event = { k, until: round + 2 + Math.floor(Math.random()*2) }; G.evLast = k;
+    notify(`${EVENTS[k].start} · ${G.event.until - round} rondas`, '#c8a040');
+  }
+}
+// production from one tile to one village / city: n cards of resource r
+function eventYield(r, n){
+  const k = curEvent(); if (!k || n <= 0) return n; const E = EVENTS[k];
+  if (E.up && E.up.includes(r) && Math.random() < .68) return n + 1;
+  if (E.down && E.down.includes(r) && Math.random() < .4) return n - 1;
+  return n;
+}
+// finds of flowers and objects during the pollination
+const eventFindChance = base => curEvent() === 'polen' ? Math.min(.9, base*1.6) : base;
+const eventFindQty = n => curEvent() === 'polen' && Math.random() < .68 ? n + 1 : n;
+// the fair makes the comercio cheaper: 4:1 → 3:1, 3:1 ports → 2:1 (2:1 ports stay)
+const eventRate = k => curEvent() === 'feria' ? (k >= 4 ? 3 : k === 3 ? 2 : k) : k;
+// the plate in the top-right corner while an event is on
+function updEventChip(){
+  const b = $('#b-event'); if (!b) return; const k = curEvent();
+  if (!k){ b.style.display = 'none'; b.dataset.k = ''; return; }
+  const E = EVENTS[k], left = evRoundsLeft();
+  if (b.dataset.k !== k){ b.dataset.k = k; b.innerHTML = ic(E.icon) + '<span></span>'; }
+  b.lastChild.textContent = ` ${E.name} · ${left} ${left === 1 ? 'ronda' : 'rondas'}`; b.title = E.desc; b.style.display = '';
 }
 // ================= MISSIONS =================
 const QUEST_TXT = {
@@ -8566,7 +8623,7 @@ function botAmulets(p){
 }
 
 // ================= GAME MODES: Clásico (base game only) or Catroan (everything), and first-person on/off =================
-const GAME_OPTS = { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal' };
+const GAME_OPTS = { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: true };
 const isClassic = () => GAME_OPTS.mode === 'clasico';
 const scenesOn = () => GAME_OPTS.firstPerson;          // 3D close-up scenes and village walks
 function applyGameOpts(){
@@ -8970,7 +9027,7 @@ function netSnap(){
   const pl = [];
   G.players.forEach((P, l) => { const o = JSON.parse(JSON.stringify(P)); delete o.tok; if (o.fx) for (const k in o.fx) if (o.fx[k] && typeof o.fx[k].from === 'number') o.fx[k].from = gSeat(o.fx[k].from); pl[gSeat(l)] = o; });
   return { v: ++NG.ver, ph: G.phase, cur: gSeat(G.current), ord: G.order ? G.order.map(gSeat) : null, dice: G.dice, rob: G.robber, deck: G.deck, army: mapP(G.army, gSeat), lon: mapP(G.longest, gSeat),
-    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, pt2: G.playT || 0, qat: G.qAt || {}, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
+    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, ev: G.event || null, evn: G.evNext ?? null, evl: G.evLast || null, evo: G.evOn !== false, pt2: G.playT || 0, qat: G.qAt || {}, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
     q: (G.quests || []).map(q => ({ ...q, p: gSeat(q.p), txt: packHtml(q.txt) })), gos: G.gossip, nm: G.names, pl,
     b: G.verts.filter(v => v.building).map(v => [v.id, gSeat(v.building.p), v.building.type === 'ciudad' ? 1 : 0, v.name]), r: G.edges.filter(e => e.road !== null).map(e => [e.id, gSeat(e.road)]) };
 }
@@ -8996,6 +9053,7 @@ function netApply(s, from){
     if (keep){ Object.assign(G.players[0], keep); regTaken(); }
     Object.assign(G, { phase: s.ph, current: lSeat(s.cur | 0), order: Array.isArray(s.ord) ? s.ord.map(lSeat) : null, dice: s.dice, deck: s.deck || [], army: mapP(s.army, lSeat), longest: mapP(s.lon, lSeat), merchant: s.mer, bag: Array.isArray(s.bag) ? s.bag.filter(v => v >= 11 && v <= 66) : null, playedTurn: s.pt, turnId: s.tid | 0,
       over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [], playT: +s.pt2 || 0,
+      event: s.ev && EVENTS[s.ev.k] ? { k: s.ev.k, until: s.ev.until | 0 } : null, evNext: Number.isFinite(s.evn) ? s.evn : null, evLast: EVENTS[s.evl] ? s.evl : null, evOn: s.evo !== false,
       qAt: s.qat && typeof s.qat === 'object' ? Object.fromEntries(Object.entries(s.qat).filter(([k, v]) => /^\d+$/.test(k) && typeof v === 'number')) : {},
       trades: s.tc && Array.isArray(s.tc.l) ? { t: s.tc.t | 0, l: s.tc.l.filter(x => Array.isArray(x)).map(([a, b, n]) => { const x = lSeat(a | 0), y = lSeat(b | 0); return [Math.min(x, y), Math.max(x, y), n | 0]; }) } : null });
     SETUP.k = s.sk | 0; SETUP.queue = (s.sq || []).map(lSeat);
@@ -9338,7 +9396,7 @@ function fallingView(canvas){
   return v;
 }
 // ================= MAIN MENU (Buckshot-Roulette-like): still of a village behind 70 % dark, falling models, the title in a biome =================
-const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, botLvl: (() => { try { return localStorage.getItem('hexterra-botlvl') || 'normal'; } catch { return 'normal'; } })(), btnViews: [] };
+const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, events: (() => { try { return localStorage.getItem('hexterra-events') !== '0'; } catch { return true; } })(), botLvl: (() => { try { return localStorage.getItem('hexterra-botlvl') || 'normal'; } catch { return 'normal'; } })(), btnViews: [] };
 const isNightNow = () => { const h = new Date().getHours() + new Date().getMinutes()/60; return h < 6.5 || h >= 19.5; };
 // a still of a village (black owner, nobody on the streets) seen from the plaza, by day or by night
 function menuBackdrop(night){
@@ -9370,7 +9428,7 @@ function openMainMenu(){
     el.innerHTML = `<div class="mbg"></div><div class="mdark"></div><div class="mfall"><canvas></canvas></div><div class="mdark2"></div>
       <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
       <div class="mview" data-v="play"><h2>Elige el modo</h2><div class="mmodes"></div>
-        <div class="mrow"><button class="mtoggle" data-fp="1"></button></div>
+        <div class="mrow"><button class="mtoggle" data-fp="1"></button><button class="mtoggle" data-ev="1"></button></div>
         <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4, 5, 6].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}<button class="mtoggle mbots"></button></div>
         <div class="mrow mlvl"><span>Dificultad</span>${[['facil', 'Fácil'], ['normal', 'Normal'], ['dificil', 'Difícil']].map(([k, n]) => `<button class="mlvlb" data-lvl="${k}">${n}</button>`).join('')}</div>
         <div class="mcomp"><h3>Complementos</h3><div class="mhexes"><div class="mhx mext" data-ext="56" title="Tablero grande de 30 hexágonos para 5 o 6 jugadores"><b>5–6</b><span>jugadores</span></div>${[0, 1].map(() => '<div class="mhx"><b>?</b><span>Próximamente</span></div>').join('')}</div></div>
@@ -9402,7 +9460,7 @@ function menuGo(v){
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
   if (v === 'main') buildMenuTitle();
-  if (v === 'play'){ buildModeHexes(); updNp(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
+  if (v === 'play'){ buildModeHexes(); updNp(); updEvToggle(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
   if (v === 'mp') el.querySelector('[data-v=mp] .mnote').textContent = '';
   if (v === 'create'){ updNetToggle(); if (!MENU.key) MENU.key = menuNewKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
   if (v === 'join') setTimeout(() => el.querySelector('.mkey').focus(), 50);
@@ -9445,7 +9503,7 @@ function buildModeHexes(){
   if (miniInit()) box.querySelectorAll('.mmode').forEach(d => { const g = modeHexModel(d.dataset.mode);
     const v = miniView(d.querySelector('canvas'), { w: 300, h: 240, res: .8, fov: 30, fps: 30, tick: (dt, t) => { g.userData.spin.forEach((sp, i) => { sp.userData.inner.rotation.y += dt*(.8 + (i % 3)*.25); sp.position.y += Math.sin(t*1.4 + i)*.0012; }); } });
     v.cam.position.set(0, 4.6, 9.6); v.cam.lookAt(0, -.2, .2); g.rotation.set(.12, -.35, 0); v.sc.add(g); MENU.modeViews.push(v); });
-  updFpToggle();
+  updFpToggle(); updEvToggle();
 }
 // players: online 2-4 (5-6 with the extension); alone it is 4, or 5-6 with the extension. Online also chooses bots or not
 function npChoices(){ return MENU.online ? (MENU.ext56 ? [2, 3, 4, 5, 6] : [2, 3, 4]) : MENU.ext56 ? [5, 6] : []; }
@@ -9458,6 +9516,9 @@ function updNp(){ const el = MENU.el, ch = npChoices(); if (ch.length && !ch.inc
   const bt = el.querySelector('.mbots'); bt.style.display = MENU.online ? '' : 'none';
   bt.innerHTML = `Bots: <b>${MENU.bots ? 'Sí' : 'No'}</b>`; bt.classList.toggle('off', !MENU.bots);
   bt.title = MENU.bots ? 'El anfitrión puede comenzar antes: los lugares libres los ocupan bots' : 'Sin bots: la partida empieza cuando se ocupen todos los lugares'; }
+// season events: only in SwapHolm mode (Clásico never has them)
+function updEvToggle(){ const b = MENU.el.querySelector('.mtoggle[data-ev]'); if (!b) return; b.style.display = MENU.sel === 'catroan' ? '' : 'none';
+  b.innerHTML = `${ic('nube')} Eventos de temporada: <b>${MENU.events ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.events); b.title = MENU.events ? 'Feria, lluvia, polinización, sequía e invierno cambian el tablero cada pocas rondas' : 'Sin eventos: la isla siempre igual'; }
 function updFpToggle(){ const b = MENU.el.querySelector('.mtoggle[data-fp]'); b.innerHTML = `${ic('ojo')} Vista en primera persona: <b>${MENU.fp ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.fp); b.title = MENU.fp ? 'Podrás recorrer tus pueblos y ver las escenas 3D (mercado, despacho, muelle…)' : 'Sin recorridos ni escenas: todo se resuelve con paneles, como el juego de mesa'; }
 // ---------- desktop only: the room lives on this computer's local network (LAN key) or online (WebRTC) ----------
 function updNetToggle(){ const b = MENU.el.querySelector('.mnet'); if (!b) return; const ip = deskLanIP(); if (!ip) NET.lan = false; else if (NET.lan === undefined) NET.lan = true;
@@ -9519,9 +9580,10 @@ async function copyKey(){
 // ---------- navigation ----------
 async function menuClick(e){
   const el = MENU.el, mm = e.target.closest('.mmode');
-  if (mm){ MENU.sel = mm.dataset.mode; el.querySelectorAll('.mmode').forEach(x => x.classList.toggle('sel', x === mm)); SFX.click?.(); return; }
+  if (mm){ MENU.sel = mm.dataset.mode; el.querySelectorAll('.mmode').forEach(x => x.classList.toggle('sel', x === mm)); updEvToggle(); SFX.click?.(); return; }
   if (e.target.closest('.mnet')){ if (deskLanIP()){ NET.lan = !NET.lan; MENU.key = menuNewKey(); updNetToggle(); drawMatchCards(); } SFX.click?.(); return; }
   if (e.target.closest('.mtoggle[data-fp]')){ MENU.fp = !MENU.fp; updFpToggle(); SFX.click?.(); return; }
+  if (e.target.closest('.mtoggle[data-ev]')){ MENU.events = !MENU.events; try { localStorage.setItem('hexterra-events', MENU.events ? '1' : '0'); } catch {} updEvToggle(); SFX.click?.(); return; }
   const np = e.target.closest('.mnpb'); if (np){ MENU.np = +np.dataset.np; updNp(); SFX.click?.(); return; }
   if (e.target.closest('.mext')){ MENU.ext56 = !MENU.ext56; if (MENU.ext56 && !MENU.online) MENU.np = 6; updNp(); SFX.click?.(); return; }
   if (e.target.closest('.mbots')){ MENU.bots = !MENU.bots; updNp(); SFX.click?.(); return; }
@@ -9532,7 +9594,7 @@ async function menuClick(e){
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
-    GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp; GAME_OPTS.botLevel = MENU.botLvl;
+    GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp; GAME_OPTS.botLevel = MENU.botLvl; GAME_OPTS.events = MENU.events;
     if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala: ' + netErrText(r.error); menuGo('mp'); return; } netHostStart(MENU.np, MENU.bots); return; }
     closeMainMenu(); applyGameOpts(); newGame(MENU.ext56 ? MENU.np : undefined); startRegistration();
   }
@@ -9551,7 +9613,7 @@ async function menuClick(e){
 function newGame(n, board, seed){
   disposeCtx(); exitBuild(); hidePopup(); highlightPieces(null); DICE3D.length = 0;
   HIST.length = 0; setTimeout(renderNews, 50);
-  G = newGameState(n || GAME_MODE.players, board || null, seed ?? null); G.quests = [];
+  G = newGameState(n || GAME_MODE.players, board || null, seed ?? null); G.quests = []; G.evOn = GAME_OPTS.events !== false;
   G.setup = true; G.phase = 'register'; G.order = null;
   buildBoardScene();
   camera.fov = 45; camera.rotation.order = 'XYZ'; camera.updateProjectionMatrix();

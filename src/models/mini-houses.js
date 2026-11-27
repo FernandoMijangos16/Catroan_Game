@@ -167,7 +167,7 @@ function tradeRate(p, r){
 function tradeRateBase(p, r){
   let k = 4;
   G.verts.forEach(v => { if (v.building && v.building.p === p && v.port){ if (v.port === '3:1') k = Math.min(k, 3); else if (v.port === r) k = 2; } });
-  return k;
+  return eventRate(k);   // the fair makes it cheaper
 }
 function portSign(type){
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');

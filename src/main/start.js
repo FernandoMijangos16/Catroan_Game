@@ -2,7 +2,7 @@
 function newGame(n, board, seed){
   disposeCtx(); exitBuild(); hidePopup(); highlightPieces(null); DICE3D.length = 0;
   HIST.length = 0; setTimeout(renderNews, 50);
-  G = newGameState(n || GAME_MODE.players, board || null, seed ?? null); G.quests = [];
+  G = newGameState(n || GAME_MODE.players, board || null, seed ?? null); G.quests = []; G.evOn = GAME_OPTS.events !== false;
   G.setup = true; G.phase = 'register'; G.order = null;
   buildBoardScene();
   camera.fov = 45; camera.rotation.order = 'XYZ'; camera.updateProjectionMatrix();
