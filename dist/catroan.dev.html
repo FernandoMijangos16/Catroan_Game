@@ -653,6 +653,9 @@ body.noscenes #pp-enter{display:none !important}
 /* players per online match */
 #menu .mnp{align-items:center;gap:8px}
 #menu .mnp .mbots{margin-left:14px}
+#menu .mlvl{align-items:center;gap:8px}#menu .mlvl span{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c8b898;margin-right:6px}
+#menu .mlvlb{min-width:86px;height:36px;padding:0 14px;font-size:14px;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,12px 100%,0 50%)}
+#menu .mlvlb.on{filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,200,100,.6));color:#ffd890;--cloth:var(--cloth-y)}
 #menu .mnp span{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c8b898;margin-right:6px}
 #menu .mnpb{width:46px;height:40px;padding:0;font-size:18px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 #menu .mnpb.on{filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,200,100,.6));color:#ffd890}
@@ -1872,6 +1875,23 @@ function checkWin(p){
 }
 
 // ================= BOTS =================
+// difficulty (chosen in Jugar, the host's choice online — bots always run on the host): 'facil' · 'normal' (the classic
+// bots) · 'dificil'. It changes how well they pick corners, how much they trade and whether they race you for spots.
+const BOT_LEVELS = { facil: { noise: 3.5, sloppy: .35, offer: .12, bank: .5, contested: .4, cards: .3, block: false },
+  normal: { noise: 1.6, sloppy: 0, offer: .35, bank: 1, contested: .6, cards: .6, block: false },
+  dificil: { noise: .4, sloppy: 0, offer: .55, bank: 1, contested: 1.35, cards: .85, block: true, need: true } };
+const botLvl = () => BOT_LEVELS[GAME_OPTS.botLevel] || BOT_LEVELS.normal;
+// how much a bot likes a corner: its production, plus (hard bots) the kinds of resource it does not produce yet
+function botSpotScore(p, v, noise){
+  let s = vscore(v); const L = botLvl();
+  if (L.need){ const have = new Set(); G.verts.forEach(w => { if (w.building && w.building.p === p) w.tiles.forEach(ti => { const r = TERRAIN[G.tiles[ti].type].res; if (r) have.add(r); }); });
+    v.tiles.forEach(ti => { const r = TERRAIN[G.tiles[ti].type].res; if (r && !have.has(r)) s += 1.2*pips(G.tiles[ti].num)/5; }); }
+  return s + Math.random()*noise;
+}
+// best corner of a list; easy bots sometimes settle for the 2nd or 3rd. setup = the opening placement (normal bots add a
+// little chance there, but during the game they always took the best corner — kept as it was)
+function botBestSpot(p, list, setup){ const L = botLvl(), noise = setup ? L.noise : L === BOT_LEVELS.normal ? 0 : L.noise*.5, sorted = list.map(v => ({ v, s: botSpotScore(p, v, noise) })).sort((a, b) => b.s - a.s);
+  if (!sorted.length) return null; const k = L.sloppy && Math.random() < L.sloppy ? Math.min(sorted.length - 1, 1 + Math.floor(Math.random()*2)) : 0; return sorted[k].v; }
 // where a road should go: the closest good free corner (no building on it or next to it) the bot can still reach,
 // walking only over empty edges and never through a rival's village; the road built is the first step of that path
 function roadPlan(p){
@@ -1884,8 +1904,8 @@ function roadPlan(p){
   let best = null;
   dist.forEach((d, vid) => { const v = G.verts[vid]; if (d < 1 || v.building || !distanceOK(v)) return;
     const contested = v.edges.some(id => { const r = G.edges[id].road; return r !== null && r !== p; });
-    const s = vscore(v)*(d === 1 ? 1 : d === 2 ? .72 : .5)*(contested ? .6 : 1) + Math.random()*.3;
-    if (!best || s > best.s) best = { s, edge: first.get(vid), target: vid, d }; });
+    const s = vscore(v)*(d === 1 ? 1 : d === 2 ? .72 : .5)*(contested ? botLvl().contested : 1) + Math.random()*.3;
+    if (!best || s > best.s) best = { s, edge: first.get(vid), target: vid, d, contested }; });
   return best;
 }
 function bestRoad(p){ const plan = roadPlan(p); if (plan) return plan.edge; const any = validRoads(p); return any.length ? pick(any).id : null; }   // free roads (a card) still go somewhere
@@ -1896,7 +1916,7 @@ function botTrade(p){
   else if (validSettlements(p).length && P.pueblos < 5) target = 'pueblo';
   const cost = COST[target];
   const need = Object.keys(cost).filter(r => P.res[r] < cost[r]);
-  if (!need.length) return false;
+  if (!need.length || Math.random() > botLvl().bank) return false;   // easy bots often skip the comercio
   const give = RES.find(r => P.res[r] - (cost[r] || 0) >= tradeRate(p, r));
   if (!give) return false;
   const get = need[0], k = tradeRate(p, give);
@@ -1907,20 +1927,20 @@ function botTrade(p){
 function botAct(p, st){
   const P = G.players[p];
   if (afford(p, costFor(p, 'ciudad')) && P.ciudades < 4){
-    const c = validCities(p).sort((a,b) => vscore(b) - vscore(a))[0];
+    const c = botBestSpot(p, validCities(p));
     if (c){ focusBoard(c.x, c.z, P.color); buildCity(p, c.id); notify(`${P.name} convirtió <b>${c.name}</b> en ciudad`, P.color); gossip(`${P.name} convirtió ${c.name} en ciudad`); checkWin(p); return true; }
   }
   if (afford(p, costFor(p, 'pueblo')) && P.pueblos < 5){
-    const s = validSettlements(p).sort((a,b) => vscore(b) - vscore(a))[0];
+    const s = botBestSpot(p, validSettlements(p));
     if (s){ focusBoard(s.x, s.z, P.color); buildSettlement(p, s.id); notify(`${P.name} fundó el pueblo <b>${s.name}</b>`, P.color); gossip(`${P.name} fundó un pueblo nuevo llamado ${s.name}`); checkWin(p); return true; }
   }
   if (!st.played && botPlayCard(p, false)){ st.played = true; return true; }
-  if (!st.traded && botTrade(p)){ st.traded = true; return true; }
-  if (!st.bought && G.deck.length && afford(p, CARD_COST) && Math.random() < .6 && !afford(p, costFor(p, 'pueblo'))){ st.bought = true; buyCard(p); return true; }
+  if ((!st.traded || (botLvl() === BOT_LEVELS.dificil && st.traded < 2)) && botTrade(p)){ st.traded = (st.traded || 0) + 1; return true; }   // hard bots may trade twice
+  if (!st.bought && G.deck.length && afford(p, CARD_COST) && Math.random() < botLvl().cards && !afford(p, costFor(p, 'pueblo'))){ st.bought = true; buyCard(p); return true; }
   if (afford(p, costFor(p, 'camino')) && P.roads < 15){
     // with a free corner already reachable the bot saves for the village instead of stretching roads to nowhere
     const spot = validSettlements(p).length > 0, plan = roadPlan(p), rich = P.res.madera + P.res.ladrillo >= 6 && P.res.lana + P.res.trigo === 0;
-    if (plan && (!spot || rich)){
+    if (plan && (!spot || rich || (botLvl().block && plan.contested))){   // hard bots race you to contested corners
       const e = plan.edge;
       if (e !== null){ { const E = G.edges[e], A = G.verts[E.a], B2 = G.verts[E.b]; focusBoard((A.x + B2.x)/2, (A.z + B2.z)/2, P.color); } buildRoad(p, e); notify(`${P.name} construyó un camino`, P.color); gossip(`${P.name} anda construyendo caminos`); return true; }
     }
@@ -6365,7 +6385,7 @@ async function tradeLetter(target){
 async function askHuman(p, gives, wants){ for (let k=0;k<60 && (marketCtx || $('#offer').classList.contains('show'));k++) await wait(250); return offerToHuman(p, gives, wants); }
 // a bot proposes to the human: glowing parchment, everything else darkened
 async function botOfferTrade(p, st){
-  if (st.offered || Math.random() > .35) return false;
+  if (st.offered || Math.random() > botLvl().offer) return false;
   st.offered = true;
   // online the bot writes to any of the humans at the table (away players excluded), offline to you
   const hs = (NG.on ? humanSeats().filter(h => h !== p && !G.players[h].away) : [0]).filter(h => tradesLeft(h, p) > 0); if (!hs.length) return false;
@@ -8310,7 +8330,7 @@ async function nextSetup(){
     SETUP.busy = key;
     setupTip(`<i style="--c:${P.color}"></i><b>${P.name}</b> está colocando su ${round === 1 ? 'primer' : 'segundo'} pueblo…`);
     await wait(900);
-    const cands = G.verts.filter(distanceOK).map(v => ({ v, s: vscore(v) + Math.random()*1.6 })).sort((a, b) => b.s - a.s), v = cands[0].v;
+    const v = botBestSpot(p, G.verts.filter(distanceOK), true);
     buildSettlement(p, v.id, true); if (round === 2) P.v2 = v.id; focusBoard?.(v.x, v.z, P.color); SFX.build?.(); await wait(700);
     const e = v.edges.map(id => G.edges[id]).map(e => { const o = G.verts[e.a === v.id ? e.b : e.a]; return { e, s: Math.max(0, ...o.adj.filter(x => x !== v.id).map(x => distanceOK(G.verts[x]) ? vscore(G.verts[x]) : 0)) + Math.random() }; }).sort((a, b) => b.s - a.s)[0].e;
     buildRoad(p, e.id, true); SFX.build?.();
@@ -8546,7 +8566,7 @@ function botAmulets(p){
 }
 
 // ================= GAME MODES: Clásico (base game only) or Catroan (everything), and first-person on/off =================
-const GAME_OPTS = { mode: 'catroan', firstPerson: true, online: false };
+const GAME_OPTS = { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal' };
 const isClassic = () => GAME_OPTS.mode === 'clasico';
 const scenesOn = () => GAME_OPTS.firstPerson;          // 3D close-up scenes and village walks
 function applyGameOpts(){
@@ -9318,7 +9338,7 @@ function fallingView(canvas){
   return v;
 }
 // ================= MAIN MENU (Buckshot-Roulette-like): still of a village behind 70 % dark, falling models, the title in a biome =================
-const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, btnViews: [] };
+const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, botLvl: (() => { try { return localStorage.getItem('hexterra-botlvl') || 'normal'; } catch { return 'normal'; } })(), btnViews: [] };
 const isNightNow = () => { const h = new Date().getHours() + new Date().getMinutes()/60; return h < 6.5 || h >= 19.5; };
 // a still of a village (black owner, nobody on the streets) seen from the plaza, by day or by night
 function menuBackdrop(night){
@@ -9352,6 +9372,7 @@ function openMainMenu(){
       <div class="mview" data-v="play"><h2>Elige el modo</h2><div class="mmodes"></div>
         <div class="mrow"><button class="mtoggle" data-fp="1"></button></div>
         <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4, 5, 6].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}<button class="mtoggle mbots"></button></div>
+        <div class="mrow mlvl"><span>Dificultad</span>${[['facil', 'Fácil'], ['normal', 'Normal'], ['dificil', 'Difícil']].map(([k, n]) => `<button class="mlvlb" data-lvl="${k}">${n}</button>`).join('')}</div>
         <div class="mcomp"><h3>Complementos</h3><div class="mhexes"><div class="mhx mext" data-ext="56" title="Tablero grande de 30 hexágonos para 5 o 6 jugadores"><b>5–6</b><span>jugadores</span></div>${[0, 1].map(() => '<div class="mhx"><b>?</b><span>Próximamente</span></div>').join('')}</div></div>
         <div class="mrow"><button data-go="back">◀ Volver</button><button class="primary" data-go="start">Comenzar ▶</button></div></div>
       <div class="mview" data-v="mp"><h2>Multijugador</h2><div class="mbig"><button class="primary" data-go="create">Crear partida</button><button data-go="join">Unirse con clave</button></div><p class="mnote"></p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
@@ -9432,6 +9453,8 @@ function updNp(){ const el = MENU.el, ch = npChoices(); if (ch.length && !ch.inc
   el.querySelector('.mnp').style.display = ch.length ? '' : 'none';
   el.querySelectorAll('.mnpb').forEach(b => { b.style.display = ch.includes(+b.dataset.np) ? '' : 'none'; b.classList.toggle('on', +b.dataset.np === MENU.np); });
   el.querySelectorAll('.mext').forEach(h => h.classList.toggle('on', MENU.ext56));
+  el.querySelectorAll('.mlvlb').forEach(b => b.classList.toggle('on', b.dataset.lvl === MENU.botLvl));
+  el.querySelector('.mlvl').style.display = MENU.online && !MENU.bots ? 'none' : '';   // no bots, nothing to tune
   const bt = el.querySelector('.mbots'); bt.style.display = MENU.online ? '' : 'none';
   bt.innerHTML = `Bots: <b>${MENU.bots ? 'Sí' : 'No'}</b>`; bt.classList.toggle('off', !MENU.bots);
   bt.title = MENU.bots ? 'El anfitrión puede comenzar antes: los lugares libres los ocupan bots' : 'Sin bots: la partida empieza cuando se ocupen todos los lugares'; }
@@ -9502,13 +9525,14 @@ async function menuClick(e){
   const np = e.target.closest('.mnpb'); if (np){ MENU.np = +np.dataset.np; updNp(); SFX.click?.(); return; }
   if (e.target.closest('.mext')){ MENU.ext56 = !MENU.ext56; if (MENU.ext56 && !MENU.online) MENU.np = 6; updNp(); SFX.click?.(); return; }
   if (e.target.closest('.mbots')){ MENU.bots = !MENU.bots; updNp(); SFX.click?.(); return; }
+  const lv = e.target.closest('.mlvlb'); if (lv){ MENU.botLvl = lv.dataset.lvl; try { localStorage.setItem('hexterra-botlvl', MENU.botLvl); } catch {} updNp(); SFX.click?.(); return; }
   const b3 = e.target.closest('.m3b'); if (b3){ SFX.click?.(); if (b3.dataset.act === 'copy') copyKey(); else if (b3.dataset.act === 'next'){ MENU.online = true; menuGo('play'); } return; }
   const a = e.target.closest('[data-go]'); if (!a) return; SFX.click?.(); audioInit();
   const go = a.dataset.go;
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
-    GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp;
+    GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp; GAME_OPTS.botLevel = MENU.botLvl;
     if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala: ' + netErrText(r.error); menuGo('mp'); return; } netHostStart(MENU.np, MENU.bots); return; }
     closeMainMenu(); applyGameOpts(); newGame(MENU.ext56 ? MENU.np : undefined); startRegistration();
   }

@@ -644,6 +644,9 @@ body.noscenes #pp-enter{display:none !important}
 /* players per online match */
 #menu .mnp{align-items:center;gap:8px}
 #menu .mnp .mbots{margin-left:14px}
+#menu .mlvl{align-items:center;gap:8px}#menu .mlvl span{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c8b898;margin-right:6px}
+#menu .mlvlb{min-width:86px;height:36px;padding:0 14px;font-size:14px;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,12px 100%,0 50%)}
+#menu .mlvlb.on{filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,200,100,.6));color:#ffd890;--cloth:var(--cloth-y)}
 #menu .mnp span{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c8b898;margin-right:6px}
 #menu .mnpb{width:46px;height:40px;padding:0;font-size:18px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 #menu .mnpb.on{filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,200,100,.6));color:#ffd890}
