@@ -214,7 +214,7 @@ function netHostStart(n, fill = true){
   GAME_OPTS.online = true; closeMainMenu(); applyGameOpts(); newGame(n);
   G.players.forEach((P, i) => { if (i) Object.assign(P, { name: 'Libre', color: '#5a5650', bot: true, empty: true }); });
   Object.assign(G.players[0], { tok: NG.tok, pid: myPeer(), bot: false });
-  NG.board = { types: G.tiles.map(t => t.type), nums: G.tiles.map(t => t.num), ports: G.ports.map(p => [p.type, p.a, p.b]) };
+  NG.board = { types: G.tiles.map(t => t.type), nums: G.tiles.map(t => t.num), ports: G.ports.map(p => [p.type, p.a, p.b]), seed: G.seed };
   PLATES.forEach(p => p.build()); updatePlates(true);
   NG.regLocal = true; startRegistration(); netWaitRender(); netFlush(true);
   chatSystem(`Partida abierta: ${NET.key}. Comparte la clave.`);
@@ -320,7 +320,7 @@ function netGotSeat(d, from){
   Object.assign(NG, { on: true, seat: d.seat | 0, n, fill: !(d.opts && d.opts.fill === false), ver: 0, board: b, started: !!d.started, last: null, turnSeen: -1, setupSeen: '', asks: {}, hostLostAt: 0 });
   GAME_OPTS.mode = d.opts && d.opts.mode === 'clasico' ? 'clasico' : 'catroan'; GAME_OPTS.firstPerson = !(d.opts && d.opts.fp === false); GAME_OPTS.online = true;
   NET.match = cleanName(d.match) || NET.match;
-  closeMainMenu(); applyGameOpts(); newGame(n, { types: b.types, nums: b.nums, ports: b.ports });
+  closeMainMenu(); applyGameOpts(); newGame(n, { types: b.types, nums: b.nums, ports: b.ports, seed: Number.isFinite(b.seed) ? b.seed >>> 0 : null });
   G.players.forEach((P, i) => { if (i) Object.assign(P, { name: '…', color: '#5a5650', bot: true, empty: true }); });
   if (!d.rejoin){ NG.regLocal = true; startRegistration(); }
   else { NG.turnSeen = -1; chatSystem('Volviste a la partida.'); }

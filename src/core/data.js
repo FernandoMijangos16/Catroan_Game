@@ -39,18 +39,20 @@ let savedCam = null;
 // a fresh name for each bot seat, never two alike in one game
 const BOT_USED = [];
 function botName(i){ if (i === 1) BOT_USED.length = 0; const n = pick(BOT_POOL.filter(x => !BOT_USED.includes(x))); BOT_USED.push(n); return n; }
-function newGameState(nPlayers = GAME_MODE.players, board = null){   // board: the host's tiles and ports, so every online player gets the same map
+function newGameState(nPlayers = GAME_MODE.players, board = null, seed = null){   // board: the host's tiles and ports, so every online player gets the same map
+  // the board (terrains, numbers, ports) comes from a seed, so a map can be repeated; dice, cards and bots stay truly random
+  seed = seed == null ? Math.floor(Math.random()*4294967296) >>> 0 : seed >>> 0; const brng = mulberry32(seed);
   const big = nPlayers > 4, coords = [];
   if (!big){ for (let q=-2;q<=2;q++) for (let r=-2;r<=2;r++) if (Math.abs(q+r)<=2) coords.push([q,r]); }
   else for (let r=-3;r<=3;r++) for (let q=Math.max(-3, -3 - r); q<=Math.min(2, 2 - r); q++) coords.push([q, r]);
   const types = board ? board.types.slice() : shuffle(big ? [...Array(6).fill('bosque'),...Array(6).fill('pradera'),...Array(6).fill('campo'),...Array(5).fill('cerro'),...Array(5).fill('montana'),'desierto','desierto']
-    : [...Array(4).fill('bosque'),...Array(4).fill('pradera'),...Array(4).fill('campo'),...Array(3).fill('cerro'),...Array(3).fill('montana'),'desierto']);
+    : [...Array(4).fill('bosque'),...Array(4).fill('pradera'),...Array(4).fill('campo'),...Array(3).fill('cerro'),...Array(3).fill('montana'),'desierto'], brng);
   let tiles = coords.map(([q,r],i) => ({ i, q, r, type: types[i], x: S*SQ3*(q + r/2), z: S*1.5*r, num: 0, verts: [] }));
   { const mx = tiles.reduce((a, t) => a + t.x, 0)/tiles.length, mz = tiles.reduce((a, t) => a + t.z, 0)/tiles.length; tiles.forEach(t => { t.x -= mx; t.z -= mz; }); }
   const nums = big ? [2,2,3,3,3,4,4,4,5,5,5,6,6,6,8,8,8,9,9,9,10,10,10,11,11,11,12,12] : [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
   if (board) tiles.forEach((t, i) => { t.num = board.nums[i] | 0; });
   else for (let tries=0; tries<800; tries++){
-    shuffle(nums); let k=0;
+    shuffle(nums, brng); let k=0;
     tiles.forEach(t => { t.num = t.type==='desierto' ? 0 : nums[k++]; });
     const hot = tiles.filter(t => t.num===6 || t.num===8);
     if (hot.every(a => hot.every(b => a===b || hexDist(a,b) > 1))) break;
@@ -78,7 +80,7 @@ function newGameState(nPlayers = GAME_MODE.players, board = null){   // board: t
     }
   });
   return {
-    id: Math.random(), tiles, verts, edges, ports: board ? portsFrom(board.ports, tiles, verts) : makePorts(tiles, verts, edges),
+    id: Math.random(), tiles, verts, edges, ports: board ? portsFrom(board.ports, tiles, verts) : makePorts(tiles, verts, edges, brng), seed: board && board.seed != null ? board.seed : seed,
     players: PLAYER_DEFS.slice(0, nPlayers).map((d, i, all) => ({ ...d, name: i ? botName(i) : d.name, res: { madera:0, ladrillo:0, lana:0, trigo:0, mineral:0 }, roads:0, pueblos:0, ciudades:0, cards: [], knights: 0 })),
     deck: newDeck(), army: -1, longest: -1, playedTurn: -1, merchant: -1, freeRoads: 0,
     current: 0, phase: 'roll', robber: tiles.find(t => t.type==='desierto').i, dice: [0,0], over: false,

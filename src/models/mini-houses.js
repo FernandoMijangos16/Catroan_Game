@@ -144,10 +144,10 @@ const LUPAS = [];
 function stepLupas(t){ LUPAS.forEach((l, i) => { l.position.y = (l.userData.baseY || .74) + Math.sin(t*2 + i)*.03; l.children[0].rotation.y = Math.sin(t*.8 + i)*.6 + .3; }); }
 // ---------- ports ----------
 const PORT_ICON = { '3:1': '⚓' };
-function makePorts(tiles, verts, edges){
+function makePorts(tiles, verts, edges, rng = Math.random){
   const outer = edges.filter(e => verts[e.a].tiles.filter(t => verts[e.b].tiles.includes(t)).length === 1)
     .map(e => { const A = verts[e.a], B = verts[e.b], mx = (A.x + B.x)/2, mz = (A.z + B.z)/2; return { e, ang: Math.atan2(mz, mx), mx, mz }; }).sort((p, q) => p.ang - q.ang);
-  const big = tiles.length > 19, off = Math.floor(Math.random()*outer.length), types = shuffle(big ? ['3:1', '3:1', '3:1', '3:1', '3:1', 'madera', 'ladrillo', 'lana', 'lana', 'trigo', 'mineral'] : ['3:1', '3:1', '3:1', '3:1', 'madera', 'ladrillo', 'lana', 'trigo', 'mineral']), NP = types.length;
+  const big = tiles.length > 19, off = Math.floor(rng()*outer.length), types = shuffle(big ? ['3:1', '3:1', '3:1', '3:1', '3:1', 'madera', 'ladrillo', 'lana', 'lana', 'trigo', 'mineral'] : ['3:1', '3:1', '3:1', '3:1', 'madera', 'ladrillo', 'lana', 'trigo', 'mineral'], rng), NP = types.length;
   return types.map((type, i) => {
     const o = outer[(off + Math.round(i*outer.length/NP)) % outer.length], ti = verts[o.e.a].tiles.find(t => verts[o.e.b].tiles.includes(t)), t = tiles[ti];
     const nx = o.mx - t.x, nz = o.mz - t.z, nl = Math.hypot(nx, nz);

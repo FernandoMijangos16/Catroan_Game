@@ -180,11 +180,10 @@ Antes de cada uno, comparte tus dudas con Fernando.
    la carta de "Nueva partida" tiene el interruptor **Red: Local / En línea**. Local = WebSocket con la IP privada en
    la clave (sin internet). En línea = WebRTC con PeerJS (también en el navegador fuera de claude.ai).
    `net-game.js` no cambió.
-3. **Azar con semilla.**
-   - Cambia `Math.random` por un generador con semilla (por ejemplo `mulberry32`, que ya existe) en todo lo que
-     afecta la partida: tablero, bolsa de dados, mazo, bots, hallazgos, misiones.
-   - El azar puramente visual puede seguir con `Math.random`.
-   - Lo necesitan la clave de mapa y el tutorial. En línea la semilla la pone el anfitrión.
+3. ~~**Azar con semilla**~~ **hecho, solo para el tablero** (decisión de Fernando: que los bots no sean memorizables).
+   `newGameState(n, board, seed)` genera terrenos, números y puertos con `mulberry32(seed)` y guarda `G.seed`; en
+   línea la semilla va con el tablero del anfitrión. Dados, mazo, bots, hallazgos y misiones siguen con `Math.random`.
+   El **tutorial** sí será fijo en todo (dados, bots, mazo): eso se hace con el pendiente 9.
 4. **Clave de mapa:** un código para repetir o compartir el mismo tablero.
 5. **Guardar y continuar.**
    - Guarda en `localStorage` (`hexterra-save`) con el mismo formato del estado en línea (`netSnap`) y restaura
