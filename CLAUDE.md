@@ -14,6 +14,14 @@ SwapHolm (antes Catroan) es un juego tipo Catan en 3D low poly para navegador, h
   captura antes de seguir.
 - Al terminar, resume qué cambió, qué se probó y qué quedó pendiente, sin rodeos.
 
+## Versiones
+
+- La versión está solo en `package.json`; `build.mjs` la pone en el menú (`APP_VERSION`) y los instaladores la usan.
+- **1.0 = la primera publicación.** Antes, cada actualización grande sube el número del medio (0.8 → 0.9) y cada
+  entrega de solo correcciones sube el último (0.8.0 → 0.8.1). Historia: 0.2 claude.ai, 0.3 escritorio y red local,
+  0.4 lote de notas, 0.5 SwapHolm, 0.6 semilla y dificultad, 0.7 eventos, 0.8 pausa y guardado, 0.9 tutorial.
+- Al cambiar la versión, etiqueta el commit en git (`v0.8.0`).
+
 ## Construir y probar
 
 ```

@@ -45,7 +45,7 @@ function openMainMenu(){
       <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="msoon">Próximamente</p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
-      <button class="mdaynight"></button><div class="mver">SwapHolm · v0.2</div>`;
+      <button class="mdaynight"></button><div class="mver">SwapHolm · v${APP_VERSION}</div>`;
     el.addEventListener('click', menuClick);
     el.querySelector('.mdaynight').onclick = e => { e.stopPropagation(); SFX.click?.(); menuSetNight(!MENU.night); };
     el.querySelector('.mname').addEventListener('input', () => { MENU.match = el.querySelector('.mname').value.trim() || 'Partida'; drawMatchCards(); });
