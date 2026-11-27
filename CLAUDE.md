@@ -134,6 +134,8 @@ El juego tiene una estética muy definida. **Nada nuevo puede verse como de otro
 - **No agregues:** diseño plano moderno, efectos de vidrio, degradados llamativos, texturas realistas en alta
   resolución, sombreado suave, modelos de otro estilo, íconos de librerías ni texto en inglés.
 - Las animaciones son suaves (con aceleración y frenado) y los avisos se mantienen cortos.
+- **Las vistas del menú se encogen solas si no caben** en la altura de la ventana (`fitMenuView` en `ui/menu.js`); si
+  agregas o muestras filas en una vista, llama `fitMenuView()` después.
 - **Doble clic omite animaciones** (`skipAnims` en `core/util.js`): usa `wait()` para esperar (se puede interrumpir) y
   las escenas avanzan con `dt` en el bucle; así todo lo nuevo también se puede omitir.
 
@@ -195,21 +197,15 @@ Antes de cada uno, comparte tus dudas con Fernando.
    oculta con Bots: No). Normal = los bots de siempre. Fácil: esquinas peores, comercia poco, evita disputas. Difícil:
    mejores esquinas y busca recursos que le faltan, comercia más (hasta 2 cambios), va por cruces en disputa para
    bloquear y compra más cartas.
-8. **Eventos de temporada** (solo en modo Catroan, salvo que Fernando diga otra cosa). Cada evento cambia el tablero
-   a la vista. Regla de probabilidades fijada por Fernando:
-   - Cuando un evento **favorece** un recurso y lo recibes: **68 %** de probabilidad de recibir **1 extra**.
-   - Cuando lo **perjudica**: **40 %** de probabilidad de recibir **1 menos**.
-
-   | Evento | Efecto | Cómo se ve |
-   |---|---|---|
-   | **Feria** | descuentos en el comercio | una gran caravana de comercio (carretas, caballos de `models/horse.js`, mercaderes) rodea toda la isla y pasa por pueblos y caminos |
-   | **Lluvia** | favorece madera, trigo y lana (68 %) | lluvia, nubes oscuras, charcos, todo más húmedo y oscuro |
-   | **Polinización** | más flores y objetos; al encontrar, 68 % de 1 extra | abejas, polen flotando, praderas en flor |
-   | **Sequía** | perjudica trigo y lana (40 %) | campos secos y agrietados, pasto amarillo, sin nubes, aire caliente |
-   | **Invierno** | perjudica madera y metal (40 %) | nieve en montañas y bosques, humo en chimeneas, agua helada |
-
-   Pregunta cada cuánto salen y cuánto duran. Anúncialos con un aviso de acción y su modelo. En línea, el estado del
-   evento va en el estado compartido y las probabilidades las tira quien está actuando.
+8. ~~**Eventos de temporada**~~ **hecho** (`core/events.js` lógica, `scenes/season-fx.js` lo visual). Solo en modo SwapHolm y
+   con **Eventos de temporada: Sí** (vista Jugar, `hexterra-events`; en línea lo decide el anfitrión, `G.evOn`).
+   - Cada 4–6 rondas sale uno y dura 2–3 (el primero no antes de la ronda 4); se anuncia con aviso de acción y su ícono,
+     y una placa arriba a la derecha dice cuál es y cuántas rondas le quedan (`#b-event`).
+   - Favorece: 68 % de 1 extra; perjudica: 40 % de 1 menos, por cada pueblo/ciudad que produce (`eventYield`).
+     Feria: comercio 4:1 → 3:1 y puertos 3:1 → 2:1 (`eventRate`). Polinización: más hallazgos y 68 % de 1 extra.
+   - Estado `G.event`, `G.evNext`, `G.evLast`, `G.evOn` en `netSnap`; los dados de probabilidad los tira quien actúa.
+   - Se ve en el tablero (colores de los hexágonos por vértice, luces, nubes, partículas, charcos, hielo en la costa,
+     humo, abejas, caravana de 8 carretas) y en el pueblo (lluvia, nieve, polen y abejas, bruma, banderines).
 9. **Tutorial** ("Cómo jugar").
    - Es una **partida arreglada que siempre sigue los mismos pasos**: mismo mapa, dados en orden fijo, bots con
      jugadas escritas y más facilidad para conseguir las cosas. Así todo se explica en una sola partida.

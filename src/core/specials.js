@@ -72,20 +72,20 @@ const gameRound = () => G ? Math.floor(Math.max(0, G.turnId - 1)/G.players.lengt
 function bioTick(p, biome, num){
   if (isClassic()) return;
   const P = G.players[p]; P.numCount = P.numCount || {}; P.numCount[num] = (P.numCount[num] || 0) + 1;
-  if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= .45) return;
+  if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= eventFindChance(.45)) return;
   P.bioRoll = G.turnId;
   // the land's object, or now and then one of its flowers (the herbs the missions ask for)
   const obj = SPK.find(k => SPECIAL[k].kind === 'objeto' && SPECIAL[k].biome === biome), flor = SPK.find(k => SPECIAL[k].kind === 'flor' && SPECIAL[k].biome === biome);
-  const k = Math.random() < .35 ? (flor || pick(['margarita', 'amapola'])) : obj; if (!k) return; const n = dropQty(k);
+  const k = Math.random() < .35 ? (flor || pick(['margarita', 'amapola'])) : obj; if (!k) return; const n = eventFindQty(dropQty(k));
   setTimeout(() => { giveSpecial(p, k, n); notify(`${p === 0 ? 'Encontraste' : P.name + ' encontró'} ${foundStr(k, n)} en ${TERRAIN[biome].label.toLowerCase()}`, P.color); }, 2600);
 }
 function roadFind(p, eid){
   if (G.setup || isClassic()) return;
   const e = G.edges[eid], tiles = G.verts[e.a].tiles.filter(t => G.verts[e.b].tiles.includes(t)).map(t => G.tiles[t]);
   if (!tiles.length) return; const t = pick(tiles), P = G.players[p];
-  if (Math.random() < .5){
+  if (Math.random() < eventFindChance(.5)){
     const uniq = SPK.find(k => SPECIAL[k].kind === 'flor' && SPECIAL[k].biome === t.type);
-    const k = uniq && Math.random() < .5 ? uniq : pick(['margarita', 'amapola']), n = dropQty(k);
+    const k = uniq && Math.random() < .5 ? uniq : pick(['margarita', 'amapola']), n = eventFindQty(dropQty(k));
     giveSpecial(p, k, n); notify(`${p === 0 ? 'Encontraste' : P.name + ' encontró'} ${foundStr(k, n)} junto al camino`, P.color);
   }
 }

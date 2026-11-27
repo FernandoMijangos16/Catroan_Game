@@ -16,6 +16,7 @@ function addLog(html, color){
 }
 function refresh(){
   if (!G) return;
+  updEventChip();
   if (NG.on) netDirty();
   updatePlates();
   const me = G.players[0], my = G.current === 0 && !G.over;

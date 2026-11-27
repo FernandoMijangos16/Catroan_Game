@@ -1,5 +1,5 @@
 // ================= MAIN MENU (Buckshot-Roulette-like): still of a village behind 70 % dark, falling models, the title in a biome =================
-const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, botLvl: (() => { try { return localStorage.getItem('hexterra-botlvl') || 'normal'; } catch { return 'normal'; } })(), btnViews: [] };
+const MENU = { el: null, view: 'main', fall: null, title: null, night: null, shots: {}, modeViews: [], sel: 'catroan', fp: true, online: false, np: 4, ext56: false, bots: true, events: (() => { try { return localStorage.getItem('hexterra-events') !== '0'; } catch { return true; } })(), botLvl: (() => { try { return localStorage.getItem('hexterra-botlvl') || 'normal'; } catch { return 'normal'; } })(), btnViews: [] };
 const isNightNow = () => { const h = new Date().getHours() + new Date().getMinutes()/60; return h < 6.5 || h >= 19.5; };
 // a still of a village (black owner, nobody on the streets) seen from the plaza, by day or by night
 function menuBackdrop(night){
@@ -31,14 +31,14 @@ function openMainMenu(){
     el.innerHTML = `<div class="mbg"></div><div class="mdark"></div><div class="mfall"><canvas></canvas></div><div class="mdark2"></div>
       <div class="mview" data-v="main"><div class="mtitle"><canvas></canvas></div><nav class="mopts"><a data-go="play">Jugar</a><a data-go="mp">Multijugador</a><a data-go="how">Cómo jugar</a><a data-go="exit">Salir</a></nav></div>
       <div class="mview" data-v="play"><h2>Elige el modo</h2><div class="mmodes"></div>
-        <div class="mrow"><button class="mtoggle" data-fp="1"></button></div>
+        <div class="mrow"><button class="mtoggle" data-fp="1"></button><button class="mtoggle" data-ev="1"></button></div>
         <div class="mrow mnp"><span>Jugadores</span>${[2, 3, 4, 5, 6].map(n => `<button class="mnpb" data-np="${n}">${n}</button>`).join('')}<button class="mtoggle mbots"></button></div>
         <div class="mrow mlvl"><span>Dificultad</span>${[['facil', 'Fácil'], ['normal', 'Normal'], ['dificil', 'Difícil']].map(([k, n]) => `<button class="mlvlb" data-lvl="${k}">${n}</button>`).join('')}</div>
         <div class="mcomp"><h3>Complementos</h3><div class="mhexes"><div class="mhx mext" data-ext="56" title="Tablero grande de 30 hexágonos para 5 o 6 jugadores"><b>5–6</b><span>jugadores</span></div>${[0, 1].map(() => '<div class="mhx"><b>?</b><span>Próximamente</span></div>').join('')}</div></div>
         <div class="mrow"><button data-go="back">◀ Volver</button><button class="primary" data-go="start">Comenzar ▶</button></div></div>
       <div class="mview" data-v="mp"><h2>Multijugador</h2><div class="mbig"><button class="primary" data-go="create">Crear partida</button><button data-go="join">Unirse con clave</button></div><p class="mnote"></p><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="create"><h2>Nueva partida</h2><div class="mcardwrap"><canvas class="mcard"></canvas></div>
-        <div class="mrow mnamerow"><label class="mfield">Nombre de la partida<input class="mname" maxlength="24"></label>${window.catroanDesk ? '<button class="mtoggle mnet"></button>' : ''}</div>
+        <div class="mrow mnamerow"><label class="mfield">Nombre de la partida<input class="mname" maxlength="24"></label>${window.catroanDesk ? '<button class="mtoggle mnet"></button>' : ''}</div>${window.catroanDesk ? '<p class="mfw"></p>' : ''}
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
@@ -58,12 +58,22 @@ function openMainMenu(){
   menuGo('main');
 }
 function closeMainMenu(){ if (!MENU.el) return; MENU.el.classList.remove('show'); document.body.classList.remove('inmenu'); }
+// a view taller than the window shrinks to fit (the title and Volver must always show)
+function fitMenuView(){
+  const el = MENU.el && MENU.el.querySelector('.mview.on'); if (!el) return;
+  el.style.setProperty('--fit', 1);
+  const rs = [...el.children].filter(k => k.offsetParent !== null).map(k => k.getBoundingClientRect()).filter(r => r.height);
+  if (!rs.length) return; const h = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), room = innerHeight - 20;
+  if (h > room) el.style.setProperty('--fit', Math.max(.55, room/h).toFixed(3));
+}
+addEventListener('resize', () => setTimeout(fitMenuView, 60));
 function menuGo(v){
   MENU.view = v; const el = MENU.el; el.dataset.view = v;
   el.querySelectorAll('.mview').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  setTimeout(fitMenuView, 0); setTimeout(fitMenuView, 400);   // again once the 3D canvases and notes are in
   el.classList.toggle('plain', v !== 'main');                    // other views: only the falling models, darker
   if (v === 'main') buildMenuTitle();
-  if (v === 'play'){ buildModeHexes(); updNp(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
+  if (v === 'play'){ buildModeHexes(); updNp(); updEvToggle(); el.querySelector('[data-v=play] [data-go=start]').textContent = MENU.online ? 'Abrir la partida ▶' : 'Comenzar ▶'; }
   if (v === 'mp') el.querySelector('[data-v=mp] .mnote').textContent = '';
   if (v === 'create'){ updNetToggle(); if (!MENU.key) MENU.key = menuNewKey(); const n = el.querySelector('.mname'); if (!n.value) n.value = MENU.match = `Partida de ${myName()}`; drawMatchCards(); build3DButtons(el.querySelector('[data-v=create]')); }
   if (v === 'join') setTimeout(() => el.querySelector('.mkey').focus(), 50);
@@ -106,7 +116,7 @@ function buildModeHexes(){
   if (miniInit()) box.querySelectorAll('.mmode').forEach(d => { const g = modeHexModel(d.dataset.mode);
     const v = miniView(d.querySelector('canvas'), { w: 300, h: 240, res: .8, fov: 30, fps: 30, tick: (dt, t) => { g.userData.spin.forEach((sp, i) => { sp.userData.inner.rotation.y += dt*(.8 + (i % 3)*.25); sp.position.y += Math.sin(t*1.4 + i)*.0012; }); } });
     v.cam.position.set(0, 4.6, 9.6); v.cam.lookAt(0, -.2, .2); g.rotation.set(.12, -.35, 0); v.sc.add(g); MENU.modeViews.push(v); });
-  updFpToggle();
+  updFpToggle(); updEvToggle();
 }
 // players: online 2-4 (5-6 with the extension); alone it is 4, or 5-6 with the extension. Online also chooses bots or not
 function npChoices(){ return MENU.online ? (MENU.ext56 ? [2, 3, 4, 5, 6] : [2, 3, 4]) : MENU.ext56 ? [5, 6] : []; }
@@ -118,16 +128,36 @@ function updNp(){ const el = MENU.el, ch = npChoices(); if (ch.length && !ch.inc
   el.querySelector('.mlvl').style.display = MENU.online && !MENU.bots ? 'none' : '';   // no bots, nothing to tune
   const bt = el.querySelector('.mbots'); bt.style.display = MENU.online ? '' : 'none';
   bt.innerHTML = `Bots: <b>${MENU.bots ? 'Sí' : 'No'}</b>`; bt.classList.toggle('off', !MENU.bots);
+  setTimeout(fitMenuView, 0);
   bt.title = MENU.bots ? 'El anfitrión puede comenzar antes: los lugares libres los ocupan bots' : 'Sin bots: la partida empieza cuando se ocupen todos los lugares'; }
+// season events: only in SwapHolm mode (Clásico never has them)
+function updEvToggle(){ const b = MENU.el.querySelector('.mtoggle[data-ev]'); if (!b) return; b.style.display = MENU.sel === 'catroan' ? '' : 'none';
+  b.innerHTML = `${ic('nube')} Eventos de temporada: <b>${MENU.events ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.events); b.title = MENU.events ? 'Feria, lluvia, polinización, sequía e invierno cambian el tablero cada pocas rondas' : 'Sin eventos: la isla siempre igual'; }
 function updFpToggle(){ const b = MENU.el.querySelector('.mtoggle[data-fp]'); b.innerHTML = `${ic('ojo')} Vista en primera persona: <b>${MENU.fp ? 'Sí' : 'No'}</b>`; b.classList.toggle('off', !MENU.fp); b.title = MENU.fp ? 'Podrás recorrer tus pueblos y ver las escenas 3D (mercado, despacho, muelle…)' : 'Sin recorridos ni escenas: todo se resuelve con paneles, como el juego de mesa'; }
 // ---------- desktop only: the room lives on this computer's local network (LAN key) or online (WebRTC) ----------
 function updNetToggle(){ const b = MENU.el.querySelector('.mnet'); if (!b) return; const ip = deskLanIP(); if (!ip) NET.lan = false; else if (NET.lan === undefined) NET.lan = true;
   b.innerHTML = NET.lan ? `${ic('casa')} Red: <b>Local (misma WiFi)</b>` : `${ic('globo')} Red: <b>En línea (internet)</b>`;
-  b.title = !ip ? 'No estás conectado a una red local: la partida será en línea' : NET.lan ? 'Sin internet: los demás deben estar en tu misma red WiFi' : 'Por internet: los demás pueden estar en cualquier lugar'; }
+  b.title = !ip ? 'No estás conectado a una red local: la partida será en línea' : NET.lan ? 'Sin internet: los demás deben estar en tu misma red WiFi' : 'Por internet: los demás pueden estar en cualquier lugar';
+  updFirewallNote(); }
+// Local games need the firewall to let the others in (port 47213): Windows gets a button, Linux the command to run
+async function updFirewallNote(){
+  const el = MENU.el.querySelector('.mfw'); if (!el) return; el.innerHTML = '';
+  if (!NET.lan || !window.catroanDesk || !window.catroanDesk.lanFirewall) return;
+  let st; try { st = await window.catroanDesk.lanFirewall(); } catch { return; }
+  if (!NET.lan) return;
+  if (st.os === 'win' && !st.ok){
+    el.innerHTML = 'Windows puede bloquear a los demás jugadores. <button class="primary mfwb">Permitir en el firewall</button>';
+    el.querySelector('.mfwb').onclick = async e => { e.stopPropagation(); SFX.click?.(); e.target.disabled = true; e.target.textContent = 'Esperando permiso…';
+      const r = await window.catroanDesk.lanFirewallAllow().catch(() => ({})); el.innerHTML = r.ok ? 'Listo: los demás ya pueden entrar a tu partida.' : 'No se dio el permiso. Puedes intentarlo otra vez al volver a esta carta.'; };
+  } else if (st.os === 'linux' && st.cmd){
+    el.innerHTML = `Si no te encuentran, tu firewall (${st.tool}) los bloquea. Ejecuta una vez en una terminal: <code>${st.cmd}</code> <button class="mfwb">Copiar</button>`;
+    el.querySelector('.mfwb').onclick = e => { e.stopPropagation(); SFX.click?.(); try { navigator.clipboard.writeText(st.cmd); e.target.textContent = 'Copiado'; } catch {} };
+  }  fitMenuView();   // the note adds height to the card: shrink it again if it no longer fits
+}
 const menuNewKey = () => { const ip = deskLanIP(); if (NET.lan === undefined) NET.lan = !!ip; return NET.lan && ip ? lanKey(ip) : newKey(); };   // desktop starts on Local
 function netErrText(code){
   return { port_busy: 'El puerto del juego (47213) está ocupado: ¿hay otra partida abierta en esta computadora?',
-    lan_unreachable: 'No se encontró al anfitrión en tu red. Revisen que estén en la misma WiFi.',
+    lan_unreachable: 'No se encontró al anfitrión. Revisen que estén en la misma WiFi y que el firewall del anfitrión deje entrar a SwapHolm (al crear la partida Local, la carta indica cómo).',
     lan_only: 'Esa clave es de una partida en red local: entra desde SwapHolm de escritorio, en la misma WiFi.',
     no_room: 'No hay ninguna partida abierta con esa clave.',
     offline: 'No hay conexión a internet (o el servidor de partidas no responde).',
@@ -180,9 +210,10 @@ async function copyKey(){
 // ---------- navigation ----------
 async function menuClick(e){
   const el = MENU.el, mm = e.target.closest('.mmode');
-  if (mm){ MENU.sel = mm.dataset.mode; el.querySelectorAll('.mmode').forEach(x => x.classList.toggle('sel', x === mm)); SFX.click?.(); return; }
+  if (mm){ MENU.sel = mm.dataset.mode; el.querySelectorAll('.mmode').forEach(x => x.classList.toggle('sel', x === mm)); updEvToggle(); SFX.click?.(); return; }
   if (e.target.closest('.mnet')){ if (deskLanIP()){ NET.lan = !NET.lan; MENU.key = menuNewKey(); updNetToggle(); drawMatchCards(); } SFX.click?.(); return; }
   if (e.target.closest('.mtoggle[data-fp]')){ MENU.fp = !MENU.fp; updFpToggle(); SFX.click?.(); return; }
+  if (e.target.closest('.mtoggle[data-ev]')){ MENU.events = !MENU.events; try { localStorage.setItem('hexterra-events', MENU.events ? '1' : '0'); } catch {} updEvToggle(); SFX.click?.(); return; }
   const np = e.target.closest('.mnpb'); if (np){ MENU.np = +np.dataset.np; updNp(); SFX.click?.(); return; }
   if (e.target.closest('.mext')){ MENU.ext56 = !MENU.ext56; if (MENU.ext56 && !MENU.online) MENU.np = 6; updNp(); SFX.click?.(); return; }
   if (e.target.closest('.mbots')){ MENU.bots = !MENU.bots; updNp(); SFX.click?.(); return; }
@@ -193,7 +224,7 @@ async function menuClick(e){
   if (go === 'play'){ MENU.online = false; menuGo('play'); }
   else if (go === 'back') menuGo(MENU.online ? 'create' : 'main');
   else if (go === 'start'){
-    GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp; GAME_OPTS.botLevel = MENU.botLvl;
+    GAME_OPTS.mode = MENU.sel; GAME_OPTS.firstPerson = MENU.fp; GAME_OPTS.botLevel = MENU.botLvl; GAME_OPTS.events = MENU.events;
     if (MENU.online){ NET.me.name = myName(); const r = await netJoin(MENU.key, { host: true, match: MENU.match, name: NET.me.name }); if (r.error){ el.querySelector('[data-v=mp] .mnote').textContent = 'No se pudo abrir la sala: ' + netErrText(r.error); menuGo('mp'); return; } netHostStart(MENU.np, MENU.bots); return; }
     closeMainMenu(); applyGameOpts(); newGame(MENU.ext56 ? MENU.np : undefined); startRegistration();
   }

@@ -7,5 +7,7 @@ contextBridge.exposeInMainWorld('catroanDesk', {
   lanConnect: ip => ipcRenderer.invoke('lan-connect', ip),         // connect to a host → { ok } | { error }
   lanSend: (id, text) => ipcRenderer.send('lan-send', id, text),   // host: to client id ('*' = all) · client: id is ignored
   lanClose: () => ipcRenderer.send('lan-close'),                   // stop server / drop connection
+  lanFirewall: () => ipcRenderer.invoke('lan-fw'),                 // { os, ok: true | false | null (unknown), cmd? }
+  lanFirewallAllow: () => ipcRenderer.invoke('lan-fw-allow'),      // Windows: admin prompt to open the port
   onLan: fn => { const h = (_e, ev) => fn(ev); ipcRenderer.on('lan-ev', h); return () => ipcRenderer.removeListener('lan-ev', h); },
 });

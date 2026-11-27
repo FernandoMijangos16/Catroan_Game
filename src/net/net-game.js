@@ -64,7 +64,7 @@ function netSnap(){
   const pl = [];
   G.players.forEach((P, l) => { const o = JSON.parse(JSON.stringify(P)); delete o.tok; if (o.fx) for (const k in o.fx) if (o.fx[k] && typeof o.fx[k].from === 'number') o.fx[k].from = gSeat(o.fx[k].from); pl[gSeat(l)] = o; });
   return { v: ++NG.ver, ph: G.phase, cur: gSeat(G.current), ord: G.order ? G.order.map(gSeat) : null, dice: G.dice, rob: G.robber, deck: G.deck, army: mapP(G.army, gSeat), lon: mapP(G.longest, gSeat),
-    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, pt2: G.playT || 0, qat: G.qAt || {}, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
+    mer: G.merchant, bag: G.bag, pt: G.playedTurn, tid: G.turnId, over: !!G.over, win: mapP(G.winner, gSeat), su: !!G.setup, ev: G.event || null, evn: G.evNext ?? null, evl: G.evLast || null, evo: G.evOn !== false, pt2: G.playT || 0, qat: G.qAt || {}, to: G.tradeOpen, tc: G.trades ? { t: G.trades.t, l: G.trades.l.map(([a, b, n]) => [gSeat(a), gSeat(b), n]) } : null, sk: SETUP.k, sq: (SETUP.queue || []).map(gSeat),
     q: (G.quests || []).map(q => ({ ...q, p: gSeat(q.p), txt: packHtml(q.txt) })), gos: G.gossip, nm: G.names, pl,
     b: G.verts.filter(v => v.building).map(v => [v.id, gSeat(v.building.p), v.building.type === 'ciudad' ? 1 : 0, v.name]), r: G.edges.filter(e => e.road !== null).map(e => [e.id, gSeat(e.road)]) };
 }
@@ -90,6 +90,7 @@ function netApply(s, from){
     if (keep){ Object.assign(G.players[0], keep); regTaken(); }
     Object.assign(G, { phase: s.ph, current: lSeat(s.cur | 0), order: Array.isArray(s.ord) ? s.ord.map(lSeat) : null, dice: s.dice, deck: s.deck || [], army: mapP(s.army, lSeat), longest: mapP(s.lon, lSeat), merchant: s.mer, bag: Array.isArray(s.bag) ? s.bag.filter(v => v >= 11 && v <= 66) : null, playedTurn: s.pt, turnId: s.tid | 0,
       over: !!s.over, winner: mapP(s.win, lSeat), setup: !!s.su, tradeOpen: s.to, gossip: s.gos || [], names: s.nm || [], playT: +s.pt2 || 0,
+      event: s.ev && EVENTS[s.ev.k] ? { k: s.ev.k, until: s.ev.until | 0 } : null, evNext: Number.isFinite(s.evn) ? s.evn : null, evLast: EVENTS[s.evl] ? s.evl : null, evOn: s.evo !== false,
       qAt: s.qat && typeof s.qat === 'object' ? Object.fromEntries(Object.entries(s.qat).filter(([k, v]) => /^\d+$/.test(k) && typeof v === 'number')) : {},
       trades: s.tc && Array.isArray(s.tc.l) ? { t: s.tc.t | 0, l: s.tc.l.filter(x => Array.isArray(x)).map(([a, b, n]) => { const x = lSeat(a | 0), y = lSeat(b | 0); return [Math.min(x, y), Math.max(x, y), n | 0]; }) } : null });
     SETUP.k = s.sk | 0; SETUP.queue = (s.sq || []).map(lSeat);
@@ -135,7 +136,7 @@ function netPersp(h, A){
     [/Tenías más de 7 cartas: descartaste/g, `${A} tenía más de 7 cartas y descartó`], [/\bSacaste\b/g, `${A} sacó`], [/\bMoviste\b/g, `${A} movió`], [/\bLe robaste\b/g, `${A} le robó`], [/\ble robaste\b/g, 'le robó'],
     [/\bJugaste\b/g, `${A} jugó`], [/\bCompraste\b/g, `${A} compró`], [/\bFundaste\b/g, `${A} fundó`], [/\bConstruiste\b/g, `${A} construyó`], [/\bColocaste tu\b/g, `${A} colocó su`], [/\bCambiaste\b/g, `${A} cambió`], [/en tu puerto/g, 'en su puerto'],
     [/\bLanzaste\b/g, `${A} lanzó`], [/Demoliste uno de tus caminos y recuperaste/g, `${A} demolió uno de sus caminos y recuperó`], [/\bDemoliste\b/g, `${A} demolió`], [/\brecuperaste\b/g, 'se quedó con'],
-    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`], [/\bTienes la\b/g, `${A} tiene la`],
+    [/\bEntregaste\b/g, `${A} entregó`], [/\brecibiste\b/g, 'recibió'], [/\bRecibiste\b/g, `${A} recibió`], [/\bEncontraste\b/g, `${A} encontró`], [/\bTienes el\b/g, `${A} tiene el`], [/\bTienes la\b/g, `${A} tiene la`], [/se te echó a perder/g, `a ${A} se le echó a perder`], [/tu construcción falló/g, `la construcción de ${A} falló`], [/rechazó tu carta de trueque/g, `rechazó la carta de trueque de ${A}`], [/\bte regaló/g, `le regaló a ${A}`], [/\ben tu puerto\b/g, 'en su puerto'], [/\bPropusiste un trueque: das\b/g, `${A} propuso un trueque: da`], [/aceptó tu trueque/g, `aceptó el trueque de ${A}`], [/¡Ganaste la partida!/g, `¡${A} ganó la partida!`],
     [/Propusiste un trueque: das/g, `${A} propuso un trueque: da`], [/Rechazaste el trueque de/g, `${A} rechazó el trueque de`], [/Nadie aceptó tu trueque/g, `Nadie aceptó el trueque de ${A}`],
     [/aceptó tu trueque/g, `aceptó el trueque de ${A}`], [/rechazó tu carta de trueque/g, `rechazó la carta de trueque de ${A}`], [/rechazó tu trueque/g, `rechazó el trueque de ${A}`],
     [/hizo un trueque contigo: te dio/g, `hizo un trueque con ${A}: le dio`], [/\bte cambió\b/g, `le cambió a ${A}`], [/Trueque con ([^:]+): diste (.+?) y recibiste/g, `${A} hizo un trueque con $1: dio $2 y recibió`],

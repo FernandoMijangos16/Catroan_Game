@@ -73,6 +73,8 @@ function botAct(p, st){
 }
 async function botTurn(p, fromMain){   // fromMain: the dice were already rolled (a bot taking over a player who left)
   const gid = G.id, tid = G.turnId;
+  // one bot turn per turn: a second call (a reconnect, a late online state) for the same turn is ignored
+  const run = gid + ':' + tid; if (botTurn.running === run) return; botTurn.running = run;
   const alive = () => G.id === gid && G.turnId === tid && !G.over;
   await wait(1500); if (!alive()) return;
   botQuests(p);
@@ -98,6 +100,7 @@ function endTurn(){
   const P = G.players[G.current];
   if (NG.on) G.players.forEach((Q, i) => { if (Q.rejoin && i !== G.current){ Q.rejoin = false; Q.bot = false; } });
   villageQuests();   // each town posts missions on its own timer (core/missions.js)
+  eventsTick();      // season events start and end with the rounds (core/events.js)
   if (P.buffs){
     if (P.buffs.randomItem){ P.buffs.randomItem = false; if (Math.random() < .5){ const r = pick(RES); P.res[r]++; notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: 1 ${resImg(r)}`, P.color); } else { const k = pick(SPK); giveSpecial(G.current, k); notify(`${G.current === 0 ? 'Recibiste' : P.name + ' recibió'} un regalo: ${specImg(k)} ${SPECIAL[k].name}`, P.color); } }
     if (P.buffs.extraRes){ P.buffs.extraRes = false; P.extraTurn = G.turnId; }

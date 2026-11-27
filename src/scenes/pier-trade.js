@@ -64,7 +64,7 @@ function buildPier(opts){
   // your tray at the end of the pier
   const camP = new THREE.Vector3(0, 2.2, -5.0), tw = hmat('mkplank', () => new THREE.MeshStandardMaterial({ map: A.tex.plank.plain, color: 0xb08a60, roughness: .9 }));
   const tray = new THREE.Mesh(GEO.box, tw); tray.scale.set(1.5, .035, .26); tray.position.set(0, 1.76, -5.92); tray.visible = false; sc.add(tray);
-  const port = pt.type, rate = port === '3:1' ? 3 : 2;
+  const port = pt.type, rate = eventRate(port === '3:1' ? 3 : 2);   // the fair also lowers the 3:1 ports
   const ctx = { bSlots, fis, dog, cat, sc, kind: 'pier', pier: true, items: [], t: 0, sel: { give: null, want: null }, busy: true, opts, hover: null, TOP: 1.8, ph: 'walk', pt: 0, port, rate, ship, pirate: pir, npc: pir, bubble, bubbleT, tray, water, wp, w0, camP, thrown: [], line: '', DY,
     cam0: [[0, 2.1, 6.5], [0, 1.9, -6]] };
   GH = prevGH; CUR_COLL = prevColl;
@@ -132,7 +132,7 @@ function updatePier(C, dt, t){
   const holdOut = () => { pr.armL.rotation.x += (-1.2 - pr.armL.rotation.x)*Math.min(1, dt*5); pr.elbowL.rotation.x += (-.3 - pr.elbowL.rotation.x)*Math.min(1, dt*5); };
   switch (C.ph){
     case 'walk': if (C.pt > 2.4){ C.ph = 'greet'; C.pt = 0; } break;
-    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? 'Dame 3 cartas, aunque sean distintas, y te doy 1. ¿Qué quieres?' : `Solo ${RES_NAME[C.port].toLowerCase()}: 2 por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
+    case 'greet': if (!C.greeted){ C.greeted = true; pierSay(C, C.port === '3:1' ? `Dame ${C.rate} cartas, aunque sean distintas, y te doy 1. ¿Qué quieres?` : `Solo ${RES_NAME[C.port].toLowerCase()}: ${C.rate} por 1. ¿Qué quieres?`); pierGoods(C); pierTray(C); C.ph = 'want'; C.pt = 0; C.ready = true; C.busy = false; } break;
     case 'want': case 'pay': holdOut(); break;
     case 'catch': holdOut(); if (C.pt > .7 && C.thrown.every(p => p.t >= 1)){ C.ph = 'throwback'; C.pt = 0; C.throwing = true; pierSay(C, pick(['Trato justo. ¡Ahí va!', 'Un placer, alcalde. ¡Atrapa!', 'Palabra de marino. ¡Ahí te va!'])); } break;
     case 'throwback': {
@@ -154,8 +154,8 @@ function pierScene(pi){
   const mine = [pt.a, pt.b].some(v => G.verts[v].building && G.verts[v].building.p === 0);
   if (!mine){ notify(`Para comerciar en este puerto (${pt.type === '3:1' ? '3:1' : '2:1 ' + RES_NAME[pt.type]}) necesitas un pueblo junto a él.`, P.color, 'sys'); return; }
   if (G.current !== 0 || G.phase !== 'main'){ notify('Puedes comerciar en el puerto durante tu turno, después de tirar los dados.', P.color, 'sys'); return; }
-  const rate = pt.type === '3:1' ? 3 : 2;
-  if (pt.type === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) < rate : P.res[pt.type] < rate){ notify(pt.type === '3:1' ? 'El pirata acepta 3 cartas, aunque sean distintas: aún no tienes suficientes.' : `El pirata solo acepta 2 de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
+  const rate = eventRate(pt.type === '3:1' ? 3 : 2);
+  if (pt.type === '3:1' ? RES.reduce((a, r) => a + P.res[r], 0) < rate : P.res[pt.type] < rate){ notify(pt.type === '3:1' ? `El pirata acepta ${rate} cartas, aunque sean distintas: aún no tienes suficientes.` : `El pirata solo acepta ${rate} de ${RES_NAME[pt.type].toLowerCase()}.`, P.color, 'sys'); return; }
   if (!scenesOn()){ openTrade('banco'); return; }
   enterMarket('pier', { port: pi });
 }

@@ -27,6 +27,8 @@ function tickPlayTime(dt){ if (G && !G.setup && !G.over && G.phase !== 'register
 function villageQuests(){
   if (!G || G.over || G.setup || isClassic()) return;
   const now = G.playT || 0; G.qAt ||= {};
+  // towns keep posting, so finished missions would pile up forever (and travel in every online state): keep the last 10
+  if (G.quests){ const done = G.quests.filter(q => q.state === 'done'); if (done.length > 10){ const drop = new Set(done.slice(0, done.length - 10)); G.quests = G.quests.filter(q => !drop.has(q)); } }
   G.verts.forEach(v => { if (!v.building) return;
     if (G.qAt[v.id] === undefined){ G.qAt[v.id] = now + 300 + Math.random()*900; return; }   // a new town: its first one in 5-20 min
     if (now < G.qAt[v.id] || gameRound() <= 4) return;
