@@ -262,5 +262,5 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
     face: { mesh: hd, skin, hair: hairC, f, kid, old, beard, must, eye: eyeC, expr } };
 }
 // change a person's face on the fly (the front of the head is material 4)
-function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = faceMat(F.skin, F.hair, { ...F, expr });
+function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = F.make ? F.make(expr) : faceMat(F.skin, F.hair, { ...F, expr });   // Nándor brings his own painted face
 }

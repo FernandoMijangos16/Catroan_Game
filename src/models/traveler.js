@@ -1,9 +1,9 @@
-// ================= ULISES, THE TRAVELLER: the tutorial's guide =================
-// A villager model (people.js) who has walked the whole board: wide leather hat, grey beard, staff, and a big pack on
-// his back with a bedroll, a rolled map, a pot and a lantern. Fixed seed, so he always looks the same.
-const TRAVELER = { name: 'Ulises', s: 4242, o: { hat: 'viajero', beard: true, must: false, expr: 'sonrisa', skin: 0xc8946a, hair: 0x9a9088, shirt: 0x5a7a96, pants: 0x4e4234 } };
+// ================= NÁNDOR, THE TRAVELLER: the tutorial's guide (and the shop's merchant in a game) =================
+// Nándor's head (models/nandor-head.js) with a straw hat, on a villager body (people.js) that has walked the whole
+// board: staff, and a big pack on his back with a bedroll, a rolled map, a pot and a lantern. Always the same.
+const TRAVELER = { name: 'Nándor', s: 4242, o: { hat: null, beard: false, must: false, expr: 'sonrisa', skin: NANDOR.skin, hair: NANDOR.hair, shirt: 0x5a7a96, pants: 0x4e4234 } };
 function travelerModel(){
-  const p = makePerson(mulberry32(TRAVELER.s), 'pastor', 'm', null, TRAVELER.o);
+  const p = useNandorHead(makePerson(mulberry32(TRAVELER.s), 'pastor', 'm', null, TRAVELER.o), 'sonrisa', { hat: 'paja' });
   const b = p.body, A = (geo, c, x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0) => { const m = mesh(geo, c, x, y, z, sx, sy, sz, true); m.rotation.set(rx, ry, rz); b.add(m); return m; };
   // the pack: canvas body, a darker flap, side pockets, shoulder straps over the chest
   A(PGEO.rbox, 0x6e5434, 0, 1.06, -.25, .36, .48, .22);

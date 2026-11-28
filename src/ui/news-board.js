@@ -72,7 +72,9 @@ function initQuestIcon(){
   const v = miniView(el.querySelector('canvas'), { w: 62, h: 62, res: .75, fov: 30, fps: 24, tick: (dt, t) => { o.userData.inner.rotation.y = t*.9; } });
   v.sc.add(o); v.cam.position.set(0, .1, 2.7); v.cam.lookAt(0, 0, 0); QICON.v = v;
 }
-function updateQuestIcon(){ const n = G ? (G.quests || []).filter(q => q.p === 0 && q.state !== 'done').length : 0, b = $('#quest-icon .nb-n'); if (b){ b.textContent = n; b.style.display = n ? 'block' : 'none'; } }
+let QSIG = '';
+function updateQuestIcon(){ { const p = $('#quests'), sig = G ? JSON.stringify((G.quests || []).filter(q => q.p === 0).map(q => [q.id, q.state])) : ''; if (sig !== QSIG){ QSIG = sig; if (p && p.classList.contains('show') && !p.dataset.closing) fillQuests(); } }   // open panel: refilled when the missions change
+  const n = G ? (G.quests || []).filter(q => q.p === 0 && q.state !== 'done').length : 0, b = $('#quest-icon .nb-n'); if (b){ b.textContent = n; b.style.display = n ? 'block' : 'none'; } }
 function initNews(){
   const nb = document.createElement('div'); nb.id = 'news-board'; nb.title = 'Tablón de anuncios: historial de la partida';
   nb.innerHTML = '<canvas width="96" height="96"></canvas><b class="nb-n"></b>';

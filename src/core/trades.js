@@ -54,7 +54,7 @@ async function tradeLetter(target){
   for (let k=0;k<60 && (busy || marketCtx);k++) await wait(200);
   const r = await officeScene({ mode: 'write', to: Q.name, toColor: Q.color, toF: FEM.has(Q.name), from: mayorName(),
     decide: (offer, ask) => { if (!tradesLeft(0, target) || (G.current !== 0 && (G.tradeOpen !== G.turnId || target !== G.current))) return false; return isRemote(target) ? netAsk(target, 'offer', { give: offer, want: ask }, () => false, 60000) : botAcceptTrade(target, offer, ask); } });
-  if (r === null) return;
+  if (!r) return;   // closed without an answer (null or undefined)
   if (r.ok){ await courierScene(target, r.offer, r.ask); refresh(); }
   else if (!r.cancel) notify(`${Q.name} rechazó tu carta de trueque`, Q.color);
 }

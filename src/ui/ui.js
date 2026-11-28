@@ -101,6 +101,7 @@ function showWin(p){
   <div class="row end"><button class="primary" id="b-new">Nueva partida</button></div>`, false);
   if (NG.on){ $('#b-new').textContent = 'Volver al menú'; $('#b-new').onclick = async () => { closeModal(); if (NG.seat === 0) netSend({ t: 'bye' }); await netLeave(); netReset(); newGame(); openMainMenu(); }; }
   else $('#b-new').onclick = () => { closeModal(); newGame(); startRegistration(); };
+  if (TUT.on) $('#b-new').style.display = 'none';   // the tutorial ends with Nándor's own buttons
   notify(`🏆 <b>${p === 0 ? '¡Ganaste la partida!' : P.name + ' ganó la partida'}</b>`, P.color);
 }
 

@@ -110,9 +110,10 @@ function restartGame(){
 }
 // called once at startup (main/start.js): true if a restart was asked for and the game is already open
 function restartPending(){
+  try { if (sessionStorage.getItem('hexterra-menu') === 'play'){ sessionStorage.removeItem('hexterra-menu'); MENU.online = false; menuGo('play'); return true; } } catch {}   // "Jugar una partida" at the end of the tutorial
   let d = null; try { d = JSON.parse(sessionStorage.getItem('hexterra-restart') || 'null'); sessionStorage.removeItem('hexterra-restart'); } catch {}
   if (!d || !d.opts) return false;
-  if (d.tut){ startTutorial(d.tut === 2 ? 2 : 1); return true; }
+  if (d.tut){ startTutorial([1, 2, 3, 4].includes(d.tut) ? d.tut : 1); return true; }
   Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts(); newGame(d.n > 4 ? d.n : undefined); startRegistration();
   return true;
 }

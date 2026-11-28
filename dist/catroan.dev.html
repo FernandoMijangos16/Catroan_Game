@@ -416,7 +416,7 @@ body[data-mode=village] #village-ui{display:block}
 #v-btns .mapbtn{padding:0;background:none;border:0;box-shadow:none;cursor:pointer;width:150px;height:118px}
 #v-btns .mapbtn canvas{width:150px;height:118px;display:block;image-rendering:pixelated;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
 #v-btns{bottom:4px}
-#v-help{position:fixed;bottom:150px;left:50%;transform:translateX(-50%);font-size:12.5px;color:#fff;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.6);white-space:nowrap;z-index:10}
+#v-help{position:fixed;bottom:196px;left:50%;transform:translateX(-50%);font-size:12.5px;color:#fff;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.6);white-space:nowrap;z-index:10}
 #v-turn{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1d1606;padding:7px 13px;border-radius:999px;font-weight:700;font-size:13px;display:none;z-index:12;box-shadow:0 6px 18px rgba(0,0,0,.3)}
 #dpad{position:fixed;left:16px;bottom:16px;display:none;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:6px;z-index:10}
 #dpad button{font-size:20px;padding:0;background:rgba(18,22,27,.6);touch-action:none;user-select:none;-webkit-user-select:none}
@@ -764,9 +764,10 @@ body.editing .fwin{cursor:grab}body.editing .fwin .ibar .edtag{pointer-events:au
 #pause .pvol .m3{width:24px;height:24px;margin:0}#pause .pvol b{min-width:52px;color:#ffd890}
 #pause .pvol input{width:240px;accent-color:#c8a040}
 body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}
-/* ---------- tutorial (ui/tutorial-guide.js): Ulises and his note ---------- */
-#tut{position:fixed;left:calc(92px*var(--ui,1));top:calc(96px*var(--ui,1));z-index:45;display:none;flex-direction:column;align-items:flex-start;pointer-events:auto;zoom:var(--ui,1);font-family:'Pixelify Sans',monospace;width:236px}
+/* ---------- tutorial (ui/tutorial-guide.js): Nándor and his note ---------- */
+#tut{position:fixed;left:calc(92px*var(--ui,1));top:calc(96px*var(--ui,1));z-index:45;display:none;flex-direction:column;align-items:flex-start;pointer-events:auto;zoom:min(var(--ui,1),1.3);font-family:'Pixelify Sans',monospace;width:236px}
 #tut.right{left:auto;right:calc(92px*var(--ui,1))}
+#tut{left:calc(92px*var(--ui,1)/min(var(--ui,1),1.3));top:calc(96px*var(--ui,1)/min(var(--ui,1),1.3))}#tut.right{left:auto;right:calc(92px*var(--ui,1)/min(var(--ui,1),1.3))}   /* positions count in its own (smaller) zoom */
 #tut.show{display:flex;animation:ofade .3s}#tut.tuck{opacity:0;pointer-events:none;transition:opacity .2s}
 #tut .tutv canvas{width:130px;height:150px;image-rendering:pixelated;filter:drop-shadow(0 10px 12px rgba(0,0,0,.6));margin-left:6px}
 #tut .tutb{position:relative;width:236px;box-sizing:border-box;margin-top:-6px;padding:8px 11px 8px;background:var(--paperimg,#e8dcc0);color:#2a1e12;box-shadow:0 0 0 2px #5a4028,0 8px 18px rgba(0,0,0,.5)}
@@ -785,6 +786,8 @@ body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:no
 @keyframes tutglow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,210,120,0))}50%{filter:drop-shadow(0 0 12px rgba(255,210,120,.95)) brightness(1.2)}}
 body.paused #tut{pointer-events:none}
 #menu .mtparts button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:420px}#menu .mtparts small{font-size:11px;opacity:.8;letter-spacing:0;text-transform:none}
+
+[data-closing]{pointer-events:none!important}   /* parchment panels closing: the click reaches what is under them */
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -843,7 +846,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const APP_VERSION = "0.8.0";   // filled in by build.mjs from package.json
+const APP_VERSION = "0.9.0";   // filled in by build.mjs from package.json
 const NG = { on: false };   // online match state (filled in net/net-game.js); declared first so every hook can read it
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -2431,6 +2434,7 @@ function showWin(p){
   <div class="row end"><button class="primary" id="b-new">Nueva partida</button></div>`, false);
   if (NG.on){ $('#b-new').textContent = 'Volver al menú'; $('#b-new').onclick = async () => { closeModal(); if (NG.seat === 0) netSend({ t: 'bye' }); await netLeave(); netReset(); newGame(); openMainMenu(); }; }
   else $('#b-new').onclick = () => { closeModal(); newGame(); startRegistration(); };
+  if (TUT.on) $('#b-new').style.display = 'none';   // the tutorial ends with Nándor's own buttons
   notify(`🏆 <b>${p === 0 ? '¡Ganaste la partida!' : P.name + ' ganó la partida'}</b>`, P.color);
 }
 
@@ -2451,7 +2455,7 @@ function boardClick(e){
   if (!G || G.over) return;
   if (G.phase === 'setupV' || G.phase === 'setupE'){ setupClick(e); return; }
   if (G.setup) return;
-  if (TUT.on && !((G.buildMode && TUT.allow.has('tablero')) || (G.phase === 'robber' && TUT.allow.has('ladron')) || TUT.allow.has('puerto') || TUT.allow.has('visitar'))){ tutNudge(); return; }   // tutorial: the board only takes what Ulises asked for
+  if (TUT.on && !((G.buildMode && TUT.allow.has('tablero')) || (G.phase === 'robber' && TUT.allow.has('ladron')) || TUT.allow.has('puerto') || TUT.allow.has('visitar'))){ tutNudge(); return; }   // tutorial: the board only takes what Nándor asked for
   setRay(e);
   if (G.current === 0 && G.phase === 'robber'){
     const hit = ray.intersectObjects(tileGroups, true)[0];
@@ -3547,14 +3551,132 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
     face: { mesh: hd, skin, hair: hairC, f, kid, old, beard, must, eye: eyeC, expr } };
 }
 // change a person's face on the fly (the front of the head is material 4)
-function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = faceMat(F.skin, F.hair, { ...F, expr });
+function setFaceExpr(p, expr){ const F = p && p.face; if (!F || F.expr === expr) return; F.expr = expr; F.mesh.material = F.mesh.material.slice(); F.mesh.material[4] = F.make ? F.make(expr) : faceMat(F.skin, F.hair, { ...F, expr });   // Nándor brings his own painted face
 }
-// ================= ULISES, THE TRAVELLER: the tutorial's guide =================
-// A villager model (people.js) who has walked the whole board: wide leather hat, grey beard, staff, and a big pack on
-// his back with a bedroll, a rolled map, a pot and a lantern. Fixed seed, so he always looks the same.
-const TRAVELER = { name: 'Ulises', s: 4242, o: { hat: 'viajero', beard: true, must: false, expr: 'sonrisa', skin: 0xc8946a, hair: 0x9a9088, shirt: 0x5a7a96, pants: 0x4e4234 } };
+// ================= NÁNDOR: the tutorial guide's head (Fernando's features in the villagers' style) =================
+// Same build as makePerson's head (neck, rounded box with a 16×16 painted face on material 4, small ears, hair on top),
+// with his own traits: dark brown curls with a fringe and short faded sides, thick straight brows, grey-blue eyes under
+// heavy lids, a marked nose, full pink lips, a thin moustache, a sparse beard along the jaw and his glasses.
+// Every expression the villagers have works here too (sonrisa, serio, risa, cansado, duda, triste, sorpresa, guiño, enojo).
+const NANDOR = {
+  skin: 0xe0b49a, hair: 0x3a2417, hairHi: 0x55361f, hairDk: 0x24160e, brow: 0x2c1b11,
+  stub: 0x8a6a4c, eye: 0x6a7f88, lipUp: 0xc0706a, lipLo: 0xd58c86,
+  rim: 0x26305a, metal: 0xc9a85a,   // glasses: thin navy hexagonal rims, gold bridge and arms
+};
+const NANDOR_RIM = sg(new THREE.TorusGeometry(1, .12, 3, 6));
+const NANDOR_FACES = new Map();
+function nandorFaceMat(expr = 'sonrisa'){
+  if (NANDOR_FACES.has(expr)) return NANDOR_FACES.get(expr);
+  const N = NANDOR, cv = document.createElement('canvas'); cv.width = cv.height = 16; const c = cv.getContext('2d');
+  const hx = n => '#' + new THREE.Color(n).getHexString(), mix = (a, b, t) => hx(new THREE.Color(a).lerp(new THREE.Color(b), t).getHex());
+  const P = (x, y, col, w = 1, h = 1) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+  const sk = new THREE.Color(N.skin), dk = hx(sk.clone().multiplyScalar(.82).getHex()), dk2 = hx(sk.clone().multiplyScalar(.72).getHex());
+  const lid = hx(sk.clone().multiplyScalar(.7).getHex()), hr = hx(N.hair), hi = hx(N.hairHi), hd = hx(N.hairDk), br = hx(N.brow);
+  const st = hx(N.stub), stL = mix(N.stub, N.skin, .55), eye = hx(N.eye), lu = hx(N.lipUp), ll = hx(N.lipLo), ink = '#2a1d18';
+  P(0, 0, hx(N.skin), 16, 16);
+  // ---- curly fringe falling on the forehead, short dark sideburns (the fade)
+  P(0, 0, hr, 16, 3); [2, 6, 9, 13].forEach(x => P(x, 0, hi)); [4, 11].forEach(x => P(x, 1, hi)); [1, 8, 14].forEach(x => P(x, 2, hd));
+  [2, 3, 6, 7, 9, 12, 13].forEach(x => P(x, 3, hr)); [3, 12].forEach(x => P(x, 3, hi)); P(7, 4, hr);   // curl tips
+  P(0, 3, hd, 1, 6); P(15, 3, hd, 1, 6); P(1, 3, hd, 1, 2); P(14, 3, hd, 1, 2);
+  // ---- brows: thick and straight; they carry the mood
+  switch (expr){
+    case 'enojo': P(3, 4, br); P(4, 5, br, 2); P(6, 6, br); P(12, 4, br); P(10, 5, br, 2); P(9, 6, br); break;
+    case 'serio': P(3, 5, br, 3); P(4, 4, br, 2); P(10, 5, br, 3); P(10, 4, br, 2); P(6, 5, br); P(9, 5, br); break;
+    case 'sorpresa': P(3, 4, br, 3); P(10, 4, br, 3); break;
+    case 'duda': P(3, 4, br, 3); P(4, 3, br, 2); P(10, 5, br, 3); break;
+    case 'triste': P(3, 5, br); P(4, 4, br, 2); P(5, 3, br); P(10, 3, br); P(10, 4, br, 2); P(12, 5, br); break;
+    default: P(3, 5, br, 3); P(4, 4, br, 2); P(10, 5, br, 3); P(10, 4, br, 2);
+  }
+  // ---- eyes: grey-blue under heavy lids (his look); wide open only when surprised
+  const eyeAt = (x, how) => {
+    const iris = x === 4 ? 5 : 10;
+    if (how === 'closed'){ P(x, 7, ink, 2, 1); return; }
+    if (how === 'happy'){ P(x, 6, lid, 2, 1); P(x, 7, ink, 2, 1); return; }                   // squeezed shut by the laugh
+    if (how === 'open'){ P(x, 6, '#ffffff', 2, 2); P(iris, 6, eye, 1, 2); return; }
+    P(x, 6, lid, 2, 1); P(x, 7, '#ffffff', 2, 1); P(iris, 7, eye);
+    if (how === 'low'){ P(x, 7, lid, 2, 1); P(iris, 7, eye); }                           // tired: lids nearly down
+  };
+  const L = expr === 'sorpresa' ? 'open' : expr === 'risa' ? 'happy' : expr === 'cansado' ? 'low' : 'lid';
+  eyeAt(4, L); eyeAt(10, expr === 'guiño' ? 'closed' : L);
+  if (expr === 'cansado' || expr === 'triste'){ P(4, 8, dk, 2, 1); P(10, 8, dk, 2, 1); }
+  // ---- a marked nose: bridge, wide tip and nostrils
+  P(7, 7, dk); P(7, 8, dk, 2, 1); P(6, 9, dk, 4, 1); P(6, 9, dk2); P(9, 9, dk2);
+  // ---- sparse beard along the jaw and on the chin (stubble: dark and skin-mixed pixels)
+  [[0, 9], [0, 10], [0, 11], [0, 12], [1, 12], [1, 13], [2, 14], [3, 14], [3, 15], [4, 15], [5, 15],
+   [15, 9], [15, 10], [15, 11], [15, 12], [14, 12], [14, 13], [13, 14], [12, 14], [12, 15], [11, 15], [10, 15]].forEach(([x, y], i) => P(x, y, i % 3 ? stL : st));
+  [[6, 14], [9, 14], [7, 15], [8, 15], [6, 15], [9, 15], [7, 14], [8, 14]].forEach(([x, y], i) => P(x, y, i < 4 ? stL : st));
+  // ---- thin moustache over the lip corners
+  P(5, 10, st); P(6, 10, stL, 4, 1); P(10, 10, st);
+  // ---- full lips: pink upper and a fuller, lighter lower one
+  switch (expr){
+    case 'risa': P(5, 11, lu, 6, 2); P(6, 11, '#f4efe4', 4, 1); P(6, 12, '#3a1410', 4, 1); P(6, 13, ll, 4, 1); break;
+    case 'sorpresa': P(7, 11, '#3a1410', 2, 2); P(6, 11, lu); P(9, 11, lu); P(7, 13, ll, 2, 1); break;
+    case 'triste': P(6, 11, lu, 4, 1); P(5, 12, lu); P(10, 12, lu); P(6, 12, ll, 4, 1); break;
+    case 'enojo': P(5, 11, lu, 6, 1); P(6, 12, ll, 4, 1); P(5, 12, dk2); P(10, 12, dk2); break;
+    case 'serio': case 'cansado': P(6, 11, lu, 4, 1); P(6, 12, ll, 4, 1); break;
+    case 'duda': P(6, 11, lu, 4, 1); P(6, 12, ll, 3, 1); P(10, 11, lu); break;
+    case 'guiño': P(6, 11, lu, 4, 1); P(10, 10, lu); P(6, 12, ll, 4, 1); break;
+    default: P(6, 11, lu, 4, 1); P(5, 10, lu); P(10, 10, lu); P(6, 12, ll, 4, 1);   // sonrisa: corners up
+  }
+  const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.MeshStandardMaterial({ map: t, roughness: .85 }); CACHED_MATS.add(m);
+  NANDOR_FACES.set(expr, m); return m;
+}
+// Returns { head, face }: `head` is a group laid out like makePerson's head (neck at y 0); `face` works with setFaceExpr.
+function nandorHead(expr = 'sonrisa', { glasses = true } = {}){
+  const N = NANDOR, head = new THREE.Group();
+  const add = (geo, c, x, y, z, sx, sy, sz) => { const m = mesh(geo, c, x, y, z, sx, sy, sz, true); head.add(m); return m; };
+  add(PGEO.crown, N.skin, 0, 0, 0, .05, .14, .05);                                                   // neck
+  const sm = mat(N.skin), hd = new THREE.Mesh(PGEO.rbox, [sm, sm, sm, sm, nandorFaceMat(expr), sm]);
+  hd.position.set(0, .26, 0); hd.scale.set(.245, .29, .25); hd.castShadow = true; head.add(hd);          // a touch wider: round cheeks
+  [-1, 1].forEach(s => add(PGEO.joint, N.skin, s*.127, .25, -.01, .026, .046, .03));                     // ears
+  const T = .405;
+  // short faded sides and nape, then the curly crown on top
+  [-1, 1].forEach(s => add(PGEO.rbox, N.hairDk, s*.113, .31, -.04, .03, .12, .21));
+  add(PGEO.rbox, N.hairDk, 0, .29, -.12, .225, .17, .035);
+  add(PGEO.rbox, N.hair, 0, T - .01, -.015, .262, .135, .27);
+  // curls: fixed spots (always the same head), three browns so the volume reads
+  const C = [N.hair, N.hairHi, N.hairDk];
+  [[-.085, .03, -.07, .05], [0, .035, -.08, .052], [.085, .03, -.07, .05], [-.09, .035, .01, .05], [-.005, .045, 0, .055],
+   [.08, .04, .015, .05], [-.05, .035, .07, .048], [.045, .04, .07, .048], [-.105, .01, .085, .04], [.105, .015, .08, .04],
+   [0, .01, -.13, .048], [-.11, -.01, -.1, .04], [.11, -.01, -.1, .04]].forEach(([x, y, z, r], i) =>
+    add(PGEO.joint, C[i % 3], x, T + y, z, r, r*.75, r));
+  // the fringe: curls hanging over the forehead
+  [[-.08, -.025, .12, .034], [-.03, -.04, .128, .036], [.025, -.035, .128, .034], [.08, -.025, .118, .032]].forEach(([x, y, z, r], i) =>
+    add(PGEO.joint, C[(i + 1) % 3], x, T + y, z, r, r, r*.8));
+  // glasses in 3D, in front of the face, so every expression shows through them
+  if (glasses){
+    const EY = .277, EZ = .146, EX = .047, R = .036;
+    [-1, 1].forEach(s => {
+      const ring = add(NANDOR_RIM, N.rim, s*EX, EY, EZ, R, R, R*1.4);
+      ring.rotation.y = s*.12;                                                                 // follows the round face
+      const hinge = add(GEO.box, N.metal, s*.097, EY + .004, EZ - .02, .042, .006, .006);          // bends back from the rim...
+      hinge.rotation.y = s*.78;
+      add(GEO.box, N.metal, s*.117, EY + .002, EZ - .1, .005, .007, .15);                     // ...and runs along the head to the ear
+    });
+    add(GEO.box, N.metal, 0, EY + .012, EZ + .004, .024, .006, .006);                          // bridge
+  }
+  return { head, face: { mesh: hd, expr, make: nandorFaceMat, skin: N.skin, hair: N.hair, f: false, kid: false, old: false, beard: true, must: true, eye: N.eye } };
+}
+// Puts Nándor's head on a person made with makePerson (e.g. the tutorial guide). Whatever was on the old head
+// (hair, hat) goes away; the body, animations and setFaceExpr keep working.
+function useNandorHead(p, expr = 'sonrisa', { hat = null } = {}){
+  const N = nandorHead(expr);
+  p.head.clear(); N.head.children.slice().forEach(c => p.head.add(c));
+  if (hat === 'paja'){   // the guide's straw hat: it sits on top of the curls, tipped back, so the fringe and the sides still show
+    const h = new THREE.Group(); h.position.set(0, .468, -.03); h.rotation.x = -.22; p.head.add(h);
+    const A = (geo, c, y, r, t) => { const m = mesh(geo, c, 0, y, 0, r, t, r, true); h.add(m); return m; };
+    A(PGEO.brim, 0xe3c77a, 0, .27, .02); A(PGEO.crown, 0xd9b864, 0, .125, .1); A(PGEO.brim, 0x8a3a2a, .022, .128, .026);
+  }
+  p.face = N.face; p.name = 'Nándor';
+  return p;
+}
+// ================= NÁNDOR, THE TRAVELLER: the tutorial's guide (and the shop's merchant in a game) =================
+// Nándor's head (models/nandor-head.js) with a straw hat, on a villager body (people.js) that has walked the whole
+// board: staff, and a big pack on his back with a bedroll, a rolled map, a pot and a lantern. Always the same.
+const TRAVELER = { name: 'Nándor', s: 4242, o: { hat: null, beard: false, must: false, expr: 'sonrisa', skin: NANDOR.skin, hair: NANDOR.hair, shirt: 0x5a7a96, pants: 0x4e4234 } };
 function travelerModel(){
-  const p = makePerson(mulberry32(TRAVELER.s), 'pastor', 'm', null, TRAVELER.o);
+  const p = useNandorHead(makePerson(mulberry32(TRAVELER.s), 'pastor', 'm', null, TRAVELER.o), 'sonrisa', { hat: 'paja' });
   const b = p.body, A = (geo, c, x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0) => { const m = mesh(geo, c, x, y, z, sx, sy, sz, true); m.rotation.set(rx, ry, rz); b.add(m); return m; };
   // the pack: canvas body, a darker flap, side pockets, shoulder straps over the chest
   A(PGEO.rbox, 0x6e5434, 0, 1.06, -.25, .36, .48, .22);
@@ -4667,7 +4789,9 @@ function initQuestIcon(){
   const v = miniView(el.querySelector('canvas'), { w: 62, h: 62, res: .75, fov: 30, fps: 24, tick: (dt, t) => { o.userData.inner.rotation.y = t*.9; } });
   v.sc.add(o); v.cam.position.set(0, .1, 2.7); v.cam.lookAt(0, 0, 0); QICON.v = v;
 }
-function updateQuestIcon(){ const n = G ? (G.quests || []).filter(q => q.p === 0 && q.state !== 'done').length : 0, b = $('#quest-icon .nb-n'); if (b){ b.textContent = n; b.style.display = n ? 'block' : 'none'; } }
+let QSIG = '';
+function updateQuestIcon(){ { const p = $('#quests'), sig = G ? JSON.stringify((G.quests || []).filter(q => q.p === 0).map(q => [q.id, q.state])) : ''; if (sig !== QSIG){ QSIG = sig; if (p && p.classList.contains('show') && !p.dataset.closing) fillQuests(); } }   // open panel: refilled when the missions change
+  const n = G ? (G.quests || []).filter(q => q.p === 0 && q.state !== 'done').length : 0, b = $('#quest-icon .nb-n'); if (b){ b.textContent = n; b.style.display = n ? 'block' : 'none'; } }
 function initNews(){
   const nb = document.createElement('div'); nb.id = 'news-board'; nb.title = 'Tablón de anuncios: historial de la partida';
   nb.innerHTML = '<canvas width="96" height="96"></canvas><b class="nb-n"></b>';
@@ -5110,7 +5234,7 @@ function avatarCanvas(id){
   if (snapInit()){
     let o, look;
     if (a.animal){ const an = makeAnimal(a.animal, mulberry32(a.s)); o = an.g; o.rotation.y = -.42; if (an.head){ o.updateMatrixWorld(true); look = an.head.getWorldPosition(new THREE.Vector3()); look.y -= .03; } }
-    else { const p = a.make === 'pirata' ? pirateModel(mulberry32(a.s*97), a.o) : makePerson(mulberry32(a.s*97), a.role, a.g, '#7a6a5a', a.o || {}); o = p.g; o.updateMatrixWorld(true); look = p.head.getWorldPosition(new THREE.Vector3()); look.y += .22*(p.S || 1); }
+    else { const p = a.make === 'pirata' ? pirateModel(mulberry32(a.s*97), a.o) : makePerson(mulberry32(a.s*97), a.role, a.g, '#7a6a5a', a.o || {}); if (a.nandor) useNandorHead(p); o = p.g; o.updateMatrixWorld(true); look = p.head.getWorldPosition(new THREE.Vector3()); look.y += .22*(p.S || 1); }
     SNAP.sc.add(o); o.updateMatrixWorld(true);
     const b = new THREE.Box3().setFromObject(o), sz = b.getSize(new THREE.Vector3());
     const headLook = !!look; if (!look){ look = b.getCenter(new THREE.Vector3()); look.y = b.max.y - sz.y*.32; look.z = b.max.z - sz.z*.18; }
@@ -5287,8 +5411,30 @@ function updatePlates(force){
 // ================= MARKET STALL SCENE (bank trade) AND THE THIEF (on a 7) =================
 let marketCtx = null;
 // the trader: always the same man (fixed seed), so his portrait in the action messages matches the one at the stall
-const MERCHANT = { s: 61, o: { must: true, beard: false, expr: 'sonrisa', skin: 0xc68a5a, hair: 0x2b1d14 } };
-const merchantAvatarURL = () => avatarCanvas({ id: 'mercader', role: 'comerciante', g: 'm', s: MERCHANT.s, o: MERCHANT.o }).toDataURL();
+// the merchant is Nándor (the tutorial's guide) in his trader's clothes: he sells what he brought from his travels
+const MERCHANT = { s: 61, o: { must: false, beard: false, hat: null, expr: 'sonrisa', skin: NANDOR.skin, hair: NANDOR.hair } };
+// his stories at the counter: the towns and biomes of this very game, and things that happened to him on the way
+function nandorTale(){
+  const towns = G ? G.verts.filter(v => v.building) : [], t = towns.length ? pick(towns) : null;
+  const L = [
+    'Todo lo que ves en esta mesa lo traje de mis viajes por la isla.',
+    'Recorrí los cinco biomas con esta mochila; mis botas ya no aguantan otro cerro.',
+    'Una vez el ladrón me asaltó cerca del desierto… por suerte escondí el metal en las botas.',
+    'Le enseñé a jugar a un forastero a cambio de una cena. ¡Ahora es alcalde!',
+    'El brujo de las afueras me debe un amuleto desde hace tres lunas. Algún día se lo cobro.',
+    'Crucé la isla de punta a punta en una semana; el camino más largo lo hice yo, je.',
+  ];
+  if (t){
+    const own = t.building.p === 0, P = G.players[t.building.p], tile = G.tiles[pick(t.tiles)], res = TERRAIN[tile.type].res;
+    const where = own ? `tu pueblo, <b>${t.name}</b>` : `<b>${t.name}</b>, el pueblo de ${P.name}`, of = ['pradera', 'montana'].includes(tile.type) ? 'de la' : 'del';
+    L.push(`Anoche dormí en ${where}. ${own ? '¡Qué buen pan hacen tus panaderos!' : 'Me dieron sopa caliente y un buen techo.'}`);
+    if (res) L.push(`Este ${resImg(res)} lo traje ${of} ${TERRAIN[tile.type].label.toLowerCase()} que está junto a ${where}.`);
+    if (!own) L.push(`En ${where} me contaron que ${P.name} anda juntando ${res ? resImg(res) : 'recursos'}. Yo no dije nada…`);
+    if (t.building.type === 'ciudad') L.push(`¿Ya viste ${where}? Cuando pasé por ahí era un pueblito; ahora es toda una ciudad.`);
+  }
+  return pick(L);
+}
+const merchantAvatarURL = () => avatarCanvas({ id: 'mercader', role: 'comerciante', g: 'm', s: MERCHANT.s, o: MERCHANT.o, nandor: true }).toDataURL();
 function handModel(sleeve, noCuff){
   const g = new THREE.Group(), skin = mat(0xd9a07a);
   const palm = new THREE.Mesh(PGEO.rbox, skin); palm.scale.set(.17, .055, .19); g.add(palm);
@@ -5334,7 +5480,7 @@ function buildMarket(kind, opts){
   RES.forEach((r, k) => { const it = makeResourceItem(r); it.scale.setScalar(.38); it.position.set(-1.3 + k*.65, 1.66, .05); it.rotation.y = rng()*3; sh.add(it); });
   barrel(sc, -2.6, -.6, rng); barrel(sc, 2.7, -.2, rng); crate(sc, 2.5, .9, .55, rng); crate(sc, -2.5, 1, .5, rng);
   // the npc
-  const npc = makePerson(mulberry32(MERCHANT.s*97), 'comerciante', 'm', 0x3a2a4a, MERCHANT.o); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
+  const npc = useNandorHead(makePerson(mulberry32(MERCHANT.s*97), 'comerciante', 'm', 0x3a2a4a, MERCHANT.o)); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
   const hoodC = 0x2e2438;
   npc.act = { kind: 'wave', t: 0 };   // he greets you as you come in
   // hands (player's from the front, npc's from behind)
@@ -6201,7 +6347,7 @@ async function enterMarket(kind = 'trade', opts){
   await fade(0, 380); busy = false;
   if (marketCtx && marketCtx.pier) tweenCam(marketCtx.camP.clone(), new THREE.Vector3(0, 2.0, -12), 2300);
   if (marketCtx && marketCtx.cam0) return;   // alley / courier / office / pier scenes drive themselves
-  mkSay(kind === 'thief' ? `<b>¡Alto ahí, viajero!</b> Dame la mitad de lo que cargas: <b>${opts.need}</b> recursos. Sin trucos…` : '<b>Bienvenido, viajero…</b> Pon en la mesa lo que das y lo que quieres. Luego toca la campana.');
+  mkSay(kind === 'thief' ? `<b>¡Alto ahí, viajero!</b> Dame la mitad de lo que cargas: <b>${opts.need}</b> recursos. Sin trucos…` : nandorTale() + '<br><b>Bienvenido, viajero…</b> Pon en la mesa lo que das y lo que quieres. Luego toca la campana.');
   await tweenCam(new THREE.Vector3(0, 2.35, 2.6), new THREE.Vector3(0, 1.22, -.5), 1300);
   if (marketCtx) marketCtx.ready = true;
 }
@@ -6273,7 +6419,7 @@ function ringBell(){
   const H = C.myHand; H.visible = true; C.npcHand.visible = false;   // the trader hands it over with his own arm
   C.anim = { t: 0, copies, gots, toks, k, gap };
   C.sel = { give: {}, want: {} }; markSel();
-  mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.']));
+  mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.', 'Con esto me pago el camino al siguiente pueblo.', 'Esto lo cargué desde el otro lado de la isla. Cuídelo.']));
 }
 function updateMarket(dt, t){
   const C = marketCtx; if (!C) return; C.t += dt;
@@ -6382,7 +6528,7 @@ const dropQty = k => { const [a, b] = SPECIAL[k].drop || [1, 1]; return a + Math
 const foundStr = (k, n) => `${n > 1 ? n + ' ' : ''}${specImg(k)} <b>${SPECIAL[k].name}</b>`;
 const gameRound = () => G ? Math.floor(Math.max(0, G.turnId - 1)/G.players.length) + 1 : 0;
 function bioTick(p, biome, num){
-  if (isClassic() || TUT.on) return;   // the tutorial's finds come when Ulises says
+  if (isClassic() || TUT.on) return;   // the tutorial's finds come when Nándor says
   const P = G.players[p]; P.numCount = P.numCount || {}; P.numCount[num] = (P.numCount[num] || 0) + 1;
   if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= eventFindChance(.45)) return;
   P.bioRoll = G.turnId;
@@ -6496,16 +6642,16 @@ function continueGame(){
   else notify('Continuaste tu partida · <b>es tu turno</b>', P.color, 'sys');
   return true;
 }
-// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Ulises, the traveller =================
+// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Nándor, the traveller =================
 // Always the same: same map (seed), you play first against two bots, the bots' villages are worked out from that map
 // before the game starts, the dice come out of a list and the bots only roll and pass. Each step lets you use only
-// what Ulises asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
+// what Nándor asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
 // Part 1: welcome, placement, starting resources, dice and production, building. Part 2 (same game, or straight from
 // "Cómo jugar" with the board already set up by tutSkipToPart2): the 7 and the robber, trading, cards. Part 3 (same game,
 // or from "Cómo jugar" with tutSkipToPart3): objects and flowers, the village in first person, missions, the witch and amulets.
 const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, robTile: null, chapter: '', part: 1, bots: ['Rosa', 'Nico'] };
 const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas',
-  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos'];
+  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos', 'Eventos de temporada', 'Camino más largo', 'Guardia más poderosa', 'Ganar'];
 // ---------- gates: everything asks here while the tutorial is on ----------
 // k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores',
 // 'editar' (the panel-editing button: never in a step, so it stays locked; starting the tutorial turns editing off)
@@ -6549,14 +6695,14 @@ function startTutorial(part = 1){
   Object.assign(GAME_OPTS, { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: false });
   closeMainMenu(); applyGameOpts();
   TUT.on = true; document.body.classList.add('tutorial');
-  if (editOn()) setEditPanels(false, true);   // no panel editing while Ulises points at things (the saved choice stays)
+  if (editOn()) setEditPanels(false, true);   // no panel editing while Nándor points at things (the saved choice stays)
   newGame(3, null, TUT.seed);
   const me = G.players[0];
   try { me.name = localStorage.getItem('hexterra-name') || 'Alcalde'; me.avatar = avOk(localStorage.getItem('hexterra-avatar') || me.avatar); } catch {}
   TUT.bots.forEach((n, i) => { G.players[i + 1].name = n; G.players[i + 1].bot = true; });
   G.order = [0, 1, 2]; PLATES.forEach(p => p.build()); updatePlates(true);
   TUT.plan = tutPlan();
-  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3();
+  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3(); else if (part === 4) tutSkipToPart4();
   tutGuideOpen();
   tutScript(part);
 }
@@ -6574,11 +6720,12 @@ const tutRoads = () => G.edges.filter(e => e.road === 0).length;
 async function tutScript(part){
   const gen = PAUSE.gen, me = G.players[0], alive = () => TUT.on && PAUSE.gen === gen;
   const say = (txt, o) => alive() && tutSay(txt, o), act = (txt, until, o) => alive() && tutAct(txt, until, o);
-  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish(); return; }
-  if (part === 3){ if (await tutPart3(say, act, me)) tutFinish(); return; }
+  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish(); return; }
+  if (part === 3){ if (await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish(); return; }
+  if (part === 4){ if (await tutPart4(say, act, me)) tutFinish(); return; }
   // 1 · welcome
   TUT.chapter = 0;
-  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Ulises</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
+  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Nándor</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
   if (!await say('Gana quien llegue primero a <b>10 puntos</b>. Cada pueblo vale 1 punto y cada ciudad 2.')) return;
   if (!await say(`Cada hexágono es un bioma y da un recurso: el bosque ${resImg('madera')}, el cerro ${resImg('ladrillo')}, la pradera ${resImg('lana')}, el campo ${resImg('trigo')} y la montaña ${resImg('mineral')}. El desierto no da nada.`)) return;
   if (!await say('El número de cada hexágono dice con qué tirada de dados produce. El <b>6</b> y el <b>8</b> salen seguido; el <b>2</b> y el <b>12</b>, casi nunca.', { expr: 'serio' })) return;
@@ -6628,7 +6775,7 @@ async function tutScript(part){
   TUT.glow = null; TUT.targetE = null;
   if (!await say(`Un <b>pueblo</b> cuesta ${resImg('madera')} ${resImg('ladrillo')} ${resImg('lana')} ${resImg('trigo')} y va en un cruce con tu camino, a dos tramos de cualquier otro pueblo.`)) return;
   if (!await say(`Una <b>ciudad</b> mejora uno de tus pueblos con ${resImg('trigo')}×2 ${resImg('mineral')}×3: vale 2 puntos y cobra el doble.`)) return;
-  if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish();
+  if (await tutPart2(say, act, me) && await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish();
 }
 // what player p got from tile number n (the first producing tile next to one of its buildings)
 function tutGot(p, n){
@@ -6644,9 +6791,9 @@ function tutRoadTarget(){
 // the end of this first part: keep playing freely, or back to the menu
 async function tutFinish(){
   TUT.chapter = TUT_CHAPTERS.length;
-  const r = await tutSay('¡Eso es todo por ahora! Pronto te enseño los eventos de temporada, el camino más largo y cómo se gana. ¿Quieres seguir jugando esta partida?', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['free', 'Seguir jugando']] });
-  if (r === 'menu'){ leaveToMenu(); return; }
-  tutEnd();
+  const r = await tutSay('¡Ganaste! Ya sabes todo lo que yo aprendí recorriendo la isla. Cuando juegues, búscame en el mercado: ahí vendo lo que traigo de mis viajes.', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['play', 'Jugar una partida']] });
+  if (r === 'play'){ try { sessionStorage.setItem('hexterra-menu', 'play'); } catch {} }
+  leaveToMenu();
 }
 // the tutorial lets go: from here it is a normal game against normal bots
 function tutEnd(){
@@ -6666,7 +6813,7 @@ async function tutBotTurn(p, alive){
 const tutInTrade = () => !!marketCtx || busy || !modal.classList.contains('hidden');
 // a scene (or the simple panel) was opened and has been closed for a moment: back on the board
 function tutSceneOver(){ let seen = false, calm = 0; return () => { if (tutInTrade()){ seen = true; calm = 0; return false; } if (!seen || mode !== 'board') return false; return ++calm >= 6; }; }
-// Ulises fills in what is missing for the next lesson, from his pack (and says so)
+// Nándor fills in what is missing for the next lesson, from his pack (and says so)
 async function tutTopUp(say, want, why){
   const me = G.players[0], got = {};
   Object.entries(want).forEach(([r, n]) => { const k = n - (me.res[r] || 0); if (k > 0){ me.res[r] += k; got[r] = k; } });
@@ -6709,6 +6856,7 @@ async function tutPart2(say, act, me){
   // 7 · trading
   TUT.chapter = 6;
   if (!await say('Cuando te falta algo, <b>comercia</b>. El comercio siempre acepta <b>4 iguales por 1</b> de lo que quieras.')) return false;
+  if (scenesOn() && !await say('Y el mercader… ¡soy yo, je! En las partidas vendo en el mercado lo que traigo de mis viajes por los biomas de la isla.', { expr: 'guiño' })) return false;
   if (!await tutTopUp(say, { trigo: 4 }, 'Para practicar necesitas 4 trigos.')) return false;
   TUT.glow = 'comercio';
   if (!await act('Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
@@ -6755,7 +6903,7 @@ async function tutPart2(say, act, me){
 
 // ================= PART 3: objects and flowers, the village in first person, missions, the witch and amulets =================
 // Missions are off in the tutorial (assignQuestFor0 / villageQuests) and so are the random finds (bioTick, roadFind,
-// villageGifts): here Ulises posts two fixed missions in your first village and the finds come when he says.
+// villageGifts): here Nándor posts two fixed missions in your first village and the finds come when he says.
 // New gates: 'visitar' (only the ! over your village, to go in), 'misiones' (the missions panel), 'amuletos' (the box).
 // part 3 straight away: the board as part 2 leaves it (a few rounds later, your turn, dice already rolled)
 function tutSkipToPart3(){
@@ -6823,7 +6971,7 @@ async function tutPart3(say, act, me){
   // 12 · the witch and the amulets
   TUT.chapter = 11;
   if (!await say('En las afueras de tus pueblos vive <b>el brujo</b>. Sus misiones piden varias cosas, y paga con <b>amuletos</b>.', { expr: 'serio' })) return false;
-  tutFind('lirio', 1, 'en la mochila de Ulises');
+  tutFind('lirio', 1, 'en la mochila de Nándor');
   if (!await say(`Te doy un ${specImg('lirio')} <b>lirio</b> de mi mochila: el brujo lo va a querer.`, { expr: 'guiño' })) return false;
   const q2 = tutQuest({ id: 'tut-brujo', vid: home, kind: 'brujo', role: 'brujo', gender: 'm', name: 'El brujo', items: { [found]: 1, lirio: 1 }, reward: { type: 'amulet', k: 'pluma' }, expr: 'serio',
     txt: 'Je, je… para mi caldero necesito {x}. A cambio, te daré algo que pocos han tocado.' });
@@ -6839,6 +6987,87 @@ async function tutPart3(say, act, me){
   if (!await say('Unos se lanzan a un rival (plaga, incendio, derrumbe…), otros te protegen (el escudo de roble) o te ayudan (el trébol te deja volver a tirar los dados).')) return false;
   if (!await act(`Toca tu caja de amuletos, elige la <b>Pluma del viento</b> y luego el letrero de <b>${R}</b>: le robarás 1 recurso.`, () => !((me.amulets || {}).pluma > 0) && !G.amuletPick, { allow: ['amuletos', 'jugadores'] })) return false;
   if (!await say('Cuidado: los rivales también te pueden lanzar amuletos. El <b>escudo de roble</b> bloquea el siguiente.', { expr: 'serio' })) return false;
+  return true;
+}
+
+// ================= PART 4: season events, longest road, most powerful guard, winning =================
+// part 4 straight away: the board as part 3 leaves it (a few rounds later, your turn, dice already rolled)
+function tutSkipToPart4(){
+  tutSkipToPart3();
+  G.turnId = 19; G.dice = [4, 4]; G.phase = 'main';
+  const me = G.players[0]; me.knights = Math.max(1, me.knights || 0);   // the Guardia of part 2
+  updatePlates(true); updateInventory(); refresh();
+}
+// the free spot that makes your road longest (null when none helps)
+function tutLongestStep(){
+  const base = longestRoadOf(0); let best = null, bl = base;
+  validRoads(0).forEach(e => { e.road = 0; const l = longestRoadOf(0); e.road = null; if (l > bl || (l === bl && best === null)){ bl = l; best = e; } });
+  return best ? best.id : null;
+}
+async function tutPart4(say, act, me){
+  const R = TUT.bots[0], N = TUT.bots[1];
+  // 13 · season events (the fair: trading is cheaper)
+  TUT.chapter = 12;
+  if (!await say('Cada pocas rondas llega una <b>temporada</b> que cambia la isla: lluvia, sequía, invierno, polinización… o la feria.')) return false;
+  G.evOn = true; G.event = { k: 'feria', until: gameRound() + 2 }; G.evLast = 'feria'; G.evNext = gameRound() + 99;
+  notify(`${EVENTS.feria.start} · 2 rondas`, '#c8a040'); refresh();
+  if (!await say('¡Llegó la <b>feria</b>! Arriba a la derecha aparece su placa: dice qué temporada es y cuántas rondas le quedan. Cada una dura 2 o 3.', { expr: 'risa' })) return false;
+  if (!await say(`Con la feria el comercio cambia <b>3 por 1</b> en vez de 4, y los puertos 3:1 cambian 2:1.${scenesOn() ? ' En tus pueblos verás banderines en la plaza.' : ''}`)) return false;
+  if (!await tutTopUp(say, { lana: 3 }, 'Para que lo pruebes necesitas 3 lanas.')) return false;
+  TUT.glow = 'comercio';
+  if (!await act('Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
+  TUT.glow = null;
+  if (!await act(scenesOn() ? `Pon solo 3 ${resImg('lana')} en la mesa: con la feria alcanzan para 1. Elige lo que quieras, toca la campana y luego <b>Salir del mercado</b>.` : `Da un lote de 3 ${resImg('lana')}, elige 1 y cambia.`, tutSceneOver())) return false;
+  G.event = null; G.evOn = false; refresh();
+  if (!await say('Las temporadas buenas ayudan a todos y las malas afectan a todos: aprovéchalas para planear. Se encienden o apagan en <b>Jugar</b>.')) return false;
+  // 14 · longest road
+  TUT.chapter = 13;
+  if (!await say(`Quien tenga el <b>camino más largo</b> (5 tramos seguidos o más, y más que nadie) gana un trofeo de <b>2 puntos</b>. Hoy tu camino mide ${longestRoadOf(0)}.`)) return false;
+  for (let k = 0; k < 6 && G.longest !== 0; k++){
+    const e = tutLongestStep(); if (e === null) break;
+    if (!await tutTopUp(say, { madera: 1, ladrillo: 1 }, k ? 'Otro tramo.' : 'Para alargarlo necesitas caminos.')) return false;
+    TUT.targetE = e; TUT.glow = 'camino'; const n0 = tutRoads(); { const ed = G.edges[e], a = G.verts[ed.a]; focusBoard?.(a.x, a.z, me.color); }
+    if (!await act(`Toca <b>Camino</b> y ponlo donde brilla (${longestRoadOf(0)} de 5).`, () => tutRoads() > n0, { allow: ['camino', 'tablero'] })) return false;
+    TUT.targetE = null; TUT.glow = null; await wait(900);
+  }
+  if (!await say(G.longest === 0 ? '¡El trofeo del <b>camino más largo</b> es tuyo! Pero cuidado: si alguien hace uno más largo, se lo lleva.' : 'Así se arma un camino largo. Si llegas a 5 tramos seguidos y nadie tiene uno más largo, el trofeo es tuyo.', { expr: 'risa' })) return false;
+  // 15 · most powerful guard: 3 played Guardias
+  TUT.chapter = 14;
+  const need = Math.max(0, 3 - (me.knights || 0));
+  if (need){ for (let k = 0; k < need; k++) (me.cards ||= []).push({ t: 'caballero', turn: G.turnId - 1 }); renderFan(); refresh();
+    if (!await say(`Llevas ${me.knights || 0} ${me.knights === 1 ? 'Guardia jugada' : 'Guardias jugadas'}. Quien juegue <b>3</b>, y más que nadie, tiene la <b>Guardia más poderosa</b>: otros 2 puntos. Te presto ${need === 1 ? 'una Guardia' : need + ' Guardias'} de mis viajes.`, { expr: 'guiño' })) return false; }
+  for (let k = 0; k < need && G.army !== 0; k++){
+    if (G.playedTurn === G.turnId){
+      TUT.dice = [tutDiceFor(1), tutDiceFor(2), tutDiceFor(0)]; TUT.glow = 'fin';
+      if (!await act('Solo se juega <b>una carta por turno</b>. Termina tu turno para jugar la siguiente.', () => G.current !== 0, { allow: ['fin'] })) return false;
+      TUT.glow = null;
+      if (!await act(`Juegan ${R} y ${N}…`, () => G.current === 0 && G.phase === 'roll', { wait: true })) return false;
+    }
+    if (!await act('Abre tus cartas (abajo a la izquierda) y juega una <b>Guardia</b>.', () => G.phase === 'robber', { allow: ['cartas'] })) return false;
+    if (!await act('Mueve al ladrón a otro terreno.', () => G.phase !== 'robber', { allow: ['ladron'] })) return false;
+    await wait(900);
+  }
+  if (G.phase === 'roll'){ TUT.glow = 'dados'; if (!await act('Tira los <b>dados</b>.', () => G.phase === 'main', { allow: ['dados'] })) return false; TUT.glow = null; await wait(1500); }
+  if (!await say(G.army === 0 ? '¡La <b>Guardia más poderosa</b> es tuya! Igual que el camino, otro jugador te la puede quitar si juega más Guardias.' : 'Con 3 Guardias jugadas, y más que nadie, ese trofeo será tuyo.', { expr: 'risa' })) return false;
+  // 16 · winning: 10 points, with a push
+  TUT.chapter = 15;
+  if (!await say(`Tienes <b>${vp(0)} puntos</b>. Recuerda: pueblos 1, ciudades 2, cada trofeo 2 y las cartas de Punto de desarrollo 1. Gana quien llegue a <b>10</b> en su turno.`)) return false;
+  const town = G.verts.find(v => v.building && v.building.p === 0 && v.building.type === 'pueblo');
+  if (town && vp(0) < 10){
+    if (!await tutTopUp(say, { trigo: 2, mineral: 3 }, 'Vamos a convertir un pueblo en <b>ciudad</b>.')) return false;
+    TUT.glow = 'ciudad'; focusBoard?.(town.x, town.z, me.color);
+    if (!await act('Toca <b>Ciudad</b> y elige uno de tus pueblos.', () => G.players[0].ciudades > 0, { allow: ['ciudad', 'tablero'] })) return false;
+    TUT.glow = null; await wait(900);
+  }
+  for (let k = 0; k < 6 && !G.over && vp(0) < 10; k++){
+    if (!await tutTopUp(say, CARD_COST, k ? 'Otra carta.' : `Te faltan ${10 - vp(0)}. Las cartas de <b>Punto de desarrollo</b> suman solas.`)) return false;
+    { const i = G.deck.lastIndexOf('punto'); if (i >= 0){ G.deck.splice(i, 1); G.deck.push('punto'); } else G.deck.push('punto'); }
+    const n0 = (me.cards || []).length; TUT.glow = 'carta';
+    if (!await act(`Toca <b>Carta</b> (${vp(0)} de 10 puntos).`, () => (me.cards || []).length > n0 || G.over, { allow: ['carta'] })) return false;
+    TUT.glow = null; await wait(1200);
+  }
+  if (!G.over) checkWin(0);
+  await wait(4500); if (!modal.classList.contains('hidden')) closeModal();
   return true;
 }
 // ================= MISSIONS =================
@@ -7112,7 +7341,7 @@ async function tradeLetter(target){
   for (let k=0;k<60 && (busy || marketCtx);k++) await wait(200);
   const r = await officeScene({ mode: 'write', to: Q.name, toColor: Q.color, toF: FEM.has(Q.name), from: mayorName(),
     decide: (offer, ask) => { if (!tradesLeft(0, target) || (G.current !== 0 && (G.tradeOpen !== G.turnId || target !== G.current))) return false; return isRemote(target) ? netAsk(target, 'offer', { give: offer, want: ask }, () => false, 60000) : botAcceptTrade(target, offer, ask); } });
-  if (r === null) return;
+  if (!r) return;   // closed without an answer (null or undefined)
   if (r.ok){ await courierScene(target, r.offer, r.ask); refresh(); }
   else if (!r.cancel) notify(`${Q.name} rechazó tu carta de trueque`, Q.color);
 }
@@ -10166,7 +10395,7 @@ function openMainMenu(){
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
-      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Ulises, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><div class="mbig mtparts"><button class="primary" data-go="tutorial" data-part="1">Parte 1 · Lo básico<small>Colocación, recursos iniciales, dados y construir</small></button><button data-go="tutorial" data-part="2">Parte 2 · Ladrón, comercio y cartas<small>Empieza con el tablero ya armado</small></button><button data-go="tutorial" data-part="3">Parte 3 · Misiones, brujo y el pueblo<small>Objetos y flores, amuletos y la primera persona</small></button></div><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
+      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Nándor, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><div class="mbig mtparts"><button class="primary" data-go="tutorial" data-part="1">Parte 1 · Lo básico<small>Colocación, recursos iniciales, dados y construir</small></button><button data-go="tutorial" data-part="2">Parte 2 · Ladrón, comercio y cartas<small>Empieza con el tablero ya armado</small></button><button data-go="tutorial" data-part="3">Parte 3 · Misiones, brujo y el pueblo<small>Objetos y flores, amuletos y la primera persona</small></button><button data-go="tutorial" data-part="4">Parte 4 · Eventos, trofeos y ganar<small>Temporadas, camino más largo, Guardia más poderosa</small></button></div><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
       <button class="mdaynight"></button><div class="mver">SwapHolm · v${APP_VERSION}</div>`;
@@ -10478,9 +10707,10 @@ function restartGame(){
 }
 // called once at startup (main/start.js): true if a restart was asked for and the game is already open
 function restartPending(){
+  try { if (sessionStorage.getItem('hexterra-menu') === 'play'){ sessionStorage.removeItem('hexterra-menu'); MENU.online = false; menuGo('play'); return true; } } catch {}   // "Jugar una partida" at the end of the tutorial
   let d = null; try { d = JSON.parse(sessionStorage.getItem('hexterra-restart') || 'null'); sessionStorage.removeItem('hexterra-restart'); } catch {}
   if (!d || !d.opts) return false;
-  if (d.tut){ startTutorial(d.tut === 2 ? 2 : 1); return true; }
+  if (d.tut){ startTutorial([1, 2, 3, 4].includes(d.tut) ? d.tut : 1); return true; }
   Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts(); newGame(d.n > 4 ? d.n : undefined); startRegistration();
   return true;
 }
@@ -10494,14 +10724,14 @@ async function leaveToMenu(){
 function pauseToggle(){ if (PAUSE.on) pauseClose(); else pauseOpen(); }
 $('#b-pause').innerHTML = ic('engrane');
 $('#b-pause').onclick = e => { e.stopPropagation(); pauseOpen(); };
-// ================= TUTORIAL: Ulises' panel (core/tutorial.js runs the script) =================
-// Ulises stands in a little 3D view facing you (he does not spin: he is talking to you), next to a paper note with
+// ================= TUTORIAL: Nándor's panel (core/tutorial.js runs the script) =================
+// Nándor stands in a little 3D view facing you (he does not spin: he is talking to you), next to a paper note with
 // his words. "Siguiente" moves on; when he asks for something, the note says so and only that can be used.
 const TG = { el: null, v: null, p: null, talk: 0, res: null, typing: null };
 function tutGuideOpen(){
   if (!TG.el){
     const el = TG.el = document.createElement('div'); el.id = 'tut';
-    el.innerHTML = `<div class="tutv"><canvas></canvas></div><div class="tutb"><div class="tuth"><b>Ulises</b><span>el viajero</span><em class="tutc"></em></div><p class="tutt"></p><div class="tutr"><span class="tuthint"></span><span class="tutbtns"></span></div></div>`;
+    el.innerHTML = `<div class="tutv"><canvas></canvas></div><div class="tutb"><div class="tuth"><b>Nándor</b><span>el viajero</span><em class="tutc"></em></div><p class="tutt"></p><div class="tutr"><span class="tuthint"></span><span class="tutbtns"></span></div></div>`;
     document.body.appendChild(el);
     el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-tut]'); if (TG.typing) TG.typing(); if (b && TG.res){ SFX.click?.(); const r = TG.res; TG.res = null; r(b.dataset.tut); } });   // a button answers at once; elsewhere a click shows the whole text
   }
@@ -10515,7 +10745,7 @@ function tutGuideOpen(){
       p.head.rotation.y = Math.sin(t*.7)*.12 + k*Math.sin(t*5)*.05; p.head.rotation.x = k*Math.sin(t*7)*.04;
       if (p.armL){ p.armL.rotation.x = -(.2 + k*(.5 + Math.sin(t*4)*.25)); p.armL.rotation.z = k*.25; }   // the free hand explains while he talks
     } });
-    v.sc.add(p.g); v.cam.position.set(.15, 1.7, 2.7); v.cam.lookAt(0, 1.36, 0);
+    v.sc.add(p.g); v.cam.position.set(.15, 1.8, 2.85); v.cam.lookAt(0, 1.45, 0);   // room for the straw hat
     const key = new THREE.DirectionalLight(0xfff0d8, 1.4); key.position.set(.5, 1.8, 3); v.sc.add(key);   // light on his face, under the brim
   }
 }
@@ -10557,7 +10787,7 @@ async function tutAct(html, until, o = {}){
   TUT.allow.clear(); tutGlow(null);
   return true;
 }
-// you tried something else: Ulises reminds you
+// you tried something else: Nándor reminds you
 function tutNudge(){ if (!TG.el) return; const el = TG.el; el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); TG.talk = .8; if (TG.p) setFaceExpr(TG.p, 'duda'); SFX.click?.(); }
 // the button he is talking about shines (the action bar's tokens shine in stepHexbar)
 function tutGlow(k){ document.querySelectorAll('.tutglow').forEach(x => x.classList.remove('tutglow')); if (k === 'fin') $('#b-endturn')?.classList.add('tutglow'); }

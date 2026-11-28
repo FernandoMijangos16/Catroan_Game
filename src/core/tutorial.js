@@ -1,13 +1,13 @@
-// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Ulises, the traveller =================
+// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Nándor, the traveller =================
 // Always the same: same map (seed), you play first against two bots, the bots' villages are worked out from that map
 // before the game starts, the dice come out of a list and the bots only roll and pass. Each step lets you use only
-// what Ulises asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
+// what Nándor asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
 // Part 1: welcome, placement, starting resources, dice and production, building. Part 2 (same game, or straight from
 // "Cómo jugar" with the board already set up by tutSkipToPart2): the 7 and the robber, trading, cards. Part 3 (same game,
 // or from "Cómo jugar" with tutSkipToPart3): objects and flowers, the village in first person, missions, the witch and amulets.
 const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, robTile: null, chapter: '', part: 1, bots: ['Rosa', 'Nico'] };
 const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas',
-  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos'];
+  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos', 'Eventos de temporada', 'Camino más largo', 'Guardia más poderosa', 'Ganar'];
 // ---------- gates: everything asks here while the tutorial is on ----------
 // k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores',
 // 'editar' (the panel-editing button: never in a step, so it stays locked; starting the tutorial turns editing off)
@@ -51,14 +51,14 @@ function startTutorial(part = 1){
   Object.assign(GAME_OPTS, { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: false });
   closeMainMenu(); applyGameOpts();
   TUT.on = true; document.body.classList.add('tutorial');
-  if (editOn()) setEditPanels(false, true);   // no panel editing while Ulises points at things (the saved choice stays)
+  if (editOn()) setEditPanels(false, true);   // no panel editing while Nándor points at things (the saved choice stays)
   newGame(3, null, TUT.seed);
   const me = G.players[0];
   try { me.name = localStorage.getItem('hexterra-name') || 'Alcalde'; me.avatar = avOk(localStorage.getItem('hexterra-avatar') || me.avatar); } catch {}
   TUT.bots.forEach((n, i) => { G.players[i + 1].name = n; G.players[i + 1].bot = true; });
   G.order = [0, 1, 2]; PLATES.forEach(p => p.build()); updatePlates(true);
   TUT.plan = tutPlan();
-  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3();
+  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3(); else if (part === 4) tutSkipToPart4();
   tutGuideOpen();
   tutScript(part);
 }
@@ -76,11 +76,12 @@ const tutRoads = () => G.edges.filter(e => e.road === 0).length;
 async function tutScript(part){
   const gen = PAUSE.gen, me = G.players[0], alive = () => TUT.on && PAUSE.gen === gen;
   const say = (txt, o) => alive() && tutSay(txt, o), act = (txt, until, o) => alive() && tutAct(txt, until, o);
-  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish(); return; }
-  if (part === 3){ if (await tutPart3(say, act, me)) tutFinish(); return; }
+  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish(); return; }
+  if (part === 3){ if (await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish(); return; }
+  if (part === 4){ if (await tutPart4(say, act, me)) tutFinish(); return; }
   // 1 · welcome
   TUT.chapter = 0;
-  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Ulises</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
+  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Nándor</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
   if (!await say('Gana quien llegue primero a <b>10 puntos</b>. Cada pueblo vale 1 punto y cada ciudad 2.')) return;
   if (!await say(`Cada hexágono es un bioma y da un recurso: el bosque ${resImg('madera')}, el cerro ${resImg('ladrillo')}, la pradera ${resImg('lana')}, el campo ${resImg('trigo')} y la montaña ${resImg('mineral')}. El desierto no da nada.`)) return;
   if (!await say('El número de cada hexágono dice con qué tirada de dados produce. El <b>6</b> y el <b>8</b> salen seguido; el <b>2</b> y el <b>12</b>, casi nunca.', { expr: 'serio' })) return;
@@ -130,7 +131,7 @@ async function tutScript(part){
   TUT.glow = null; TUT.targetE = null;
   if (!await say(`Un <b>pueblo</b> cuesta ${resImg('madera')} ${resImg('ladrillo')} ${resImg('lana')} ${resImg('trigo')} y va en un cruce con tu camino, a dos tramos de cualquier otro pueblo.`)) return;
   if (!await say(`Una <b>ciudad</b> mejora uno de tus pueblos con ${resImg('trigo')}×2 ${resImg('mineral')}×3: vale 2 puntos y cobra el doble.`)) return;
-  if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish();
+  if (await tutPart2(say, act, me) && await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish();
 }
 // what player p got from tile number n (the first producing tile next to one of its buildings)
 function tutGot(p, n){
@@ -146,9 +147,9 @@ function tutRoadTarget(){
 // the end of this first part: keep playing freely, or back to the menu
 async function tutFinish(){
   TUT.chapter = TUT_CHAPTERS.length;
-  const r = await tutSay('¡Eso es todo por ahora! Pronto te enseño los eventos de temporada, el camino más largo y cómo se gana. ¿Quieres seguir jugando esta partida?', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['free', 'Seguir jugando']] });
-  if (r === 'menu'){ leaveToMenu(); return; }
-  tutEnd();
+  const r = await tutSay('¡Ganaste! Ya sabes todo lo que yo aprendí recorriendo la isla. Cuando juegues, búscame en el mercado: ahí vendo lo que traigo de mis viajes.', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['play', 'Jugar una partida']] });
+  if (r === 'play'){ try { sessionStorage.setItem('hexterra-menu', 'play'); } catch {} }
+  leaveToMenu();
 }
 // the tutorial lets go: from here it is a normal game against normal bots
 function tutEnd(){
@@ -168,7 +169,7 @@ async function tutBotTurn(p, alive){
 const tutInTrade = () => !!marketCtx || busy || !modal.classList.contains('hidden');
 // a scene (or the simple panel) was opened and has been closed for a moment: back on the board
 function tutSceneOver(){ let seen = false, calm = 0; return () => { if (tutInTrade()){ seen = true; calm = 0; return false; } if (!seen || mode !== 'board') return false; return ++calm >= 6; }; }
-// Ulises fills in what is missing for the next lesson, from his pack (and says so)
+// Nándor fills in what is missing for the next lesson, from his pack (and says so)
 async function tutTopUp(say, want, why){
   const me = G.players[0], got = {};
   Object.entries(want).forEach(([r, n]) => { const k = n - (me.res[r] || 0); if (k > 0){ me.res[r] += k; got[r] = k; } });
@@ -211,6 +212,7 @@ async function tutPart2(say, act, me){
   // 7 · trading
   TUT.chapter = 6;
   if (!await say('Cuando te falta algo, <b>comercia</b>. El comercio siempre acepta <b>4 iguales por 1</b> de lo que quieras.')) return false;
+  if (scenesOn() && !await say('Y el mercader… ¡soy yo, je! En las partidas vendo en el mercado lo que traigo de mis viajes por los biomas de la isla.', { expr: 'guiño' })) return false;
   if (!await tutTopUp(say, { trigo: 4 }, 'Para practicar necesitas 4 trigos.')) return false;
   TUT.glow = 'comercio';
   if (!await act('Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
@@ -257,7 +259,7 @@ async function tutPart2(say, act, me){
 
 // ================= PART 3: objects and flowers, the village in first person, missions, the witch and amulets =================
 // Missions are off in the tutorial (assignQuestFor0 / villageQuests) and so are the random finds (bioTick, roadFind,
-// villageGifts): here Ulises posts two fixed missions in your first village and the finds come when he says.
+// villageGifts): here Nándor posts two fixed missions in your first village and the finds come when he says.
 // New gates: 'visitar' (only the ! over your village, to go in), 'misiones' (the missions panel), 'amuletos' (the box).
 // part 3 straight away: the board as part 2 leaves it (a few rounds later, your turn, dice already rolled)
 function tutSkipToPart3(){
@@ -325,7 +327,7 @@ async function tutPart3(say, act, me){
   // 12 · the witch and the amulets
   TUT.chapter = 11;
   if (!await say('En las afueras de tus pueblos vive <b>el brujo</b>. Sus misiones piden varias cosas, y paga con <b>amuletos</b>.', { expr: 'serio' })) return false;
-  tutFind('lirio', 1, 'en la mochila de Ulises');
+  tutFind('lirio', 1, 'en la mochila de Nándor');
   if (!await say(`Te doy un ${specImg('lirio')} <b>lirio</b> de mi mochila: el brujo lo va a querer.`, { expr: 'guiño' })) return false;
   const q2 = tutQuest({ id: 'tut-brujo', vid: home, kind: 'brujo', role: 'brujo', gender: 'm', name: 'El brujo', items: { [found]: 1, lirio: 1 }, reward: { type: 'amulet', k: 'pluma' }, expr: 'serio',
     txt: 'Je, je… para mi caldero necesito {x}. A cambio, te daré algo que pocos han tocado.' });
@@ -341,5 +343,86 @@ async function tutPart3(say, act, me){
   if (!await say('Unos se lanzan a un rival (plaga, incendio, derrumbe…), otros te protegen (el escudo de roble) o te ayudan (el trébol te deja volver a tirar los dados).')) return false;
   if (!await act(`Toca tu caja de amuletos, elige la <b>Pluma del viento</b> y luego el letrero de <b>${R}</b>: le robarás 1 recurso.`, () => !((me.amulets || {}).pluma > 0) && !G.amuletPick, { allow: ['amuletos', 'jugadores'] })) return false;
   if (!await say('Cuidado: los rivales también te pueden lanzar amuletos. El <b>escudo de roble</b> bloquea el siguiente.', { expr: 'serio' })) return false;
+  return true;
+}
+
+// ================= PART 4: season events, longest road, most powerful guard, winning =================
+// part 4 straight away: the board as part 3 leaves it (a few rounds later, your turn, dice already rolled)
+function tutSkipToPart4(){
+  tutSkipToPart3();
+  G.turnId = 19; G.dice = [4, 4]; G.phase = 'main';
+  const me = G.players[0]; me.knights = Math.max(1, me.knights || 0);   // the Guardia of part 2
+  updatePlates(true); updateInventory(); refresh();
+}
+// the free spot that makes your road longest (null when none helps)
+function tutLongestStep(){
+  const base = longestRoadOf(0); let best = null, bl = base;
+  validRoads(0).forEach(e => { e.road = 0; const l = longestRoadOf(0); e.road = null; if (l > bl || (l === bl && best === null)){ bl = l; best = e; } });
+  return best ? best.id : null;
+}
+async function tutPart4(say, act, me){
+  const R = TUT.bots[0], N = TUT.bots[1];
+  // 13 · season events (the fair: trading is cheaper)
+  TUT.chapter = 12;
+  if (!await say('Cada pocas rondas llega una <b>temporada</b> que cambia la isla: lluvia, sequía, invierno, polinización… o la feria.')) return false;
+  G.evOn = true; G.event = { k: 'feria', until: gameRound() + 2 }; G.evLast = 'feria'; G.evNext = gameRound() + 99;
+  notify(`${EVENTS.feria.start} · 2 rondas`, '#c8a040'); refresh();
+  if (!await say('¡Llegó la <b>feria</b>! Arriba a la derecha aparece su placa: dice qué temporada es y cuántas rondas le quedan. Cada una dura 2 o 3.', { expr: 'risa' })) return false;
+  if (!await say(`Con la feria el comercio cambia <b>3 por 1</b> en vez de 4, y los puertos 3:1 cambian 2:1.${scenesOn() ? ' En tus pueblos verás banderines en la plaza.' : ''}`)) return false;
+  if (!await tutTopUp(say, { lana: 3 }, 'Para que lo pruebes necesitas 3 lanas.')) return false;
+  TUT.glow = 'comercio';
+  if (!await act('Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
+  TUT.glow = null;
+  if (!await act(scenesOn() ? `Pon solo 3 ${resImg('lana')} en la mesa: con la feria alcanzan para 1. Elige lo que quieras, toca la campana y luego <b>Salir del mercado</b>.` : `Da un lote de 3 ${resImg('lana')}, elige 1 y cambia.`, tutSceneOver())) return false;
+  G.event = null; G.evOn = false; refresh();
+  if (!await say('Las temporadas buenas ayudan a todos y las malas afectan a todos: aprovéchalas para planear. Se encienden o apagan en <b>Jugar</b>.')) return false;
+  // 14 · longest road
+  TUT.chapter = 13;
+  if (!await say(`Quien tenga el <b>camino más largo</b> (5 tramos seguidos o más, y más que nadie) gana un trofeo de <b>2 puntos</b>. Hoy tu camino mide ${longestRoadOf(0)}.`)) return false;
+  for (let k = 0; k < 6 && G.longest !== 0; k++){
+    const e = tutLongestStep(); if (e === null) break;
+    if (!await tutTopUp(say, { madera: 1, ladrillo: 1 }, k ? 'Otro tramo.' : 'Para alargarlo necesitas caminos.')) return false;
+    TUT.targetE = e; TUT.glow = 'camino'; const n0 = tutRoads(); { const ed = G.edges[e], a = G.verts[ed.a]; focusBoard?.(a.x, a.z, me.color); }
+    if (!await act(`Toca <b>Camino</b> y ponlo donde brilla (${longestRoadOf(0)} de 5).`, () => tutRoads() > n0, { allow: ['camino', 'tablero'] })) return false;
+    TUT.targetE = null; TUT.glow = null; await wait(900);
+  }
+  if (!await say(G.longest === 0 ? '¡El trofeo del <b>camino más largo</b> es tuyo! Pero cuidado: si alguien hace uno más largo, se lo lleva.' : 'Así se arma un camino largo. Si llegas a 5 tramos seguidos y nadie tiene uno más largo, el trofeo es tuyo.', { expr: 'risa' })) return false;
+  // 15 · most powerful guard: 3 played Guardias
+  TUT.chapter = 14;
+  const need = Math.max(0, 3 - (me.knights || 0));
+  if (need){ for (let k = 0; k < need; k++) (me.cards ||= []).push({ t: 'caballero', turn: G.turnId - 1 }); renderFan(); refresh();
+    if (!await say(`Llevas ${me.knights || 0} ${me.knights === 1 ? 'Guardia jugada' : 'Guardias jugadas'}. Quien juegue <b>3</b>, y más que nadie, tiene la <b>Guardia más poderosa</b>: otros 2 puntos. Te presto ${need === 1 ? 'una Guardia' : need + ' Guardias'} de mis viajes.`, { expr: 'guiño' })) return false; }
+  for (let k = 0; k < need && G.army !== 0; k++){
+    if (G.playedTurn === G.turnId){
+      TUT.dice = [tutDiceFor(1), tutDiceFor(2), tutDiceFor(0)]; TUT.glow = 'fin';
+      if (!await act('Solo se juega <b>una carta por turno</b>. Termina tu turno para jugar la siguiente.', () => G.current !== 0, { allow: ['fin'] })) return false;
+      TUT.glow = null;
+      if (!await act(`Juegan ${R} y ${N}…`, () => G.current === 0 && G.phase === 'roll', { wait: true })) return false;
+    }
+    if (!await act('Abre tus cartas (abajo a la izquierda) y juega una <b>Guardia</b>.', () => G.phase === 'robber', { allow: ['cartas'] })) return false;
+    if (!await act('Mueve al ladrón a otro terreno.', () => G.phase !== 'robber', { allow: ['ladron'] })) return false;
+    await wait(900);
+  }
+  if (G.phase === 'roll'){ TUT.glow = 'dados'; if (!await act('Tira los <b>dados</b>.', () => G.phase === 'main', { allow: ['dados'] })) return false; TUT.glow = null; await wait(1500); }
+  if (!await say(G.army === 0 ? '¡La <b>Guardia más poderosa</b> es tuya! Igual que el camino, otro jugador te la puede quitar si juega más Guardias.' : 'Con 3 Guardias jugadas, y más que nadie, ese trofeo será tuyo.', { expr: 'risa' })) return false;
+  // 16 · winning: 10 points, with a push
+  TUT.chapter = 15;
+  if (!await say(`Tienes <b>${vp(0)} puntos</b>. Recuerda: pueblos 1, ciudades 2, cada trofeo 2 y las cartas de Punto de desarrollo 1. Gana quien llegue a <b>10</b> en su turno.`)) return false;
+  const town = G.verts.find(v => v.building && v.building.p === 0 && v.building.type === 'pueblo');
+  if (town && vp(0) < 10){
+    if (!await tutTopUp(say, { trigo: 2, mineral: 3 }, 'Vamos a convertir un pueblo en <b>ciudad</b>.')) return false;
+    TUT.glow = 'ciudad'; focusBoard?.(town.x, town.z, me.color);
+    if (!await act('Toca <b>Ciudad</b> y elige uno de tus pueblos.', () => G.players[0].ciudades > 0, { allow: ['ciudad', 'tablero'] })) return false;
+    TUT.glow = null; await wait(900);
+  }
+  for (let k = 0; k < 6 && !G.over && vp(0) < 10; k++){
+    if (!await tutTopUp(say, CARD_COST, k ? 'Otra carta.' : `Te faltan ${10 - vp(0)}. Las cartas de <b>Punto de desarrollo</b> suman solas.`)) return false;
+    { const i = G.deck.lastIndexOf('punto'); if (i >= 0){ G.deck.splice(i, 1); G.deck.push('punto'); } else G.deck.push('punto'); }
+    const n0 = (me.cards || []).length; TUT.glow = 'carta';
+    if (!await act(`Toca <b>Carta</b> (${vp(0)} de 10 puntos).`, () => (me.cards || []).length > n0 || G.over, { allow: ['carta'] })) return false;
+    TUT.glow = null; await wait(1200);
+  }
+  if (!G.over) checkWin(0);
+  await wait(4500); if (!modal.classList.contains('hidden')) closeModal();
   return true;
 }
