@@ -2170,7 +2170,7 @@ const AMBOX = { el: null, v: null, key: '' };
 function amuletsOf(p){ const a = G && G.players[p] ? G.players[p].amulets || {} : {}; return AMK.filter(k => a[k] > 0); }
 function initAmuletBox(){
   const el = AMBOX.el = document.createElement('div'); el.id = 'amubox'; el.title = 'Caja de amuletos'; el.innerHTML = '<canvas></canvas><b></b>'; document.body.appendChild(el);
-  el.addEventListener('click', e => { e.stopPropagation(); if (!document.body.classList.contains('boxfront') && !document.body.classList.contains('nocards')){ swapDeck(true); return; } openAmulets(); });
+  el.addEventListener('click', e => { e.stopPropagation(); if (!tutAllow('amuletos')) return; if (!document.body.classList.contains('boxfront') && !document.body.classList.contains('nocards')){ swapDeck(true); return; } openAmulets(); });
   if (!miniInit()) return;
   const S = { hov: 0, lid: 0 }; el.addEventListener('pointerenter', () => S.hov = 1); el.addEventListener('pointerleave', () => S.hov = 0);
   const v = AMBOX.v = miniView(el.querySelector('canvas'), { w: 112, h: 98, res: 1, fov: 30, fps: 24, tick: (dt, t) => { S.lid += (S.hov - S.lid)*Math.min(1, dt*8); if (AMBOX.inside) AMBOX.inside.children.forEach((o, i) => { o.position.y = .3 + S.lid*.14 + Math.sin(t*2 + i)*.015; if (o.userData.inner) o.userData.inner.rotation.y += dt*1.2; }); if (AMBOX.g) AMBOX.g.rotation.y = -.25 + Math.sin(t*.5)*.05; } });
@@ -2438,7 +2438,7 @@ function boardClick(e){
   if (!G || G.over) return;
   if (G.phase === 'setupV' || G.phase === 'setupE'){ setupClick(e); return; }
   if (G.setup) return;
-  if (TUT.on && !((G.buildMode && TUT.allow.has('tablero')) || (G.phase === 'robber' && TUT.allow.has('ladron')) || TUT.allow.has('puerto'))){ tutNudge(); return; }   // tutorial: the board only takes what Ulises asked for
+  if (TUT.on && !((G.buildMode && TUT.allow.has('tablero')) || (G.phase === 'robber' && TUT.allow.has('ladron')) || TUT.allow.has('puerto') || TUT.allow.has('visitar'))){ tutNudge(); return; }   // tutorial: the board only takes what Ulises asked for
   setRay(e);
   if (G.current === 0 && G.phase === 'robber'){
     const hit = ray.intersectObjects(tileGroups, true)[0];
@@ -2466,12 +2466,13 @@ function boardClick(e){
   const scr = p => { const v = p.clone().project(camera); if (v.z > 1 || v.z < -1) return Infinity; return Math.hypot(r.left + (v.x + 1)/2*r.width - e.clientX, r.top + (1 - v.y)/2*r.height - e.clientY); };
   const consider = (list, posOf, kind, prio, key) => { const hits = ray.intersectObjects(list, true);
     list.forEach(o => { const hit = hits.find(h => { let x = h.object; while (x){ if (x === o) return true; x = x.parent; } return false; }); const d = hit ? -1/(1 + hit.distance) : scr(posOf(o)); if (d < PX) cands.push({ o, kind, d, prio, key }); }); };
+  if (TUT.on && TUT.allow.has('visitar')) consider(QMARKS, wpos, 'quest', 0, o => o.userData.vid);   // the tutorial's way into your village: its !
   if (!TUT.on){   // in the tutorial only the port can be asked for here
-  consider(QMARKS, wpos, 'quest', 0, o => upTo(o, 'qvid'));
+  consider(QMARKS, wpos, 'quest', 0, o => o.userData.vid);
   consider(LUPAS, wpos, 'lupa', 1, o => upTo(o, 'lupa'));
   consider(G.verts.filter(v => v.mesh).map(v => v.mesh), wpos, 'village', 2, o => upTo(o, 'vid'));
   }
-  if (!G.buildMode && G.phase !== 'robber') consider(PORT_GROUPS, g => g.position.clone().setY(.1), 'port', 3, o => upTo(o, 'port'));
+  if (!G.buildMode && G.phase !== 'robber' && (!TUT.on || TUT.allow.has('puerto'))) consider(PORT_GROUPS, g => g.position.clone().setY(.1), 'port', 3, o => upTo(o, 'port'));
   const best = cands.sort((a, b) => (a.d < 0 || b.d < 0 ? a.d - b.d : Math.abs(a.d - b.d) < 6 ? a.prio - b.prio : a.d - b.d))[0];
   if (best){ const k = best.key(best.o);
     if (k !== undefined){
@@ -4647,7 +4648,7 @@ function questIconModel(){
 }
 function initQuestIcon(){
   const el = document.createElement('div'); el.id = 'quest-icon'; el.title = 'Misiones'; el.innerHTML = '<canvas></canvas><b class="nb-n"></b>';
-  $('#news-board').after(el); el.addEventListener('click', e => { e.stopPropagation(); SFX.click?.(); openQuests(); });
+  $('#news-board').after(el); el.addEventListener('click', e => { e.stopPropagation(); if (!tutAllow('misiones')) return; SFX.click?.(); openQuests(); });
   if (!miniInit()) return;
   const o = spinner(questIconModel(), 1.25);
   const v = miniView(el.querySelector('canvas'), { w: 62, h: 62, res: .75, fov: 30, fps: 24, tick: (dt, t) => { o.userData.inner.rotation.y = t*.9; } });
@@ -6368,7 +6369,7 @@ const dropQty = k => { const [a, b] = SPECIAL[k].drop || [1, 1]; return a + Math
 const foundStr = (k, n) => `${n > 1 ? n + ' ' : ''}${specImg(k)} <b>${SPECIAL[k].name}</b>`;
 const gameRound = () => G ? Math.floor(Math.max(0, G.turnId - 1)/G.players.length) + 1 : 0;
 function bioTick(p, biome, num){
-  if (isClassic()) return;
+  if (isClassic() || TUT.on) return;   // the tutorial's finds come when Ulises says
   const P = G.players[p]; P.numCount = P.numCount || {}; P.numCount[num] = (P.numCount[num] || 0) + 1;
   if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= eventFindChance(.45)) return;
   P.bioRoll = G.turnId;
@@ -6378,7 +6379,7 @@ function bioTick(p, biome, num){
   setTimeout(() => { giveSpecial(p, k, n); notify(`${p === 0 ? 'Encontraste' : P.name + ' encontró'} ${foundStr(k, n)} en ${TERRAIN[biome].label.toLowerCase()}`, P.color); }, 2600);
 }
 function roadFind(p, eid){
-  if (G.setup || isClassic()) return;
+  if (G.setup || isClassic() || TUT.on) return;
   const e = G.edges[eid], tiles = G.verts[e.a].tiles.filter(t => G.verts[e.b].tiles.includes(t)).map(t => G.tiles[t]);
   if (!tiles.length) return; const t = pick(tiles), P = G.players[p];
   if (Math.random() < eventFindChance(.5)){
@@ -6487,9 +6488,11 @@ function continueGame(){
 // before the game starts, the dice come out of a list and the bots only roll and pass. Each step lets you use only
 // what Ulises asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
 // Part 1: welcome, placement, starting resources, dice and production, building. Part 2 (same game, or straight from
-// "Cómo jugar" with the board already set up by tutSkipToPart2): the 7 and the robber, trading, cards.
+// "Cómo jugar" with the board already set up by tutSkipToPart2): the 7 and the robber, trading, cards. Part 3 (same game,
+// or from "Cómo jugar" with tutSkipToPart3): objects and flowers, the village in first person, missions, the witch and amulets.
 const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, robTile: null, chapter: '', part: 1, bots: ['Rosa', 'Nico'] };
-const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas'];
+const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas',
+  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos'];
 // ---------- gates: everything asks here while the tutorial is on ----------
 // k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores'
 function tutAllow(k){
@@ -6538,7 +6541,7 @@ function startTutorial(part = 1){
   TUT.bots.forEach((n, i) => { G.players[i + 1].name = n; G.players[i + 1].bot = true; });
   G.order = [0, 1, 2]; PLATES.forEach(p => p.build()); updatePlates(true);
   TUT.plan = tutPlan();
-  if (part === 2) tutSkipToPart2();
+  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3();
   tutGuideOpen();
   tutScript(part);
 }
@@ -6556,7 +6559,8 @@ const tutRoads = () => G.edges.filter(e => e.road === 0).length;
 async function tutScript(part){
   const gen = PAUSE.gen, me = G.players[0], alive = () => TUT.on && PAUSE.gen === gen;
   const say = (txt, o) => alive() && tutSay(txt, o), act = (txt, until, o) => alive() && tutAct(txt, until, o);
-  if (part === 2){ if (await tutPart2(say, act, me)) tutFinish(); return; }
+  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish(); return; }
+  if (part === 3){ if (await tutPart3(say, act, me)) tutFinish(); return; }
   // 1 · welcome
   TUT.chapter = 0;
   if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Ulises</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
@@ -6609,7 +6613,7 @@ async function tutScript(part){
   TUT.glow = null; TUT.targetE = null;
   if (!await say(`Un <b>pueblo</b> cuesta ${resImg('madera')} ${resImg('ladrillo')} ${resImg('lana')} ${resImg('trigo')} y va en un cruce con tu camino, a dos tramos de cualquier otro pueblo.`)) return;
   if (!await say(`Una <b>ciudad</b> mejora uno de tus pueblos con ${resImg('trigo')}×2 ${resImg('mineral')}×3: vale 2 puntos y cobra el doble.`)) return;
-  if (await tutPart2(say, act, me)) tutFinish();
+  if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish();
 }
 // what player p got from tile number n (the first producing tile next to one of its buildings)
 function tutGot(p, n){
@@ -6625,7 +6629,7 @@ function tutRoadTarget(){
 // the end of this first part: keep playing freely, or back to the menu
 async function tutFinish(){
   TUT.chapter = TUT_CHAPTERS.length;
-  const r = await tutSay('¡Eso es todo por ahora! Pronto te enseño las misiones, el pueblo en primera persona, los eventos y cómo se gana. ¿Quieres seguir jugando esta partida?', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['free', 'Seguir jugando']] });
+  const r = await tutSay('¡Eso es todo por ahora! Pronto te enseño los eventos de temporada, el camino más largo y cómo se gana. ¿Quieres seguir jugando esta partida?', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['free', 'Seguir jugando']] });
   if (r === 'menu'){ leaveToMenu(); return; }
   tutEnd();
 }
@@ -6731,6 +6735,95 @@ async function tutPart2(say, act, me){
   TUT.glow = 'dados';
   if (!await act('Ahora sí, tira los <b>dados</b>.', () => G.phase !== 'roll', { allow: ['dados'] })) return false;
   TUT.glow = null;
+  return true;
+}
+
+// ================= PART 3: objects and flowers, the village in first person, missions, the witch and amulets =================
+// Missions are off in the tutorial (assignQuestFor0 / villageQuests) and so are the random finds (bioTick, roadFind,
+// villageGifts): here Ulises posts two fixed missions in your first village and the finds come when he says.
+// New gates: 'visitar' (only the ! over your village, to go in), 'misiones' (the missions panel), 'amuletos' (the box).
+// part 3 straight away: the board as part 2 leaves it (a few rounds later, your turn, dice already rolled)
+function tutSkipToPart3(){
+  tutSkipToPart2();
+  G.turnId = 13; G.dice = [2, 3]; G.phase = 'main';
+  updatePlates(true); updateInventory(); refresh();
+}
+function tutQuest(o){
+  const q = { id: o.id, p: 0, vid: o.vid, items: o.items, item: Object.keys(o.items)[0], n: Object.values(o.items)[0], kind: o.kind, role: o.role, gender: o.gender, name: o.name, reward: o.reward, state: 'new', expr: o.expr };
+  q.txt = o.txt.replace('{x}', qListM(q));
+  (G.quests ||= []).push(q); drawQuestMarks(); return q;
+}
+function tutFind(k, n, where){ giveSpecial(0, k, n); notify(`Encontraste ${foundStr(k, n)} ${where}`, G.players[0].color); }
+const tutCalm = () => mode === 'board' && !busy && !marketCtx;
+async function tutPart3(say, act, me){
+  const R = TUT.bots[0], N = TUT.bots[1], home = TUT.plan[0].v, hv = G.verts[home];
+  const atHome = () => { focusBoard?.(hv.x, hv.z, me.color); pingAt?.(hv.x, hv.z, me.color); };
+  // 9 · objects and flowers
+  TUT.chapter = 8;
+  if (!await say('En la isla no solo hay recursos: también hay <b>objetos</b> y <b>flores</b>. Los aldeanos los piden en sus misiones.')) return false;
+  if (!await tutTopUp(say, { madera: 1, ladrillo: 1 }, 'Para el siguiente camino necesitas madera y ladrillo.')) return false;
+  { const r0 = tutRoads(); TUT.targetE = tutRoadTarget(); TUT.glow = 'camino';
+    if (TUT.targetE != null){ const e = G.edges[TUT.targetE], a = G.verts[e.a]; focusBoard?.(a.x, a.z, me.color); }
+    if (!await act('Construye un <b>camino</b> donde brilla. Al abrir caminos, a veces encuentras flores.', () => tutRoads() > r0, { allow: ['camino', 'tablero'] })) return false;
+    TUT.glow = null; TUT.targetE = null; await wait(900); }
+  tutFind('margarita', 2, 'junto al camino');
+  if (!await say(`¡Encontraste <b>2 margaritas</b>! Se guardan en tu ventana de <b>Objetos y flores</b>, a la izquierda.`, { expr: 'risa' })) return false;
+  if (!await say('Cuando un terreno tuyo produce seguido, a veces sale su objeto: champiñones en el bosque, cristales en la montaña, miel en la pradera, vasijas en el cerro, semillas en el campo y ámbar en el desierto.')) return false;
+  TUT.dice = [tutDiceFor(1), tutDiceFor(2), tutDiceFor(0, 'madera')]; TUT.glow = 'fin';
+  if (!await act('Termina tu turno.', () => G.current !== 0, { allow: ['fin'] })) return false;
+  TUT.glow = null;
+  if (!await act(`Juegan ${R} y ${N}…`, () => G.current === 0 && G.phase === 'roll', { wait: true })) return false;
+  TUT.glow = 'dados';
+  if (!await act('Tu turno: tira los <b>dados</b>.', () => G.phase === 'main', { allow: ['dados'] })) return false;
+  TUT.glow = null; await wait(2600);
+  let found;
+  { const n = G.dice[0] + G.dice[1], got = tutGot(0, n), biome = got ? G.tiles[[...G.verts.filter(v => v.building && v.building.p === 0).flatMap(v => v.tiles)].find(ti => G.tiles[ti].num === n && TERRAIN[G.tiles[ti].type].res === got.res)].type : 'bosque';
+    found = SPK.find(k => SPECIAL[k].kind === 'objeto' && SPECIAL[k].biome === biome) || 'hongo';
+    tutFind(found, 1, `en ${TERRAIN[biome].label.toLowerCase()}`);
+    if (!await say(`Tu ${got ? got.label : 'terreno'} volvió a producir y encontraste ${foundStr(found, 1)}. Guárdalo: alguien lo va a querer.`, { expr: 'sonrisa' })) return false; }
+  // 10 · the village (in first person; without it, the missions come to your panel)
+  TUT.chapter = 9;
+  const q1 = tutQuest({ id: 'tut-flor', vid: home, kind: 'flor', role: 'campesino', gender: 'f', name: 'Doña Lupe', items: { margarita: 2 }, reward: { type: 'res', res: { lana: 1, trigo: 1, mineral: 1 } }, expr: 'triste',
+    txt: 'Mi nieto tiene tos… con {x} le preparo un té. ¿Me ayudas?' });
+  if (scenesOn()){
+    if (!await say(`Tus pueblos se pueden <b>visitar</b>. Sobre <b>${hv.name}</b> apareció un <b>!</b> amarillo: alguien necesita ayuda.`)) return false;
+    atHome();
+    if (!await act('Toca el <b>!</b> sobre tu pueblo para entrar.', () => mode === 'village' && villageCtx && villageCtx.vid === home, { allow: ['visitar'] })) return false;
+    await wait(1800);
+    if (!await say('Estás dentro de tu pueblo. Camina con <b>W A S D</b> o las flechas, gira con <b>Q</b> y <b>E</b>, corre con <b>Shift</b> y arrastra para mirar.')) return false;
+    { const p0 = ctl.pos.clone();
+      if (!await act('Camina un poco por el pueblo.', () => mode !== 'village' || Math.hypot(ctl.pos.x - p0.x, ctl.pos.z - p0.z) > 3)) return false; }
+    if (!await say('Aquí vive tu gente: trabaja, platica, vende en el mercado y a veces te regala flores. Toca a cualquiera para platicar.')) return false;
+    if (!await act(`Junto al <b>pozo</b> hay un cartel. Ve con <b>${q1.name}</b>, que está colgando un folleto, y tócala.`, () => q1.state === 'accepted', { expr: 'duda' })) return false;
+    if (!await act('¡Aceptaste su misión! Toca <b>Tablero</b>, abajo, para volver.', () => tutCalm())) return false;
+  } else {
+    if (!await say('Con la primera persona encendida podrías entrar a tus pueblos y caminar por ellos. Sin ella, las misiones llegan directo a tu panel.')) return false;
+    if (!await act('Abre tus <b>misiones</b> (el cartel de arriba) y toca <b>Aceptar</b>.', () => q1.state === 'accepted', { allow: ['misiones'] })) return false;
+  }
+  // 11 · missions
+  TUT.chapter = 10;
+  if (!await say(`${q1.name} pidió ${qImgs(q1)} y ya los tienes. Cuando juntas lo que piden, entregas desde tu panel de misiones.`)) return false;
+  if (!await act(`Abre tus <b>misiones</b> (el cartel de arriba) y toca el <b>sello</b> para aprobar la entrega.${scenesOn() ? ' Ella irá a tu despacho.' : ''}`, () => q1.state === 'done' && tutCalm(), { allow: ['misiones'] })) return false;
+  if (!await say(`${q1.name} te pagó con ${rewardText(q1.reward)}. Cada misión da algo distinto: recursos, descuentos, caminos de regalo o cartas.`, { expr: 'risa' })) return false;
+  // 12 · the witch and the amulets
+  TUT.chapter = 11;
+  if (!await say('En las afueras de tus pueblos vive <b>el brujo</b>. Sus misiones piden varias cosas, y paga con <b>amuletos</b>.', { expr: 'serio' })) return false;
+  tutFind('lirio', 1, 'en la mochila de Ulises');
+  if (!await say(`Te doy un ${specImg('lirio')} <b>lirio</b> de mi mochila: el brujo lo va a querer.`, { expr: 'guiño' })) return false;
+  const q2 = tutQuest({ id: 'tut-brujo', vid: home, kind: 'brujo', role: 'brujo', gender: 'm', name: 'El brujo', items: { [found]: 1, lirio: 1 }, reward: { type: 'amulet', k: 'pluma' }, expr: 'serio',
+    txt: 'Je, je… para mi caldero necesito {x}. A cambio, te daré algo que pocos han tocado.' });
+  if (scenesOn()){
+    atHome();
+    if (!await act('Ahora el <b>!</b> sobre tu pueblo es morado: es el brujo. Tócalo para entrar.', () => mode === 'village' && villageCtx && villageCtx.vid === home, { allow: ['visitar'] })) return false;
+    await wait(1800);
+    if (!await act('Busca su <b>choza</b> en las afueras: le sale humo morado y tiene un <b>!</b> morado encima. Háblale.', () => q2.state === 'accepted', { expr: 'duda' })) return false;
+    if (!await act('Vuelve al <b>Tablero</b>.', () => tutCalm())) return false;
+  } else if (!await act('Abre tus <b>misiones</b> y acepta la del brujo.', () => q2.state === 'accepted', { allow: ['misiones'] })) return false;
+  if (!await act('Ya tienes lo que pide. Abre tus <b>misiones</b> y sella la entrega del brujo.', () => q2.state === 'done' && tutCalm(), { allow: ['misiones'] })) return false;
+  if (!await say('¡Un <b>amuleto</b>! Se guardan en tu <b>caja de amuletos</b>, detrás de tus cartas (abajo a la izquierda).', { expr: 'risa' })) return false;
+  if (!await say('Unos se lanzan a un rival (plaga, incendio, derrumbe…), otros te protegen (el escudo de roble) o te ayudan (el trébol te deja volver a tirar los dados).')) return false;
+  if (!await act(`Toca tu caja de amuletos, elige la <b>Pluma del viento</b> y luego el letrero de <b>${R}</b>: le robarás 1 recurso.`, () => !((me.amulets || {}).pluma > 0) && !G.amuletPick, { allow: ['amuletos', 'jugadores'] })) return false;
+  if (!await say('Cuidado: los rivales también te pueden lanzar amuletos. El <b>escudo de roble</b> bloquea el siguiente.', { expr: 'serio' })) return false;
   return true;
 }
 // ================= MISSIONS =================
@@ -7868,7 +7961,7 @@ function tickDoors(list, dt){ const now = doorNow(); for (const h of list){ cons
   const k = d.userData.open, e = k*k*(3 - 2*k); d.rotation.y = e*1.45; } }
 // ---------- your own townsfolk bring you flowers: more roads joined to the town, more often ----------
 function villageGifts(c, dt){
-  if (!c || isClassic() || !scenesOn() || !G || G.over) return; const v = G.verts[c.vid]; if (!v || !v.building || v.building.p !== 0) return;
+  if (!c || isClassic() || !scenesOn() || !G || G.over || TUT.on) return; const v = G.verts[c.vid]; if (!v || !v.building || v.building.p !== 0) return;
   c.giftT = (c.giftT === undefined ? 20 : c.giftT) - dt; if (c.giftT > 0) return; c.giftT = 40;
   if (c.V.people.some(p => p.st.kind === 'gift') || Math.random() > Math.min(.6, .12 + .12*(v.conn || 0))) return;
   const me = ctl.pos, p = c.V.people.filter(q => q.g.visible && !q.kid && !q.guard && !q.vendor && ['idle', 'walk', 'watch'].includes(q.st.kind) && Math.hypot(q.g.position.x - me.x, q.g.position.z - me.z) < 18).sort((a, b) => Math.hypot(a.g.position.x - me.x, a.g.position.z - me.z) - Math.hypot(b.g.position.x - me.x, b.g.position.z - me.z))[0];   // the nearest one
@@ -10055,7 +10148,7 @@ function openMainMenu(){
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
-      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Ulises, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><div class="mbig mtparts"><button class="primary" data-go="tutorial" data-part="1">Parte 1 · Lo básico<small>Colocación, recursos iniciales, dados y construir</small></button><button data-go="tutorial" data-part="2">Parte 2 · Ladrón, comercio y cartas<small>Empieza con el tablero ya armado</small></button></div><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
+      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Ulises, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><div class="mbig mtparts"><button class="primary" data-go="tutorial" data-part="1">Parte 1 · Lo básico<small>Colocación, recursos iniciales, dados y construir</small></button><button data-go="tutorial" data-part="2">Parte 2 · Ladrón, comercio y cartas<small>Empieza con el tablero ya armado</small></button><button data-go="tutorial" data-part="3">Parte 3 · Misiones, brujo y el pueblo<small>Objetos y flores, amuletos y la primera persona</small></button></div><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
       <button class="mdaynight"></button><div class="mver">SwapHolm · v${APP_VERSION}</div>`;

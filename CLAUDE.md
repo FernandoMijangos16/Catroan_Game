@@ -239,9 +239,18 @@ Antes de cada uno, comparte tus dudas con Fernando.
      descartas en el callejón y su ladrón va a tu terreno, `TUT.robTile`; luego sacas 7 tú), comercio (mercado 4:1,
      muelle del pirata: tu 2° pueblo va en un puerto; carta de trueque a Rosa, que acepta) y cartas (la siguiente del
      mazo es una Guardia; se juega el turno siguiente, antes de tirar). Ulises completa con `tutTopUp` lo que falte.
-   - Con primera persona apagada, los mismos pasos usan los paneles simples.
-   - Falta: misiones, brujo, amuletos, objetos y flores, el pueblo en primera persona, eventos, camino más largo,
-     Guardia más poderosa (solo se menciona) y ganar.
+   - Parte 3 (sigue en la misma partida, o desde "Cómo jugar" con `tutSkipToPart3`, que arma el tablero como queda al
+     terminar la parte 2): objetos y flores (un camino da 2 margaritas y tu bosque, al producir, su objeto), el pueblo en
+     primera persona (entras por el **!** de tu primer pueblo, caminas y aceptas el folleto de Doña Lupe junto al pozo),
+     misiones (la entregas con el sello del panel; ella va a tu despacho) y el brujo y los amuletos (su choza en las
+     afueras, su misión paga la **Pluma del viento** y la lanzas contra Rosa). Las dos misiones son fijas (`tutQuest`).
+     - En el tutorial no hay hallazgos al azar (`bioTick`, `roadFind`, `villageGifts` regresan con `TUT.on`): los da
+       Ulises cuando toca.
+     - Candados nuevos: `visitar` (solo el **!** de tu pueblo para entrar), `misiones` (el panel de misiones) y
+       `amuletos` (la caja de amuletos).
+   - Con primera persona apagada, los mismos pasos usan los paneles simples (en la parte 3, aceptar la misión en el
+     panel en vez de ir al pueblo).
+   - Falta (parte 4): eventos, camino más largo, Guardia más poderosa (solo se menciona) y ganar.
    - Es una **partida arreglada que siempre sigue los mismos pasos**: mismo mapa, dados en orden fijo, bots con
      jugadas escritas y más facilidad para conseguir las cosas. Así todo se explica en una sola partida.
    - Debe cubrir todo:
