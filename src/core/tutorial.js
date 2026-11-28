@@ -302,8 +302,9 @@ async function tutPart3(say, act, me){
     if (!await say(`Tu ${got ? got.label : 'terreno'} volvió a producir y encontraste ${foundStr(found, 1)}. Guárdalo: alguien lo va a querer.`, { expr: 'sonrisa' })) return false; }
   // 10 · the village (in first person; without it, the missions come to your panel)
   TUT.chapter = 9;
-  const q1 = tutQuest({ id: 'tut-flor', vid: home, kind: 'flor', role: 'campesino', gender: 'f', name: 'Doña Lupe', items: { margarita: 2 }, reward: { type: 'res', res: { lana: 1, trigo: 1, mineral: 1 } }, expr: 'triste',
-    txt: 'Mi nieto tiene tos… con {x} le preparo un té. ¿Me ayudas?' });
+  if (me.res.ladrillo > 0){ me.res.trigo += me.res.ladrillo; me.res.ladrillo = 0; updateInventory(); }   // she asks for what you do not have: you will trade for it
+  const q1 = tutQuest({ id: 'tut-ladrillo', vid: home, kind: 'objeto', role: 'campesino', gender: 'f', name: 'Doña Lupe', items: { ladrillo: 1 }, reward: { type: 'res', res: { lana: 1, trigo: 1, mineral: 1 } }, expr: 'triste',
+    txt: 'Se me cayó un pedazo del horno… con {x} lo arreglo y vuelvo a hornear pan. ¿Me ayudas?' });
   if (scenesOn()){
     if (!await say(`Tus pueblos se pueden <b>visitar</b>. Sobre <b>${hv.name}</b> apareció un <b>!</b> amarillo: alguien necesita ayuda.`)) return false;
     atHome();
@@ -313,7 +314,7 @@ async function tutPart3(say, act, me){
     { const p0 = ctl.pos.clone();
       if (!await act('Camina un poco por el pueblo.', () => mode !== 'village' || Math.hypot(ctl.pos.x - p0.x, ctl.pos.z - p0.z) > 3)) return false; }
     if (!await say('Aquí vive tu gente: trabaja, platica, vende en el mercado y a veces te regala flores. Toca a cualquiera para platicar.')) return false;
-    if (!await act(`Junto al <b>pozo</b> hay un cartel. Ve con <b>${q1.name}</b>, que está colgando un folleto, y tócala.`, () => q1.state === 'accepted', { expr: 'duda' })) return false;
+    if (!await tutTalkIn(act, home, q1, `Junto al <b>pozo</b> hay un cartel. Ve con <b>${q1.name}</b>, que está colgando un folleto, y tócala.`, 'Toca el <b>!</b> sobre tu pueblo para volver a entrar.')) return false;
     if (!await act('¡Aceptaste su misión! Toca <b>Tablero</b>, abajo, para volver.', () => tutCalm())) return false;
   } else {
     if (!await say('Con la primera persona encendida podrías entrar a tus pueblos y caminar por ellos. Sin ella, las misiones llegan directo a tu panel.')) return false;
@@ -321,7 +322,16 @@ async function tutPart3(say, act, me){
   }
   // 11 · missions
   TUT.chapter = 10;
-  if (!await say(`${q1.name} pidió ${qImgs(q1)} y ya los tienes. Cuando juntas lo que piden, entregas desde tu panel de misiones.`)) return false;
+  if (!await say(`${q1.name} pidió ${qImgs(q1)} y no tienes. Lo consigues en el mercado: el comercio cambia 4 iguales por 1.`)) return false;
+  for (let k = 0; k < 3 && !questReady(q1); k++){
+    if (!await tutTopUp(say, { trigo: 4 }, k ? 'Te faltan trigos para el cambio.' : 'Para el cambio necesitas 4 trigos.')) return false;
+    TUT.glow = 'comercio';
+    if (!await act(k ? `Todavía te falta ${qImgs(q1)}. Toca <b>Comercio</b> otra vez.` : 'Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
+    TUT.glow = null;
+    if (!await act(scenesOn() ? `Pon 4 ${resImg('trigo')} en la mesa, elige 1 ${resImg('ladrillo')}, toca la campana y luego <b>Salir del mercado</b>.` : `Da un lote de 4 ${resImg('trigo')}, pide 1 ${resImg('ladrillo')} y cambia.`, tutSceneOver())) return false;
+  }
+  if (!questReady(q1)){ me.res.ladrillo += 1; updateInventory(); refresh(); if (!await say(`Te doy el ${resImg('ladrillo')} de mi mochila para que sigamos.`, { expr: 'guiño' })) return false; }
+  if (!await say('¡Ya tienes lo que pide! Cuando juntas lo que piden, entregas desde tu panel de misiones.', { expr: 'risa' })) return false;
   if (!await act(`Abre tus <b>misiones</b> (el cartel de arriba) y toca el <b>sello</b> para aprobar la entrega.${scenesOn() ? ' Ella irá a tu despacho.' : ''}`, () => q1.state === 'done' && tutCalm(), { allow: ['misiones'] })) return false;
   if (!await say(`${q1.name} te pagó con ${rewardText(q1.reward)}. Cada misión da algo distinto: recursos, descuentos, caminos de regalo o cartas.`, { expr: 'risa' })) return false;
   // 12 · the witch and the amulets
@@ -335,7 +345,7 @@ async function tutPart3(say, act, me){
     atHome();
     if (!await act('Ahora el <b>!</b> sobre tu pueblo es morado: es el brujo. Tócalo para entrar.', () => mode === 'village' && villageCtx && villageCtx.vid === home, { allow: ['visitar'] })) return false;
     await wait(1800);
-    if (!await act('Busca su <b>choza</b> en las afueras: le sale humo morado y tiene un <b>!</b> morado encima. Háblale.', () => q2.state === 'accepted', { expr: 'duda' })) return false;
+    if (!await tutTalkIn(act, home, q2, 'Busca su <b>choza</b> en las afueras: le sale humo morado y tiene un <b>!</b> morado encima. Háblale.', 'Todavía no hablas con el brujo. Toca el <b>!</b> morado sobre tu pueblo para volver a entrar.')) return false;
     if (!await act('Vuelve al <b>Tablero</b>.', () => tutCalm())) return false;
   } else if (!await act('Abre tus <b>misiones</b> y acepta la del brujo.', () => q2.state === 'accepted', { allow: ['misiones'] })) return false;
   if (!await act('Ya tienes lo que pide. Abre tus <b>misiones</b> y sella la entrega del brujo.', () => q2.state === 'done' && tutCalm(), { allow: ['misiones'] })) return false;
@@ -425,4 +435,18 @@ async function tutPart4(say, act, me){
   if (!G.over) checkWin(0);
   await wait(4500); if (!modal.classList.contains('hidden')) closeModal();
   return true;
+}
+
+// talk to someone in your village (the woman at the board, the witch); if you walk out before, he asks you to go back in
+async function tutTalkIn(act, vid, q, txt, back){
+  const inside = () => mode === 'village' && villageCtx && villageCtx.vid === vid;
+  for (let k = 0; k < 20 && q.state === 'new'; k++){
+    if (!inside()){
+      { const v = G.verts[vid]; focusBoard?.(v.x, v.z, G.players[0].color); }
+      if (!await act(back, inside, { allow: ['visitar'] })) return false;
+      await wait(1800);
+    }
+    if (!await act(txt, () => q.state !== 'new' || !inside(), { expr: 'duda' })) return false;
+  }
+  return q.state !== 'new';
 }

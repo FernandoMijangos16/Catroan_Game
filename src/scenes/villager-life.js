@@ -212,6 +212,12 @@ function stepToward(V, p, tx, tz, speed, dt){
     if (pd < 2.4){ const rel = Math.atan2(Math.sin(Math.atan2(px, pz) - want), Math.cos(Math.atan2(px, pz) - want)); if (Math.abs(rel) < 1.1) want -= Math.sign(rel || 1)*(1.25 - Math.abs(rel)*.5); }
     if (pd < 1.2) p.spd = Math.min(p.spd, .35);
   }
+  // step around other villagers ahead (the push below only kept them apart: face to face they jammed and piled up)
+  if (d > 1.2){ let rel = null, bd = Math.min(1.8, d);   // close to where they go (a chat, a seat) they just arrive
+    for (const q of V.people){ if (q === p || !q.g.visible) continue; const qx = q.g.position.x - pos.x, qz = q.g.position.z - pos.z, qd = Math.hypot(qx, qz); if (qd >= bd || qd < 1e-4) continue;
+      const r = Math.atan2(Math.sin(Math.atan2(qx, qz) - want), Math.cos(Math.atan2(qx, qz) - want)); if (Math.abs(r) < .9){ bd = qd; rel = r; } }
+    if (rel !== null){ want -= (rel > 0 ? 1 : -1)*(1.1 - Math.abs(rel)*.7); if (bd < .9) p.spd = Math.min(p.spd, .5); }
+  }
   turnTo(p.g, want, Math.min(1, dt*6));
   const facing = Math.cos(want - p.g.rotation.y), st = Math.min(d, p.spd*dt*Math.max(.25, facing)), ox = pos.x, oz = pos.z;
   pos.x += Math.sin(p.g.rotation.y)*st; pos.z += Math.cos(p.g.rotation.y)*st;

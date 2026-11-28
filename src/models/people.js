@@ -214,11 +214,13 @@ function makePerson(rng, role, gender, ownerColor, opt = {}){
   [-1,1].forEach(s => add(head, PGEO.joint, skin, s*.125, .25, -.01, .025, .045, .03));
   const T = .405;
   const capM = mat(hairC);
+  const tight = ['yelmo', 'casco', 'impermeable'].includes(hat);   // close helmets: the hair stays inside (only a ponytail shows at the back)
   if (old && !f && !hat){ [-1,1].forEach(s => add(head, PGEO.rbox, hairC, s*.108, .28, -.045, .03, .085, .17)); add(head, PGEO.rbox, hairC, 0, .28, -.118, .22, .095, .03); }   // bald on top
-  else if (!hat || f){ const cap = add(head, PGEO.rbox, hairC, 0, T - .025, -.012, f ? .262 : .258, .12, .268); }
+  else if ((!hat || f) && !tight){ const cap = add(head, PGEO.rbox, hairC, 0, T - .025, -.012, f ? .262 : .258, .12, .268); }
   if (f){
-    const style = old ? 'chongo' : pick(['largo','trenzas','chongo','coleta','corto'], rng);
-    if (style === 'largo') add(head, PGEO.rbox, hairC, 0, .18, -.08, .26, .3, .12);
+    const style = old ? 'chongo' : pick(['largo','trenzas','chongo','coleta','corto'], rng);   // drawn even under a helmet: the same villagers keep their looks
+    if (tight && style !== 'coleta'){}
+    else if (style === 'largo') add(head, PGEO.rbox, hairC, 0, .18, -.08, .26, .3, .12);
     else if (style === 'trenzas') [-1,1].forEach(s => { add(head, PGEO.limb, hairC, s*.12, .22, -.05, .035, .3, .035); add(head, PGEO.joint, 0xc0392b, s*.12, -.09, -.05, .035, .03, .035); });
     else if (style === 'chongo') add(head, PGEO.joint, hairC, 0, T - .02, -.13, .085, .085, .085);
     else if (style === 'coleta') { add(head, PGEO.joint, hairC, 0, .3, -.14, .05, .05, .05); add(head, PGEO.limb, hairC, 0, .29, -.16, .04, .26, .04); }

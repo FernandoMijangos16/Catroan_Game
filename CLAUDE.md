@@ -243,6 +243,11 @@ Antes de cada uno, comparte tus dudas con Fernando.
    panel, `models/traveler.js` Nándor). Lo guía **Nándor, el viajero** (mochila con cobija, mapa, olla y farol).
    - Partida fija: semilla `TUT.seed`, tú primero contra Rosa y Nico; los pueblos de los bots salen de `tutPlan()`
      (calculado del mapa), los dados de `TUT.dice` y los bots solo tiran y pasan (`tutBotTurn`).
+   - **El guía va abajo a la derecha**, en el lugar de "Terminar turno" (pecho y sombrero, en grande), con su nota a
+     la izquierda, siempre encima de las fichas o de la ayuda del pueblo (`tutLift`). Si tapa lo que pide, se pasa a
+     la esquina de arriba a la izquierda (`.alt`). "Terminar turno" solo aparece dentro de su nota cuando él lo pide
+     (`tutGlow('fin')`). Una flecha de latón señala lo que hay que tocar (`tutArrowUpdate`), habla con un murmullo y
+     Enter (o Espacio en el tablero) es Siguiente.
    - Cada paso es `tutSay` (Siguiente) o `tutAct` (espera algo del juego); solo se puede usar lo de `TUT.allow`
      (`tutAllow` en la barra de acciones, terminar turno, tablero, letreros y cartas). El panel se aparta si tapa el
      lugar que pide (`tutDodge`). Al final: Volver al menú o Seguir jugando (bots normales).
@@ -268,6 +273,9 @@ Antes de cada uno, comparte tus dudas con Fernando.
      feria con su placa y comercias 3:1; luego la apaga), camino más largo (`tutLongestStep` marca el tramo que más lo
      alarga hasta ganar el trofeo), Guardia más poderosa (presta las Guardias que falten para 3; una por turno) y
      ganar (ciudad + cartas de Punto de desarrollo hasta 10). Al final: Volver al menú o Jugar una partida (abre Jugar).
+   - La misión de Doña Lupe pide **1 ladrillo** (fijo; si tienes, se cambian por trigo) y Nándor te lleva al mercado a
+     conseguirlo: las misiones pueden pedir recursos además de objetos (`qImg`, `questReady` con `haveOf`). Si sales del
+     pueblo sin hablar con ella o con el brujo, Nándor te pide volver a entrar (`tutTalkIn`).
    - **El tutorial está completo** (16 capítulos en 4 partes).
    - Es una **partida arreglada que siempre sigue los mismos pasos**: mismo mapa, dados en orden fijo, bots con
      jugadas escritas y más facilidad para conseguir las cosas. Así todo se explica en una sola partida.
