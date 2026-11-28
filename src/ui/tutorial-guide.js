@@ -36,7 +36,7 @@ function tutWrite(html, o = {}){
   const all = () => { done = true; nodes.forEach(([c, s]) => c.textContent = s); TG.typing = null; };
   TG.typing = all;
   (async () => { while (!done && ni < nodes.length){ const [c, s] = nodes[ni]; c.textContent = s.slice(0, ++i); if (i >= s.length){ ni++; i = 0; } if (i % 2 === 0) await new Promise(r => setTimeout(r, 12)); } if (!done) all(); })();
-  el.classList.remove('nudge');
+  el.classList.remove('nudge', 'tuck');
 }
 // a line with "Siguiente" (or other buttons): resolves with the button's key, false if the tutorial was closed
 function tutSay(html, o = {}){
@@ -57,7 +57,7 @@ async function tutAct(html, until, o = {}){
   TG.el.querySelector('.tutbtns').innerHTML = '';
   const gen = PAUSE.gen;
   while (!until()){ tutDodge(); await wait(250); if (!TUT.on || PAUSE.gen !== gen) return false; }
-  TG.el.classList.remove('right');
+  TG.el.classList.remove('right', 'tuck');
   TUT.allow.clear(); tutGlow(null);
   return true;
 }
@@ -67,7 +67,10 @@ function tutNudge(){ if (!TG.el) return; const el = TG.el; el.classList.remove('
 function tutGlow(k){ document.querySelectorAll('.tutglow').forEach(x => x.classList.remove('tutglow')); if (k === 'fin') $('#b-endturn')?.classList.add('tutglow'); }
 // the spot he asks for must never be under his note: if it is, he moves to the other side of the screen
 function tutDodge(){
-  const el = TG.el; if (!el || mode !== 'board') return;
+  const el = TG.el; if (!el) return;
+  { const a = PB.ask && PB.ask.classList.contains('on') ? PB.ask.getBoundingClientRect() : null, b = el.getBoundingClientRect();   // a villager's question (with buttons) goes over his note: he steps aside
+    el.classList.toggle('tuck', !!a && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top); }
+  if (mode !== 'board') return;
   let x = null, z = null;
   const slot = G.setup ? tutSlot() : null;
   if (slot){ if (G.phase === 'setupV'){ const v = G.verts[slot.v]; x = v.x; z = v.z; } else if (G.phase === 'setupE'){ const e = G.edges[slot.e], a = G.verts[e.a], b = G.verts[e.b]; x = (a.x + b.x)/2; z = (a.z + b.z)/2; } }
