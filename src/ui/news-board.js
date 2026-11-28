@@ -66,7 +66,7 @@ function questIconModel(){
 }
 function initQuestIcon(){
   const el = document.createElement('div'); el.id = 'quest-icon'; el.title = 'Misiones'; el.innerHTML = '<canvas></canvas><b class="nb-n"></b>';
-  $('#news-board').after(el); el.addEventListener('click', e => { e.stopPropagation(); SFX.click?.(); openQuests(); });
+  $('#news-board').after(el); el.addEventListener('click', e => { e.stopPropagation(); if (!tutAllow('misiones')) return; SFX.click?.(); openQuests(); });
   if (!miniInit()) return;
   const o = spinner(questIconModel(), 1.25);
   const v = miniView(el.querySelector('canvas'), { w: 62, h: 62, res: .75, fov: 30, fps: 24, tick: (dt, t) => { o.userData.inner.rotation.y = t*.9; } });

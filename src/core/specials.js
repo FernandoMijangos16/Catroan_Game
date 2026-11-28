@@ -70,7 +70,7 @@ const dropQty = k => { const [a, b] = SPECIAL[k].drop || [1, 1]; return a + Math
 const foundStr = (k, n) => `${n > 1 ? n + ' ' : ''}${specImg(k)} <b>${SPECIAL[k].name}</b>`;
 const gameRound = () => G ? Math.floor(Math.max(0, G.turnId - 1)/G.players.length) + 1 : 0;
 function bioTick(p, biome, num){
-  if (isClassic()) return;
+  if (isClassic() || TUT.on) return;   // the tutorial's finds come when Ulises says
   const P = G.players[p]; P.numCount = P.numCount || {}; P.numCount[num] = (P.numCount[num] || 0) + 1;
   if (gameRound() < 2 || P.numCount[num] <= 2 || P.bioRoll === G.turnId || Math.random() >= eventFindChance(.45)) return;
   P.bioRoll = G.turnId;
@@ -80,7 +80,7 @@ function bioTick(p, biome, num){
   setTimeout(() => { giveSpecial(p, k, n); notify(`${p === 0 ? 'Encontraste' : P.name + ' encontró'} ${foundStr(k, n)} en ${TERRAIN[biome].label.toLowerCase()}`, P.color); }, 2600);
 }
 function roadFind(p, eid){
-  if (G.setup || isClassic()) return;
+  if (G.setup || isClassic() || TUT.on) return;
   const e = G.edges[eid], tiles = G.verts[e.a].tiles.filter(t => G.verts[e.b].tiles.includes(t)).map(t => G.tiles[t]);
   if (!tiles.length) return; const t = pick(tiles), P = G.players[p];
   if (Math.random() < eventFindChance(.5)){

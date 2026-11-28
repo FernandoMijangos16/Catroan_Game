@@ -113,7 +113,7 @@ function tickDoors(list, dt){ const now = doorNow(); for (const h of list){ cons
   const k = d.userData.open, e = k*k*(3 - 2*k); d.rotation.y = e*1.45; } }
 // ---------- your own townsfolk bring you flowers: more roads joined to the town, more often ----------
 function villageGifts(c, dt){
-  if (!c || isClassic() || !scenesOn() || !G || G.over) return; const v = G.verts[c.vid]; if (!v || !v.building || v.building.p !== 0) return;
+  if (!c || isClassic() || !scenesOn() || !G || G.over || TUT.on) return; const v = G.verts[c.vid]; if (!v || !v.building || v.building.p !== 0) return;
   c.giftT = (c.giftT === undefined ? 20 : c.giftT) - dt; if (c.giftT > 0) return; c.giftT = 40;
   if (c.V.people.some(p => p.st.kind === 'gift') || Math.random() > Math.min(.6, .12 + .12*(v.conn || 0))) return;
   const me = ctl.pos, p = c.V.people.filter(q => q.g.visible && !q.kid && !q.guard && !q.vendor && ['idle', 'walk', 'watch'].includes(q.st.kind) && Math.hypot(q.g.position.x - me.x, q.g.position.z - me.z) < 18).sort((a, b) => Math.hypot(a.g.position.x - me.x, a.g.position.z - me.z) - Math.hypot(b.g.position.x - me.x, b.g.position.z - me.z))[0];   // the nearest one

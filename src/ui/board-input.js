@@ -15,7 +15,7 @@ function boardClick(e){
   if (!G || G.over) return;
   if (G.phase === 'setupV' || G.phase === 'setupE'){ setupClick(e); return; }
   if (G.setup) return;
-  if (TUT.on && !((G.buildMode && TUT.allow.has('tablero')) || (G.phase === 'robber' && TUT.allow.has('ladron')) || TUT.allow.has('puerto'))){ tutNudge(); return; }   // tutorial: the board only takes what Ulises asked for
+  if (TUT.on && !((G.buildMode && TUT.allow.has('tablero')) || (G.phase === 'robber' && TUT.allow.has('ladron')) || TUT.allow.has('puerto') || TUT.allow.has('visitar'))){ tutNudge(); return; }   // tutorial: the board only takes what Ulises asked for
   setRay(e);
   if (G.current === 0 && G.phase === 'robber'){
     const hit = ray.intersectObjects(tileGroups, true)[0];
@@ -43,12 +43,13 @@ function boardClick(e){
   const scr = p => { const v = p.clone().project(camera); if (v.z > 1 || v.z < -1) return Infinity; return Math.hypot(r.left + (v.x + 1)/2*r.width - e.clientX, r.top + (1 - v.y)/2*r.height - e.clientY); };
   const consider = (list, posOf, kind, prio, key) => { const hits = ray.intersectObjects(list, true);
     list.forEach(o => { const hit = hits.find(h => { let x = h.object; while (x){ if (x === o) return true; x = x.parent; } return false; }); const d = hit ? -1/(1 + hit.distance) : scr(posOf(o)); if (d < PX) cands.push({ o, kind, d, prio, key }); }); };
+  if (TUT.on && TUT.allow.has('visitar')) consider(QMARKS, wpos, 'quest', 0, o => o.userData.vid);   // the tutorial's way into your village: its !
   if (!TUT.on){   // in the tutorial only the port can be asked for here
-  consider(QMARKS, wpos, 'quest', 0, o => upTo(o, 'qvid'));
+  consider(QMARKS, wpos, 'quest', 0, o => o.userData.vid);
   consider(LUPAS, wpos, 'lupa', 1, o => upTo(o, 'lupa'));
   consider(G.verts.filter(v => v.mesh).map(v => v.mesh), wpos, 'village', 2, o => upTo(o, 'vid'));
   }
-  if (!G.buildMode && G.phase !== 'robber') consider(PORT_GROUPS, g => g.position.clone().setY(.1), 'port', 3, o => upTo(o, 'port'));
+  if (!G.buildMode && G.phase !== 'robber' && (!TUT.on || TUT.allow.has('puerto'))) consider(PORT_GROUPS, g => g.position.clone().setY(.1), 'port', 3, o => upTo(o, 'port'));
   const best = cands.sort((a, b) => (a.d < 0 || b.d < 0 ? a.d - b.d : Math.abs(a.d - b.d) < 6 ? a.prio - b.prio : a.d - b.d))[0];
   if (best){ const k = best.key(best.o);
     if (k !== undefined){

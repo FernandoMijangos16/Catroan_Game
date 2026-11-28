@@ -24,7 +24,7 @@ const AMBOX = { el: null, v: null, key: '' };
 function amuletsOf(p){ const a = G && G.players[p] ? G.players[p].amulets || {} : {}; return AMK.filter(k => a[k] > 0); }
 function initAmuletBox(){
   const el = AMBOX.el = document.createElement('div'); el.id = 'amubox'; el.title = 'Caja de amuletos'; el.innerHTML = '<canvas></canvas><b></b>'; document.body.appendChild(el);
-  el.addEventListener('click', e => { e.stopPropagation(); if (!document.body.classList.contains('boxfront') && !document.body.classList.contains('nocards')){ swapDeck(true); return; } openAmulets(); });
+  el.addEventListener('click', e => { e.stopPropagation(); if (!tutAllow('amuletos')) return; if (!document.body.classList.contains('boxfront') && !document.body.classList.contains('nocards')){ swapDeck(true); return; } openAmulets(); });
   if (!miniInit()) return;
   const S = { hov: 0, lid: 0 }; el.addEventListener('pointerenter', () => S.hov = 1); el.addEventListener('pointerleave', () => S.hov = 0);
   const v = AMBOX.v = miniView(el.querySelector('canvas'), { w: 112, h: 98, res: 1, fov: 30, fps: 24, tick: (dt, t) => { S.lid += (S.hov - S.lid)*Math.min(1, dt*8); if (AMBOX.inside) AMBOX.inside.children.forEach((o, i) => { o.position.y = .3 + S.lid*.14 + Math.sin(t*2 + i)*.015; if (o.userData.inner) o.userData.inner.rotation.y += dt*1.2; }); if (AMBOX.g) AMBOX.g.rotation.y = -.25 + Math.sin(t*.5)*.05; } });
