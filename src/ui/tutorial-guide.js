@@ -106,7 +106,7 @@ function tutArrow(pt){
   a.style.left = Math.round(pt[0]) + 'px'; a.style.top = Math.round(pt[1]) + 'px'; a.classList.add('on');
 }
 function tutArrowUpdate(){
-  if (!TUT.on || !G) return tutArrow(null);
+  if (!TUT.on || !G || !modal.classList.contains('hidden')) return tutArrow(null);   // a window is open: it has the floor
   const top = r => r && r.width ? [r.left + r.width/2, r.top - 4] : null, el = s => { const e = $(s); return e && e.offsetParent ? e.getBoundingClientRect() : null; };
   const board = (x, z) => { if (mode !== 'board') return null; const p = new THREE.Vector3(x, .35, z).project(camera), r = canvas.getBoundingClientRect(); return [r.left + (p.x + 1)/2*r.width, r.top + (1 - p.y)/2*r.height - 18]; };
   let pt = null; const k = TUT.glow;

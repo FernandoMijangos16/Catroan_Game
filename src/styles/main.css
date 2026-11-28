@@ -756,7 +756,7 @@ body.editing .fwin{cursor:grab}body.editing .fwin .ibar .edtag{pointer-events:au
 #pause .pvol input{width:240px;accent-color:#c8a040}
 body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}
 /* ---------- tutorial (ui/tutorial-guide.js): Nándor and his note ---------- */
-#tut{position:fixed;right:6px;bottom:2px;z-index:45;display:none;flex-direction:row-reverse;align-items:flex-end;pointer-events:none;zoom:min(var(--ui,1),1.5);font-family:'Pixelify Sans',monospace}
+#tut{position:fixed;right:6px;bottom:2px;z-index:39;display:none;flex-direction:row-reverse;align-items:flex-end;pointer-events:none;zoom:min(var(--ui,1),1.5);font-family:'Pixelify Sans',monospace}
 #tut.show{display:flex;animation:ofade .3s}#tut.tuck{opacity:0;pointer-events:none;transition:opacity .2s}
 #tut>*{pointer-events:auto}
 #tut.alt{right:auto;bottom:auto;left:calc(92px*var(--ui,1)/min(var(--ui,1),1.5));top:calc(96px*var(--ui,1)/min(var(--ui,1),1.5));flex-direction:column;align-items:flex-start}   /* when his corner covers the spot he asks for */

@@ -6,8 +6,10 @@ const QUEST_TXT = {
   objeto: ['Estoy preparando algo especial y me falta {x}.', 'El herrero dice que con {x} su trabajo saldría mejor.', '¿Podrías conseguirme {x}? Te recompensaré bien.'],
 };
 const qItems = q => q.items || { [q.item]: q.n };
-const qListM = q => Object.entries(qItems(q)).map(([k, n]) => `<b>${n > 1 ? n + ' ' : ''}${specImg(k)} ${SPECIAL[k].name}</b>`).join(' y ');
-const qImgs = q => Object.entries(qItems(q)).map(([k, n]) => `${specImg(k)}${n > 1 ? '×' + n : ''}`).join(' ');
+// a mission can ask for objects and flowers (P.special) or for resources (P.res, the tutorial's)
+const qImg = k => RES.includes(k) ? resImg(k) : specImg(k), qName = k => RES.includes(k) ? RES_NAME[k].toLowerCase() : SPECIAL[k].name;
+const qListM = q => Object.entries(qItems(q)).map(([k, n]) => `<b>${n > 1 ? n + ' ' : ''}${qImg(k)} ${qName(k)}</b>`).join(' y ');
+const qImgs = q => Object.entries(qItems(q)).map(([k, n]) => `${qImg(k)}${n > 1 ? '×' + n : ''}`).join(' ');
 const BUFF_TXT = { halfTrade: 'Mitad de precio en el mercado (1 cambio)', randomItem: 'Un objeto al azar al iniciar tu siguiente turno', extraRes: '+1 recurso cada vez que produzcas en tu siguiente turno' };
 function rewardText(r){
   if (r.type === 'res') return Object.entries(r.res).map(([k, n]) => `${n} ${resImg(k)}`).join(' ');
@@ -66,10 +68,10 @@ const questSeed = q => { let h = 7; for (const c of q.id) h = (h*31 + c.charCode
 const questRole = q => q.kind === 'brujo' ? 'brujo' : ROLE_LABEL[q.role] && q.role !== 'vecino' ? q.role : 'campesino';
 function questPerson(q){ const p = makePerson(mulberry32(questSeed(q)*97), questRole(q), q.kind === 'brujo' ? 'm' : q.gender, '#7a6a5a', { expr: q.expr || 'sonrisa' }); return p; }
 function questAvatar(q){ return q.kind === 'brujo' ? avatarURL('brujo') : avatarCanvas({ id: 'q' + q.id, role: questRole(q), g: q.gender, s: questSeed(q), o: { expr: q.expr || 'sonrisa' } }).toDataURL(); }
-function questReady(q){ const sp = G.players[q.p].special || {}; return Object.entries(qItems(q)).every(([k, n]) => (sp[k] || 0) >= n); }
+function questReady(q){ return Object.entries(qItems(q)).every(([k, n]) => haveOf(q.p, k) >= n); }
 function completeQuest(q){
   const P = G.players[q.p]; if (!questReady(q) || q.state === 'done') return;
-  Object.entries(qItems(q)).forEach(([k, n]) => P.special[k] -= n); q.state = 'done';
+  Object.entries(qItems(q)).forEach(([k, n]) => { if (RES.includes(k)) P.res[k] -= n; else P.special[k] -= n; }); q.state = 'done';
   const r = q.reward; P.buffs = P.buffs || {};
   if (r.type === 'res'){ Object.entries(r.res).forEach(([k, n]) => { P.res[k] += n; if (q.p === 0){ const tok = invExpect(k, n); for (let i=0;i<n;i++) flyToInventory(tok, innerWidth/2, innerHeight/2, i*.15); } }); }
   if (r.type === 'buff') P.buffs[r.buff] = true;
@@ -111,7 +113,7 @@ function fillQuests(){
   const p = $('#quests'), box = ensureParchPanel(p);
   const qs = (G.quests || []).filter(q => q.p === 0 && q.state !== 'done').sort((a, b) => (questReady(b) - questReady(a)) || (a.state === 'new') - (b.state === 'new'));
   const KIND = { flor: ['Hierbas', '🌿'], objeto: ['Objetos', '🧺'], dificil: ['Difícil', '⭐'], brujo: ['Brujo', '🔮'] };
-  const have = k => (G.players[0].special || {})[k] || 0;
+  const have = k => haveOf(0, k);
   const card = q => { const ready = q.state === 'accepted' && questReady(q), K = KIND[q.kind] || KIND.objeto, vn = G.verts[q.vid].name;
     const needs = Object.entries(qItems(q)).map(([k, n]) => `<span class="qn ${have(k) >= n ? 'ok' : ''}"><canvas class="qcv" data-k="${k}"></canvas><b>${Math.min(have(k), n)}/${n}</b></span>`).join('');
     const right = q.state === 'new' && !scenesOn() ? `<div class="qwait"><button class="qacc" data-q="${q.id}">Aceptar</button></div>` : q.state === 'new' ? `<div class="qwait">${q.kind === 'brujo' ? `Ve a su <b>choza</b> en las afueras de ${vn}` : `Busca su folleto en el <b>cartel junto al pozo</b> de ${vn}`}</div>`
@@ -186,7 +188,16 @@ function villageQuest(vid){
   who.g.traverse(o => { if (o.isMesh){ o.userData.qposter = { q, who }; villageCtx.clickables.push(o); } });
   let near = false, talked = false;
   villageCtx.anims.push((dt, t) => {
-    if (!villageCtx || q.state === 'done') return;
+    if (!villageCtx || !who.g.parent) return;
+    // once you accepted, they stop pinning, turn round and walk off into the village (they used to keep their arm up forever, in front of you)
+    if (q.state !== 'new' && !who.talking){
+      if (!who.leave){ who.leave = { t: 0, a: who.g.rotation.y + Math.PI }; mark.visible = false; if (!animal){ who.armR.rotation.set(0, 0, 0); who.armL.rotation.set(0, 0, 0); if (who.elbowR) who.elbowR.rotation.x = 0; who.head.rotation.x = 0; } }
+      const L = who.leave; L.t += dt; if (L.t > 8){ who.g.parent.remove(who.g); return; }
+      who.g.rotation.y = L.a; who.g.position.x += Math.sin(L.a)*1.1*dt; who.g.position.z += Math.cos(L.a)*1.1*dt;
+      if (villageCtx.gh) who.g.position.y = villageCtx.gh(who.g.position.x, who.g.position.z);
+      if (!animal && who.legL){ const sw = Math.sin(L.t*7)*.45; who.legL.rotation.x = sw; who.legR.rotation.x = -sw; who.armL.rotation.x = -sw*.5; who.armR.rotation.x = sw*.5; }
+      return;
+    }
     mark.visible = q.state === 'new'; mark.rotation.y = t*2; mark.position.y = (animal ? 1.25 : 2.15) + Math.sin(t*3)*.06;
     const dx = ctl.pos.x - who.g.position.x, dz = ctl.pos.z - who.g.position.z, d = Math.hypot(dx, dz);
     if (who.talking){ const a = Math.atan2(dx, dz), cur = who.g.rotation.y; who.g.rotation.y = cur + Math.atan2(Math.sin(a - cur), Math.cos(a - cur))*Math.min(1, dt*5); if (who.armR){ who.armR.rotation.x *= .9; } return; }
@@ -205,7 +216,7 @@ function posterTalk(info){
   questDialog(q, who).then(() => { who.talking = false; });
 }
 async function questDialog(q, who){
-  const have = k => (G.players[0].special || {})[k] || 0;
+  const have = k => haveOf(0, k);
   const need = Object.entries(qItems(q)).map(([k, n]) => `<span class="pc"><span class="m3 big" data-k="${k}"></span><em class="${have(k) >= n ? '' : 'hot'}">${Math.min(have(k), n)}/${n}</em></span>`).join('');
   const intro = who && who.animal ? `<span class="muted">${ANIMAL_SAYS[who.animal] || '…'} Te deja el folleto de ${q.name}:</span><br>` : '';
   const r = await pbAsk(`${intro}<b>${q.name}:</b> ${q.txt}<div class="pbprev">${need}</div><span class="muted">Te dará:</span> ${rewardText(q.reward)}`, { av: questAvatar(q), btns: [{ t: 'Ahora no', k: 'no' }, { t: 'Acepto ✔', k: 'ok', ok: true }] });
