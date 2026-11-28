@@ -256,6 +256,8 @@ Antes de cada uno, comparte tus dudas con Fernando.
        Ulises cuando toca.
      - Candados nuevos: `visitar` (solo el **!** de tu pueblo para entrar), `misiones` (el panel de misiones) y
        `amuletos` (la caja de amuletos).
+   - **El tutorial siempre enciende la primera persona** (decisión de Fernando: el pueblo y las escenas son parte de lo
+     que se explica). El camino con paneles simples de abajo se conserva, pero hoy no se usa.
    - Con primera persona apagada, los mismos pasos usan los paneles simples (en la parte 3, aceptar la misión en el
      panel en vez de ir al pueblo).
    - Falta (parte 4): eventos, camino más largo, Guardia más poderosa (solo se menciona) y ganar.
