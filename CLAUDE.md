@@ -239,7 +239,7 @@ Antes de cada uno, comparte tus dudas con Fernando.
    - Estado `G.event`, `G.evNext`, `G.evLast`, `G.evOn` en `netSnap`; los dados de probabilidad los tira quien actúa.
    - Se ve en el tablero (colores de los hexágonos por vértice, luces, nubes, partículas, charcos, hielo en la costa,
      humo, abejas, caravana de 8 carretas) y en el pueblo (lluvia, nieve, polen y abejas, bruma, banderines).
-9. **Tutorial** ("Cómo jugar") — **partes 1 y 2 hechas** (`core/tutorial.js` guion y candados, `ui/tutorial-guide.js`
+9. **Tutorial** ("Cómo jugar") — **completo (partes 1 a 4)** (`core/tutorial.js` guion y candados, `ui/tutorial-guide.js`
    panel, `models/traveler.js` Nándor). Lo guía **Nándor, el viajero** (mochila con cobija, mapa, olla y farol).
    - Partida fija: semilla `TUT.seed`, tú primero contra Rosa y Nico; los pueblos de los bots salen de `tutPlan()`
      (calculado del mapa), los dados de `TUT.dice` y los bots solo tiran y pasan (`tutBotTurn`).
@@ -264,7 +264,11 @@ Antes de cada uno, comparte tus dudas con Fernando.
      que se explica). El camino con paneles simples de abajo se conserva, pero hoy no se usa.
    - Con primera persona apagada, los mismos pasos usan los paneles simples (en la parte 3, aceptar la misión en el
      panel en vez de ir al pueblo).
-   - Falta (parte 4): eventos, camino más largo, Guardia más poderosa (solo se menciona) y ganar.
+   - Parte 4 (sigue en la misma partida, o desde "Cómo jugar" con `tutSkipToPart4`): temporada (Nándor enciende la
+     feria con su placa y comercias 3:1; luego la apaga), camino más largo (`tutLongestStep` marca el tramo que más lo
+     alarga hasta ganar el trofeo), Guardia más poderosa (presta las Guardias que falten para 3; una por turno) y
+     ganar (ciudad + cartas de Punto de desarrollo hasta 10). Al final: Volver al menú o Jugar una partida (abre Jugar).
+   - **El tutorial está completo** (16 capítulos en 4 partes).
    - Es una **partida arreglada que siempre sigue los mismos pasos**: mismo mapa, dados en orden fijo, bots con
      jugadas escritas y más facilidad para conseguir las cosas. Así todo se explica en una sola partida.
    - Debe cubrir todo:

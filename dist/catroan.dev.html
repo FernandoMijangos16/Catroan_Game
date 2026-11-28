@@ -846,7 +846,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const APP_VERSION = "0.8.0";   // filled in by build.mjs from package.json
+const APP_VERSION = "0.9.0";   // filled in by build.mjs from package.json
 const NG = { on: false };   // online match state (filled in net/net-game.js); declared first so every hook can read it
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -2434,6 +2434,7 @@ function showWin(p){
   <div class="row end"><button class="primary" id="b-new">Nueva partida</button></div>`, false);
   if (NG.on){ $('#b-new').textContent = 'Volver al menú'; $('#b-new').onclick = async () => { closeModal(); if (NG.seat === 0) netSend({ t: 'bye' }); await netLeave(); netReset(); newGame(); openMainMenu(); }; }
   else $('#b-new').onclick = () => { closeModal(); newGame(); startRegistration(); };
+  if (TUT.on) $('#b-new').style.display = 'none';   // the tutorial ends with Nándor's own buttons
   notify(`🏆 <b>${p === 0 ? '¡Ganaste la partida!' : P.name + ' ganó la partida'}</b>`, P.color);
 }
 
@@ -6650,7 +6651,7 @@ function continueGame(){
 // or from "Cómo jugar" with tutSkipToPart3): objects and flowers, the village in first person, missions, the witch and amulets.
 const TUT = { on: false, seed: 271828, plan: null, dice: [], allow: new Set(), glow: null, targetV: null, targetE: null, robTile: null, chapter: '', part: 1, bots: ['Rosa', 'Nico'] };
 const TUT_CHAPTERS = ['Bienvenida', 'Colocación', 'Recursos iniciales', 'Dados y producción', 'Construir', 'El 7 y el ladrón', 'Comercio', 'Cartas',
-  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos'];
+  'Objetos y flores', 'El pueblo', 'Misiones', 'El brujo y los amuletos', 'Eventos de temporada', 'Camino más largo', 'Guardia más poderosa', 'Ganar'];
 // ---------- gates: everything asks here while the tutorial is on ----------
 // k: 'dados', 'camino', 'pueblo', 'ciudad', 'carta', 'comercio', 'fin', 'tablero' (clicks on the board), 'cartas', 'jugadores',
 // 'editar' (the panel-editing button: never in a step, so it stays locked; starting the tutorial turns editing off)
@@ -6701,7 +6702,7 @@ function startTutorial(part = 1){
   TUT.bots.forEach((n, i) => { G.players[i + 1].name = n; G.players[i + 1].bot = true; });
   G.order = [0, 1, 2]; PLATES.forEach(p => p.build()); updatePlates(true);
   TUT.plan = tutPlan();
-  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3();
+  if (part === 2) tutSkipToPart2(); else if (part === 3) tutSkipToPart3(); else if (part === 4) tutSkipToPart4();
   tutGuideOpen();
   tutScript(part);
 }
@@ -6719,8 +6720,9 @@ const tutRoads = () => G.edges.filter(e => e.road === 0).length;
 async function tutScript(part){
   const gen = PAUSE.gen, me = G.players[0], alive = () => TUT.on && PAUSE.gen === gen;
   const say = (txt, o) => alive() && tutSay(txt, o), act = (txt, until, o) => alive() && tutAct(txt, until, o);
-  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish(); return; }
-  if (part === 3){ if (await tutPart3(say, act, me)) tutFinish(); return; }
+  if (part === 2){ if (await tutPart2(say, act, me) && await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish(); return; }
+  if (part === 3){ if (await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish(); return; }
+  if (part === 4){ if (await tutPart4(say, act, me)) tutFinish(); return; }
   // 1 · welcome
   TUT.chapter = 0;
   if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Nándor</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
@@ -6773,7 +6775,7 @@ async function tutScript(part){
   TUT.glow = null; TUT.targetE = null;
   if (!await say(`Un <b>pueblo</b> cuesta ${resImg('madera')} ${resImg('ladrillo')} ${resImg('lana')} ${resImg('trigo')} y va en un cruce con tu camino, a dos tramos de cualquier otro pueblo.`)) return;
   if (!await say(`Una <b>ciudad</b> mejora uno de tus pueblos con ${resImg('trigo')}×2 ${resImg('mineral')}×3: vale 2 puntos y cobra el doble.`)) return;
-  if (await tutPart2(say, act, me) && await tutPart3(say, act, me)) tutFinish();
+  if (await tutPart2(say, act, me) && await tutPart3(say, act, me) && await tutPart4(say, act, me)) tutFinish();
 }
 // what player p got from tile number n (the first producing tile next to one of its buildings)
 function tutGot(p, n){
@@ -6789,9 +6791,9 @@ function tutRoadTarget(){
 // the end of this first part: keep playing freely, or back to the menu
 async function tutFinish(){
   TUT.chapter = TUT_CHAPTERS.length;
-  const r = await tutSay('¡Eso es todo por ahora! Pronto te enseño los eventos de temporada, el camino más largo y cómo se gana. ¿Quieres seguir jugando esta partida?', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['free', 'Seguir jugando']] });
-  if (r === 'menu'){ leaveToMenu(); return; }
-  tutEnd();
+  const r = await tutSay('¡Ganaste! Ya sabes todo lo que yo aprendí recorriendo la isla. Cuando juegues, búscame en el mercado: ahí vendo lo que traigo de mis viajes.', { expr: 'risa', buttons: [['menu', 'Volver al menú'], ['play', 'Jugar una partida']] });
+  if (r === 'play'){ try { sessionStorage.setItem('hexterra-menu', 'play'); } catch {} }
+  leaveToMenu();
 }
 // the tutorial lets go: from here it is a normal game against normal bots
 function tutEnd(){
@@ -6985,6 +6987,87 @@ async function tutPart3(say, act, me){
   if (!await say('Unos se lanzan a un rival (plaga, incendio, derrumbe…), otros te protegen (el escudo de roble) o te ayudan (el trébol te deja volver a tirar los dados).')) return false;
   if (!await act(`Toca tu caja de amuletos, elige la <b>Pluma del viento</b> y luego el letrero de <b>${R}</b>: le robarás 1 recurso.`, () => !((me.amulets || {}).pluma > 0) && !G.amuletPick, { allow: ['amuletos', 'jugadores'] })) return false;
   if (!await say('Cuidado: los rivales también te pueden lanzar amuletos. El <b>escudo de roble</b> bloquea el siguiente.', { expr: 'serio' })) return false;
+  return true;
+}
+
+// ================= PART 4: season events, longest road, most powerful guard, winning =================
+// part 4 straight away: the board as part 3 leaves it (a few rounds later, your turn, dice already rolled)
+function tutSkipToPart4(){
+  tutSkipToPart3();
+  G.turnId = 19; G.dice = [4, 4]; G.phase = 'main';
+  const me = G.players[0]; me.knights = Math.max(1, me.knights || 0);   // the Guardia of part 2
+  updatePlates(true); updateInventory(); refresh();
+}
+// the free spot that makes your road longest (null when none helps)
+function tutLongestStep(){
+  const base = longestRoadOf(0); let best = null, bl = base;
+  validRoads(0).forEach(e => { e.road = 0; const l = longestRoadOf(0); e.road = null; if (l > bl || (l === bl && best === null)){ bl = l; best = e; } });
+  return best ? best.id : null;
+}
+async function tutPart4(say, act, me){
+  const R = TUT.bots[0], N = TUT.bots[1];
+  // 13 · season events (the fair: trading is cheaper)
+  TUT.chapter = 12;
+  if (!await say('Cada pocas rondas llega una <b>temporada</b> que cambia la isla: lluvia, sequía, invierno, polinización… o la feria.')) return false;
+  G.evOn = true; G.event = { k: 'feria', until: gameRound() + 2 }; G.evLast = 'feria'; G.evNext = gameRound() + 99;
+  notify(`${EVENTS.feria.start} · 2 rondas`, '#c8a040'); refresh();
+  if (!await say('¡Llegó la <b>feria</b>! Arriba a la derecha aparece su placa: dice qué temporada es y cuántas rondas le quedan. Cada una dura 2 o 3.', { expr: 'risa' })) return false;
+  if (!await say(`Con la feria el comercio cambia <b>3 por 1</b> en vez de 4, y los puertos 3:1 cambian 2:1.${scenesOn() ? ' En tus pueblos verás banderines en la plaza.' : ''}`)) return false;
+  if (!await tutTopUp(say, { lana: 3 }, 'Para que lo pruebes necesitas 3 lanas.')) return false;
+  TUT.glow = 'comercio';
+  if (!await act('Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
+  TUT.glow = null;
+  if (!await act(scenesOn() ? `Pon solo 3 ${resImg('lana')} en la mesa: con la feria alcanzan para 1. Elige lo que quieras, toca la campana y luego <b>Salir del mercado</b>.` : `Da un lote de 3 ${resImg('lana')}, elige 1 y cambia.`, tutSceneOver())) return false;
+  G.event = null; G.evOn = false; refresh();
+  if (!await say('Las temporadas buenas ayudan a todos y las malas afectan a todos: aprovéchalas para planear. Se encienden o apagan en <b>Jugar</b>.')) return false;
+  // 14 · longest road
+  TUT.chapter = 13;
+  if (!await say(`Quien tenga el <b>camino más largo</b> (5 tramos seguidos o más, y más que nadie) gana un trofeo de <b>2 puntos</b>. Hoy tu camino mide ${longestRoadOf(0)}.`)) return false;
+  for (let k = 0; k < 6 && G.longest !== 0; k++){
+    const e = tutLongestStep(); if (e === null) break;
+    if (!await tutTopUp(say, { madera: 1, ladrillo: 1 }, k ? 'Otro tramo.' : 'Para alargarlo necesitas caminos.')) return false;
+    TUT.targetE = e; TUT.glow = 'camino'; const n0 = tutRoads(); { const ed = G.edges[e], a = G.verts[ed.a]; focusBoard?.(a.x, a.z, me.color); }
+    if (!await act(`Toca <b>Camino</b> y ponlo donde brilla (${longestRoadOf(0)} de 5).`, () => tutRoads() > n0, { allow: ['camino', 'tablero'] })) return false;
+    TUT.targetE = null; TUT.glow = null; await wait(900);
+  }
+  if (!await say(G.longest === 0 ? '¡El trofeo del <b>camino más largo</b> es tuyo! Pero cuidado: si alguien hace uno más largo, se lo lleva.' : 'Así se arma un camino largo. Si llegas a 5 tramos seguidos y nadie tiene uno más largo, el trofeo es tuyo.', { expr: 'risa' })) return false;
+  // 15 · most powerful guard: 3 played Guardias
+  TUT.chapter = 14;
+  const need = Math.max(0, 3 - (me.knights || 0));
+  if (need){ for (let k = 0; k < need; k++) (me.cards ||= []).push({ t: 'caballero', turn: G.turnId - 1 }); renderFan(); refresh();
+    if (!await say(`Llevas ${me.knights || 0} ${me.knights === 1 ? 'Guardia jugada' : 'Guardias jugadas'}. Quien juegue <b>3</b>, y más que nadie, tiene la <b>Guardia más poderosa</b>: otros 2 puntos. Te presto ${need === 1 ? 'una Guardia' : need + ' Guardias'} de mis viajes.`, { expr: 'guiño' })) return false; }
+  for (let k = 0; k < need && G.army !== 0; k++){
+    if (G.playedTurn === G.turnId){
+      TUT.dice = [tutDiceFor(1), tutDiceFor(2), tutDiceFor(0)]; TUT.glow = 'fin';
+      if (!await act('Solo se juega <b>una carta por turno</b>. Termina tu turno para jugar la siguiente.', () => G.current !== 0, { allow: ['fin'] })) return false;
+      TUT.glow = null;
+      if (!await act(`Juegan ${R} y ${N}…`, () => G.current === 0 && G.phase === 'roll', { wait: true })) return false;
+    }
+    if (!await act('Abre tus cartas (abajo a la izquierda) y juega una <b>Guardia</b>.', () => G.phase === 'robber', { allow: ['cartas'] })) return false;
+    if (!await act('Mueve al ladrón a otro terreno.', () => G.phase !== 'robber', { allow: ['ladron'] })) return false;
+    await wait(900);
+  }
+  if (G.phase === 'roll'){ TUT.glow = 'dados'; if (!await act('Tira los <b>dados</b>.', () => G.phase === 'main', { allow: ['dados'] })) return false; TUT.glow = null; await wait(1500); }
+  if (!await say(G.army === 0 ? '¡La <b>Guardia más poderosa</b> es tuya! Igual que el camino, otro jugador te la puede quitar si juega más Guardias.' : 'Con 3 Guardias jugadas, y más que nadie, ese trofeo será tuyo.', { expr: 'risa' })) return false;
+  // 16 · winning: 10 points, with a push
+  TUT.chapter = 15;
+  if (!await say(`Tienes <b>${vp(0)} puntos</b>. Recuerda: pueblos 1, ciudades 2, cada trofeo 2 y las cartas de Punto de desarrollo 1. Gana quien llegue a <b>10</b> en su turno.`)) return false;
+  const town = G.verts.find(v => v.building && v.building.p === 0 && v.building.type === 'pueblo');
+  if (town && vp(0) < 10){
+    if (!await tutTopUp(say, { trigo: 2, mineral: 3 }, 'Vamos a convertir un pueblo en <b>ciudad</b>.')) return false;
+    TUT.glow = 'ciudad'; focusBoard?.(town.x, town.z, me.color);
+    if (!await act('Toca <b>Ciudad</b> y elige uno de tus pueblos.', () => G.players[0].ciudades > 0, { allow: ['ciudad', 'tablero'] })) return false;
+    TUT.glow = null; await wait(900);
+  }
+  for (let k = 0; k < 6 && !G.over && vp(0) < 10; k++){
+    if (!await tutTopUp(say, CARD_COST, k ? 'Otra carta.' : `Te faltan ${10 - vp(0)}. Las cartas de <b>Punto de desarrollo</b> suman solas.`)) return false;
+    { const i = G.deck.lastIndexOf('punto'); if (i >= 0){ G.deck.splice(i, 1); G.deck.push('punto'); } else G.deck.push('punto'); }
+    const n0 = (me.cards || []).length; TUT.glow = 'carta';
+    if (!await act(`Toca <b>Carta</b> (${vp(0)} de 10 puntos).`, () => (me.cards || []).length > n0 || G.over, { allow: ['carta'] })) return false;
+    TUT.glow = null; await wait(1200);
+  }
+  if (!G.over) checkWin(0);
+  await wait(4500); if (!modal.classList.contains('hidden')) closeModal();
   return true;
 }
 // ================= MISSIONS =================
@@ -10312,7 +10395,7 @@ function openMainMenu(){
         <div class="m3btns"><div class="m3b" data-act="copy"><canvas></canvas><span>Copiar clave</span></div><div class="m3b" data-act="next"><canvas></canvas><span>Siguiente</span></div></div>
         <div class="mrow"><button data-go="mp">◀ Volver</button></div></div>
       <div class="mview" data-v="join"><h2>Unirse a una partida</h2><label class="mfield">Clave de la partida<input class="mkey" maxlength="7" placeholder="K7M-2QX" autocomplete="off"></label><p class="mnote jnote"></p><div class="mrow"><button data-go="mp">◀ Volver</button><button class="primary" data-go="dojoin">Unirse ▶</button></div></div>
-      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Nándor, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><div class="mbig mtparts"><button class="primary" data-go="tutorial" data-part="1">Parte 1 · Lo básico<small>Colocación, recursos iniciales, dados y construir</small></button><button data-go="tutorial" data-part="2">Parte 2 · Ladrón, comercio y cartas<small>Empieza con el tablero ya armado</small></button><button data-go="tutorial" data-part="3">Parte 3 · Misiones, brujo y el pueblo<small>Objetos y flores, amuletos y la primera persona</small></button></div><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
+      <div class="mview" data-v="how"><h2>Cómo jugar</h2><p class="mnote">Nándor, un viajero que recorrió toda la isla, te enseña a jugar en una partida guiada contra dos bots.</p><div class="mbig mtparts"><button class="primary" data-go="tutorial" data-part="1">Parte 1 · Lo básico<small>Colocación, recursos iniciales, dados y construir</small></button><button data-go="tutorial" data-part="2">Parte 2 · Ladrón, comercio y cartas<small>Empieza con el tablero ya armado</small></button><button data-go="tutorial" data-part="3">Parte 3 · Misiones, brujo y el pueblo<small>Objetos y flores, amuletos y la primera persona</small></button><button data-go="tutorial" data-part="4">Parte 4 · Eventos, trofeos y ganar<small>Temporadas, camino más largo, Guardia más poderosa</small></button></div><div class="mrow"><button data-go="main">◀ Volver</button></div></div>
       <div class="mview" data-v="exit"><h2>¿Salir de SwapHolm?</h2><div class="mrow"><button class="no" data-go="main">No</button><button class="primary" data-go="bye">Sí, salir</button></div></div>
       <div class="mview" data-v="bye"><h2>Gracias por jugar SwapHolm</h2><p class="mnote">Ya puedes cerrar esta pestaña.</p><div class="mrow"><button data-go="main">Volver al menú</button></div></div>
       <button class="mdaynight"></button><div class="mver">SwapHolm · v${APP_VERSION}</div>`;
@@ -10624,9 +10707,10 @@ function restartGame(){
 }
 // called once at startup (main/start.js): true if a restart was asked for and the game is already open
 function restartPending(){
+  try { if (sessionStorage.getItem('hexterra-menu') === 'play'){ sessionStorage.removeItem('hexterra-menu'); MENU.online = false; menuGo('play'); return true; } } catch {}   // "Jugar una partida" at the end of the tutorial
   let d = null; try { d = JSON.parse(sessionStorage.getItem('hexterra-restart') || 'null'); sessionStorage.removeItem('hexterra-restart'); } catch {}
   if (!d || !d.opts) return false;
-  if (d.tut){ startTutorial(d.tut === 2 ? 2 : 1); return true; }
+  if (d.tut){ startTutorial([1, 2, 3, 4].includes(d.tut) ? d.tut : 1); return true; }
   Object.assign(GAME_OPTS, d.opts, { online: false }); closeMainMenu(); applyGameOpts(); newGame(d.n > 4 ? d.n : undefined); startRegistration();
   return true;
 }
