@@ -1,11 +1,11 @@
-// ================= TUTORIAL: Ulises' panel (core/tutorial.js runs the script) =================
-// Ulises stands in a little 3D view facing you (he does not spin: he is talking to you), next to a paper note with
+// ================= TUTORIAL: Nándor's panel (core/tutorial.js runs the script) =================
+// Nándor stands in a little 3D view facing you (he does not spin: he is talking to you), next to a paper note with
 // his words. "Siguiente" moves on; when he asks for something, the note says so and only that can be used.
 const TG = { el: null, v: null, p: null, talk: 0, res: null, typing: null };
 function tutGuideOpen(){
   if (!TG.el){
     const el = TG.el = document.createElement('div'); el.id = 'tut';
-    el.innerHTML = `<div class="tutv"><canvas></canvas></div><div class="tutb"><div class="tuth"><b>Ulises</b><span>el viajero</span><em class="tutc"></em></div><p class="tutt"></p><div class="tutr"><span class="tuthint"></span><span class="tutbtns"></span></div></div>`;
+    el.innerHTML = `<div class="tutv"><canvas></canvas></div><div class="tutb"><div class="tuth"><b>Nándor</b><span>el viajero</span><em class="tutc"></em></div><p class="tutt"></p><div class="tutr"><span class="tuthint"></span><span class="tutbtns"></span></div></div>`;
     document.body.appendChild(el);
     el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-tut]'); if (TG.typing) TG.typing(); if (b && TG.res){ SFX.click?.(); const r = TG.res; TG.res = null; r(b.dataset.tut); } });   // a button answers at once; elsewhere a click shows the whole text
   }
@@ -19,7 +19,7 @@ function tutGuideOpen(){
       p.head.rotation.y = Math.sin(t*.7)*.12 + k*Math.sin(t*5)*.05; p.head.rotation.x = k*Math.sin(t*7)*.04;
       if (p.armL){ p.armL.rotation.x = -(.2 + k*(.5 + Math.sin(t*4)*.25)); p.armL.rotation.z = k*.25; }   // the free hand explains while he talks
     } });
-    v.sc.add(p.g); v.cam.position.set(.15, 1.7, 2.7); v.cam.lookAt(0, 1.36, 0);
+    v.sc.add(p.g); v.cam.position.set(.15, 1.8, 2.85); v.cam.lookAt(0, 1.45, 0);   // room for the straw hat
     const key = new THREE.DirectionalLight(0xfff0d8, 1.4); key.position.set(.5, 1.8, 3); v.sc.add(key);   // light on his face, under the brim
   }
 }
@@ -61,7 +61,7 @@ async function tutAct(html, until, o = {}){
   TUT.allow.clear(); tutGlow(null);
   return true;
 }
-// you tried something else: Ulises reminds you
+// you tried something else: Nándor reminds you
 function tutNudge(){ if (!TG.el) return; const el = TG.el; el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); TG.talk = .8; if (TG.p) setFaceExpr(TG.p, 'duda'); SFX.click?.(); }
 // the button he is talking about shines (the action bar's tokens shine in stepHexbar)
 function tutGlow(k){ document.querySelectorAll('.tutglow').forEach(x => x.classList.remove('tutglow')); if (k === 'fin') $('#b-endturn')?.classList.add('tutglow'); }

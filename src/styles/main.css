@@ -755,7 +755,7 @@ body.editing .fwin{cursor:grab}body.editing .fwin .ibar .edtag{pointer-events:au
 #pause .pvol .m3{width:24px;height:24px;margin:0}#pause .pvol b{min-width:52px;color:#ffd890}
 #pause .pvol input{width:240px;accent-color:#c8a040}
 body.paused #hud-top,body.paused #board-ui,body.paused #corner{pointer-events:none}
-/* ---------- tutorial (ui/tutorial-guide.js): Ulises and his note ---------- */
+/* ---------- tutorial (ui/tutorial-guide.js): Nándor and his note ---------- */
 #tut{position:fixed;left:calc(92px*var(--ui,1));top:calc(96px*var(--ui,1));z-index:45;display:none;flex-direction:column;align-items:flex-start;pointer-events:auto;zoom:min(var(--ui,1),1.3);font-family:'Pixelify Sans',monospace;width:236px}
 #tut.right{left:auto;right:calc(92px*var(--ui,1))}
 #tut{left:calc(92px*var(--ui,1)/min(var(--ui,1),1.3));top:calc(96px*var(--ui,1)/min(var(--ui,1),1.3))}#tut.right{left:auto;right:calc(92px*var(--ui,1)/min(var(--ui,1),1.3))}   /* positions count in its own (smaller) zoom */

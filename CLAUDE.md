@@ -109,9 +109,13 @@ npm run dist:linux # AppImage · npm run dist:win → .exe con Docker (ver elect
      `LOGO_BIOMES`; la O es ese hexágono (`logoHex`, de la altura de las letras, gira sobre su eje) y las letras se arman
      con el recurso que produce (`resourceLetter`: copias de `makeResourceItem` con `InstancedMesh`, pegadas y algo
      revueltas; madera, ladrillo y metal van a lo largo del trazo, dos por casilla). Las letras **no giran**. El ícono de la app es ese hexágono (bosque, con ciudad) inclinado.
+   - **Nándor** (`models/nandor-head.js`: cara de 16×16 con sus expresiones, rizos fijos y lentes hexagonales) tiene la
+     cara de Fernando. Es el guía del tutorial (cuerpo de viajero con mochila, **sombrero de paja** alto y echado hacia
+     atrás para que se vean los rizos) y el comerciante de la tienda (sin sombrero; también su retrato). En el mercado
+     cuenta historias de sus viajes con los pueblos y biomas de la partida (`nandorTale`).
 10. **Todo modelo 3D que se muestre en la interfaz gira sobre su propio eje** (`spinner` + `userData.inner`). Las
     excepciones son los modelos que caen en el menú (cada uno conserva su inclinación), los recursos que forman las
-    letras del título y Ulises en el tutorial (te está hablando: mira hacia ti).
+    letras del título y Nándor en el tutorial (te está hablando: mira hacia ti).
 11. **Las claves de `localStorage` empiezan con `hexterra-`** a propósito, para no perder las preferencias guardadas.
     El token de reconexión en línea es `sessionStorage` `catroan-tok`.
 12. **Selección en el tablero** (`ui/board-input.js`): marcas de misión, lupas, pueblos y puertos compiten y gana lo
@@ -236,7 +240,7 @@ Antes de cada uno, comparte tus dudas con Fernando.
    - Se ve en el tablero (colores de los hexágonos por vértice, luces, nubes, partículas, charcos, hielo en la costa,
      humo, abejas, caravana de 8 carretas) y en el pueblo (lluvia, nieve, polen y abejas, bruma, banderines).
 9. **Tutorial** ("Cómo jugar") — **partes 1 y 2 hechas** (`core/tutorial.js` guion y candados, `ui/tutorial-guide.js`
-   panel, `models/traveler.js` Ulises). Lo guía **Ulises, el viajero** (mochila con cobija, mapa, olla y farol).
+   panel, `models/traveler.js` Nándor). Lo guía **Nándor, el viajero** (mochila con cobija, mapa, olla y farol).
    - Partida fija: semilla `TUT.seed`, tú primero contra Rosa y Nico; los pueblos de los bots salen de `tutPlan()`
      (calculado del mapa), los dados de `TUT.dice` y los bots solo tiran y pasan (`tutBotTurn`).
    - Cada paso es `tutSay` (Siguiente) o `tutAct` (espera algo del juego); solo se puede usar lo de `TUT.allow`
@@ -246,14 +250,14 @@ Antes de cada uno, comparte tus dudas con Fernando.
      partida, o desde "Cómo jugar" con `tutSkipToPart2`, que arma el tablero como quedaría): el 7 (un bot saca 7, tú
      descartas en el callejón y su ladrón va a tu terreno, `TUT.robTile`; luego sacas 7 tú), comercio (mercado 4:1,
      muelle del pirata: tu 2° pueblo va en un puerto; carta de trueque a Rosa, que acepta) y cartas (la siguiente del
-     mazo es una Guardia; se juega el turno siguiente, antes de tirar). Ulises completa con `tutTopUp` lo que falte.
+     mazo es una Guardia; se juega el turno siguiente, antes de tirar). Nándor completa con `tutTopUp` lo que falte.
    - Parte 3 (sigue en la misma partida, o desde "Cómo jugar" con `tutSkipToPart3`, que arma el tablero como queda al
      terminar la parte 2): objetos y flores (un camino da 2 margaritas y tu bosque, al producir, su objeto), el pueblo en
      primera persona (entras por el **!** de tu primer pueblo, caminas y aceptas el folleto de Doña Lupe junto al pozo),
      misiones (la entregas con el sello del panel; ella va a tu despacho) y el brujo y los amuletos (su choza en las
      afueras, su misión paga la **Pluma del viento** y la lanzas contra Rosa). Las dos misiones son fijas (`tutQuest`).
      - En el tutorial no hay hallazgos al azar (`bioTick`, `roadFind`, `villageGifts` regresan con `TUT.on`): los da
-       Ulises cuando toca.
+       Nándor cuando toca.
      - Candados nuevos: `visitar` (solo el **!** de tu pueblo para entrar), `misiones` (el panel de misiones) y
        `amuletos` (la caja de amuletos).
    - **El tutorial siempre enciende la primera persona** (decisión de Fernando: el pueblo y las escenas son parte de lo

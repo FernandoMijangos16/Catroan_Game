@@ -1,8 +1,30 @@
 // ================= MARKET STALL SCENE (bank trade) AND THE THIEF (on a 7) =================
 let marketCtx = null;
 // the trader: always the same man (fixed seed), so his portrait in the action messages matches the one at the stall
-const MERCHANT = { s: 61, o: { must: true, beard: false, expr: 'sonrisa', skin: 0xc68a5a, hair: 0x2b1d14 } };
-const merchantAvatarURL = () => avatarCanvas({ id: 'mercader', role: 'comerciante', g: 'm', s: MERCHANT.s, o: MERCHANT.o }).toDataURL();
+// the merchant is Nándor (the tutorial's guide) in his trader's clothes: he sells what he brought from his travels
+const MERCHANT = { s: 61, o: { must: false, beard: false, hat: null, expr: 'sonrisa', skin: NANDOR.skin, hair: NANDOR.hair } };
+// his stories at the counter: the towns and biomes of this very game, and things that happened to him on the way
+function nandorTale(){
+  const towns = G ? G.verts.filter(v => v.building) : [], t = towns.length ? pick(towns) : null;
+  const L = [
+    'Todo lo que ves en esta mesa lo traje de mis viajes por la isla.',
+    'Recorrí los cinco biomas con esta mochila; mis botas ya no aguantan otro cerro.',
+    'Una vez el ladrón me asaltó cerca del desierto… por suerte escondí el metal en las botas.',
+    'Le enseñé a jugar a un forastero a cambio de una cena. ¡Ahora es alcalde!',
+    'El brujo de las afueras me debe un amuleto desde hace tres lunas. Algún día se lo cobro.',
+    'Crucé la isla de punta a punta en una semana; el camino más largo lo hice yo, je.',
+  ];
+  if (t){
+    const own = t.building.p === 0, P = G.players[t.building.p], tile = G.tiles[pick(t.tiles)], res = TERRAIN[tile.type].res;
+    const where = own ? `tu pueblo, <b>${t.name}</b>` : `<b>${t.name}</b>, el pueblo de ${P.name}`, of = ['pradera', 'montana'].includes(tile.type) ? 'de la' : 'del';
+    L.push(`Anoche dormí en ${where}. ${own ? '¡Qué buen pan hacen tus panaderos!' : 'Me dieron sopa caliente y un buen techo.'}`);
+    if (res) L.push(`Este ${resImg(res)} lo traje ${of} ${TERRAIN[tile.type].label.toLowerCase()} que está junto a ${where}.`);
+    if (!own) L.push(`En ${where} me contaron que ${P.name} anda juntando ${res ? resImg(res) : 'recursos'}. Yo no dije nada…`);
+    if (t.building.type === 'ciudad') L.push(`¿Ya viste ${where}? Cuando pasé por ahí era un pueblito; ahora es toda una ciudad.`);
+  }
+  return pick(L);
+}
+const merchantAvatarURL = () => avatarCanvas({ id: 'mercader', role: 'comerciante', g: 'm', s: MERCHANT.s, o: MERCHANT.o, nandor: true }).toDataURL();
 function handModel(sleeve, noCuff){
   const g = new THREE.Group(), skin = mat(0xd9a07a);
   const palm = new THREE.Mesh(PGEO.rbox, skin); palm.scale.set(.17, .055, .19); g.add(palm);
@@ -48,7 +70,7 @@ function buildMarket(kind, opts){
   RES.forEach((r, k) => { const it = makeResourceItem(r); it.scale.setScalar(.38); it.position.set(-1.3 + k*.65, 1.66, .05); it.rotation.y = rng()*3; sh.add(it); });
   barrel(sc, -2.6, -.6, rng); barrel(sc, 2.7, -.2, rng); crate(sc, 2.5, .9, .55, rng); crate(sc, -2.5, 1, .5, rng);
   // the npc
-  const npc = makePerson(mulberry32(MERCHANT.s*97), 'comerciante', 'm', 0x3a2a4a, MERCHANT.o); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
+  const npc = useNandorHead(makePerson(mulberry32(MERCHANT.s*97), 'comerciante', 'm', 0x3a2a4a, MERCHANT.o)); npc.g.position.set(0, 0, -.95); sc.add(npc.g);
   const hoodC = 0x2e2438;
   npc.act = { kind: 'wave', t: 0 };   // he greets you as you come in
   // hands (player's from the front, npc's from behind)

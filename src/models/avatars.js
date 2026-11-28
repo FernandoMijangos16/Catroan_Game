@@ -30,7 +30,7 @@ function avatarCanvas(id){
   if (snapInit()){
     let o, look;
     if (a.animal){ const an = makeAnimal(a.animal, mulberry32(a.s)); o = an.g; o.rotation.y = -.42; if (an.head){ o.updateMatrixWorld(true); look = an.head.getWorldPosition(new THREE.Vector3()); look.y -= .03; } }
-    else { const p = a.make === 'pirata' ? pirateModel(mulberry32(a.s*97), a.o) : makePerson(mulberry32(a.s*97), a.role, a.g, '#7a6a5a', a.o || {}); o = p.g; o.updateMatrixWorld(true); look = p.head.getWorldPosition(new THREE.Vector3()); look.y += .22*(p.S || 1); }
+    else { const p = a.make === 'pirata' ? pirateModel(mulberry32(a.s*97), a.o) : makePerson(mulberry32(a.s*97), a.role, a.g, '#7a6a5a', a.o || {}); if (a.nandor) useNandorHead(p); o = p.g; o.updateMatrixWorld(true); look = p.head.getWorldPosition(new THREE.Vector3()); look.y += .22*(p.S || 1); }
     SNAP.sc.add(o); o.updateMatrixWorld(true);
     const b = new THREE.Box3().setFromObject(o), sz = b.getSize(new THREE.Vector3());
     const headLook = !!look; if (!look){ look = b.getCenter(new THREE.Vector3()); look.y = b.max.y - sz.y*.32; look.z = b.max.z - sz.z*.18; }

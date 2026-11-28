@@ -19,7 +19,7 @@ async function enterMarket(kind = 'trade', opts){
   await fade(0, 380); busy = false;
   if (marketCtx && marketCtx.pier) tweenCam(marketCtx.camP.clone(), new THREE.Vector3(0, 2.0, -12), 2300);
   if (marketCtx && marketCtx.cam0) return;   // alley / courier / office / pier scenes drive themselves
-  mkSay(kind === 'thief' ? `<b>¡Alto ahí, viajero!</b> Dame la mitad de lo que cargas: <b>${opts.need}</b> recursos. Sin trucos…` : '<b>Bienvenido, viajero…</b> Pon en la mesa lo que das y lo que quieres. Luego toca la campana.');
+  mkSay(kind === 'thief' ? `<b>¡Alto ahí, viajero!</b> Dame la mitad de lo que cargas: <b>${opts.need}</b> recursos. Sin trucos…` : nandorTale() + '<br><b>Bienvenido, viajero…</b> Pon en la mesa lo que das y lo que quieres. Luego toca la campana.');
   await tweenCam(new THREE.Vector3(0, 2.35, 2.6), new THREE.Vector3(0, 1.22, -.5), 1300);
   if (marketCtx) marketCtx.ready = true;
 }
@@ -91,7 +91,7 @@ function ringBell(){
   const H = C.myHand; H.visible = true; C.npcHand.visible = false;   // the trader hands it over with his own arm
   C.anim = { t: 0, copies, gots, toks, k, gap };
   C.sel = { give: {}, want: {} }; markSel();
-  mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.']));
+  mkSay(pick(['Mmm… trato hecho.', 'Un buen intercambio, viajero.', 'Je, je… no se arrepentirá.', 'Con esto me pago el camino al siguiente pueblo.', 'Esto lo cargué desde el otro lado de la isla. Cuídelo.']));
 }
 function updateMarket(dt, t){
   const C = marketCtx; if (!C) return; C.t += dt;

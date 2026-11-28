@@ -105,9 +105,14 @@ function nandorHead(expr = 'sonrisa', { glasses = true } = {}){
 }
 // Puts Nándor's head on a person made with makePerson (e.g. the tutorial guide). Whatever was on the old head
 // (hair, hat) goes away; the body, animations and setFaceExpr keep working.
-function useNandorHead(p, expr = 'sonrisa'){
+function useNandorHead(p, expr = 'sonrisa', { hat = null } = {}){
   const N = nandorHead(expr);
   p.head.clear(); N.head.children.slice().forEach(c => p.head.add(c));
+  if (hat === 'paja'){   // the guide's straw hat: it sits on top of the curls, tipped back, so the fringe and the sides still show
+    const h = new THREE.Group(); h.position.set(0, .468, -.03); h.rotation.x = -.22; p.head.add(h);
+    const A = (geo, c, y, r, t) => { const m = mesh(geo, c, 0, y, 0, r, t, r, true); h.add(m); return m; };
+    A(PGEO.brim, 0xe3c77a, 0, .27, .02); A(PGEO.crown, 0xd9b864, 0, .125, .1); A(PGEO.brim, 0x8a3a2a, .022, .128, .026);
+  }
   p.face = N.face; p.name = 'Nándor';
   return p;
 }

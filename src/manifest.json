@@ -22,7 +22,7 @@
  "models/props-buildings.js",
  "models/trees.js",
  "models/animals.js",
- "models/people.js", "models/traveler.js",
+ "models/people.js", "models/nandor-head.js", "models/traveler.js",
  "scenes/production-sites.js",
  "scenes/day-night.js",
  "audio/sound.js",

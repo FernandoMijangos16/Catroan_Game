@@ -1,7 +1,7 @@
-// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Ulises, the traveller =================
+// ================= TUTORIAL ("Cómo jugar"): a fixed game guided by Nándor, the traveller =================
 // Always the same: same map (seed), you play first against two bots, the bots' villages are worked out from that map
 // before the game starts, the dice come out of a list and the bots only roll and pass. Each step lets you use only
-// what Ulises asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
+// what Nándor asks for (tutAllow), so the game cannot leave the script. The guide's panel is in ui/tutorial-guide.js.
 // Part 1: welcome, placement, starting resources, dice and production, building. Part 2 (same game, or straight from
 // "Cómo jugar" with the board already set up by tutSkipToPart2): the 7 and the robber, trading, cards. Part 3 (same game,
 // or from "Cómo jugar" with tutSkipToPart3): objects and flowers, the village in first person, missions, the witch and amulets.
@@ -51,7 +51,7 @@ function startTutorial(part = 1){
   Object.assign(GAME_OPTS, { mode: 'catroan', firstPerson: true, online: false, botLevel: 'normal', events: false });
   closeMainMenu(); applyGameOpts();
   TUT.on = true; document.body.classList.add('tutorial');
-  if (editOn()) setEditPanels(false, true);   // no panel editing while Ulises points at things (the saved choice stays)
+  if (editOn()) setEditPanels(false, true);   // no panel editing while Nándor points at things (the saved choice stays)
   newGame(3, null, TUT.seed);
   const me = G.players[0];
   try { me.name = localStorage.getItem('hexterra-name') || 'Alcalde'; me.avatar = avOk(localStorage.getItem('hexterra-avatar') || me.avatar); } catch {}
@@ -80,7 +80,7 @@ async function tutScript(part){
   if (part === 3){ if (await tutPart3(say, act, me)) tutFinish(); return; }
   // 1 · welcome
   TUT.chapter = 0;
-  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Ulises</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
+  if (!await say(`¡Hola, <b>${me.name}</b>! Soy <b>Nándor</b>. Recorrí esta isla de punta a punta con mi mochila, y te voy a enseñar a jugar.`, { expr: 'risa' })) return;
   if (!await say('Gana quien llegue primero a <b>10 puntos</b>. Cada pueblo vale 1 punto y cada ciudad 2.')) return;
   if (!await say(`Cada hexágono es un bioma y da un recurso: el bosque ${resImg('madera')}, el cerro ${resImg('ladrillo')}, la pradera ${resImg('lana')}, el campo ${resImg('trigo')} y la montaña ${resImg('mineral')}. El desierto no da nada.`)) return;
   if (!await say('El número de cada hexágono dice con qué tirada de dados produce. El <b>6</b> y el <b>8</b> salen seguido; el <b>2</b> y el <b>12</b>, casi nunca.', { expr: 'serio' })) return;
@@ -168,7 +168,7 @@ async function tutBotTurn(p, alive){
 const tutInTrade = () => !!marketCtx || busy || !modal.classList.contains('hidden');
 // a scene (or the simple panel) was opened and has been closed for a moment: back on the board
 function tutSceneOver(){ let seen = false, calm = 0; return () => { if (tutInTrade()){ seen = true; calm = 0; return false; } if (!seen || mode !== 'board') return false; return ++calm >= 6; }; }
-// Ulises fills in what is missing for the next lesson, from his pack (and says so)
+// Nándor fills in what is missing for the next lesson, from his pack (and says so)
 async function tutTopUp(say, want, why){
   const me = G.players[0], got = {};
   Object.entries(want).forEach(([r, n]) => { const k = n - (me.res[r] || 0); if (k > 0){ me.res[r] += k; got[r] = k; } });
@@ -211,6 +211,7 @@ async function tutPart2(say, act, me){
   // 7 · trading
   TUT.chapter = 6;
   if (!await say('Cuando te falta algo, <b>comercia</b>. El comercio siempre acepta <b>4 iguales por 1</b> de lo que quieras.')) return false;
+  if (scenesOn() && !await say('Y el mercader… ¡soy yo, je! En las partidas vendo en el mercado lo que traigo de mis viajes por los biomas de la isla.', { expr: 'guiño' })) return false;
   if (!await tutTopUp(say, { trigo: 4 }, 'Para practicar necesitas 4 trigos.')) return false;
   TUT.glow = 'comercio';
   if (!await act('Toca <b>Comercio</b>.', () => tutInTrade(), { allow: ['comercio'] })) return false;
@@ -257,7 +258,7 @@ async function tutPart2(say, act, me){
 
 // ================= PART 3: objects and flowers, the village in first person, missions, the witch and amulets =================
 // Missions are off in the tutorial (assignQuestFor0 / villageQuests) and so are the random finds (bioTick, roadFind,
-// villageGifts): here Ulises posts two fixed missions in your first village and the finds come when he says.
+// villageGifts): here Nándor posts two fixed missions in your first village and the finds come when he says.
 // New gates: 'visitar' (only the ! over your village, to go in), 'misiones' (the missions panel), 'amuletos' (the box).
 // part 3 straight away: the board as part 2 leaves it (a few rounds later, your turn, dice already rolled)
 function tutSkipToPart3(){
@@ -325,7 +326,7 @@ async function tutPart3(say, act, me){
   // 12 · the witch and the amulets
   TUT.chapter = 11;
   if (!await say('En las afueras de tus pueblos vive <b>el brujo</b>. Sus misiones piden varias cosas, y paga con <b>amuletos</b>.', { expr: 'serio' })) return false;
-  tutFind('lirio', 1, 'en la mochila de Ulises');
+  tutFind('lirio', 1, 'en la mochila de Nándor');
   if (!await say(`Te doy un ${specImg('lirio')} <b>lirio</b> de mi mochila: el brujo lo va a querer.`, { expr: 'guiño' })) return false;
   const q2 = tutQuest({ id: 'tut-brujo', vid: home, kind: 'brujo', role: 'brujo', gender: 'm', name: 'El brujo', items: { [found]: 1, lirio: 1 }, reward: { type: 'amulet', k: 'pluma' }, expr: 'serio',
     txt: 'Je, je… para mi caldero necesito {x}. A cambio, te daré algo que pocos han tocado.' });
