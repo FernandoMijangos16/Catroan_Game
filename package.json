@@ -1,6 +1,6 @@
 {
   "name": "catroan",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "SwapHolm: juego de construcción de pueblos en una isla de hexágonos, low poly 3D en el navegador",
   "scripts": {
     "build": "node build.mjs",
