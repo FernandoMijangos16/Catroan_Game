@@ -243,6 +243,11 @@ Antes de cada uno, comparte tus dudas con Fernando.
    panel, `models/traveler.js` Nándor). Lo guía **Nándor, el viajero** (mochila con cobija, mapa, olla y farol).
    - Partida fija: semilla `TUT.seed`, tú primero contra Rosa y Nico; los pueblos de los bots salen de `tutPlan()`
      (calculado del mapa), los dados de `TUT.dice` y los bots solo tiran y pasan (`tutBotTurn`).
+   - **El guía va abajo a la derecha**, en el lugar de "Terminar turno" (pecho y sombrero, en grande), con su nota a
+     la izquierda, siempre encima de las fichas o de la ayuda del pueblo (`tutLift`). Si tapa lo que pide, se pasa a
+     la esquina de arriba a la izquierda (`.alt`). "Terminar turno" solo aparece dentro de su nota cuando él lo pide
+     (`tutGlow('fin')`). Una flecha de latón señala lo que hay que tocar (`tutArrowUpdate`), habla con un murmullo y
+     Enter (o Espacio en el tablero) es Siguiente.
    - Cada paso es `tutSay` (Siguiente) o `tutAct` (espera algo del juego); solo se puede usar lo de `TUT.allow`
      (`tutAllow` en la barra de acciones, terminar turno, tablero, letreros y cartas). El panel se aparta si tapa el
      lugar que pide (`tutDodge`). Al final: Volver al menú o Seguir jugando (bots normales).
